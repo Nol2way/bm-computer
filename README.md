@@ -2,81 +2,130 @@
   <img src="./public/logo-full.png" alt="BM Computer บ้านมีคอม" width="420" />
 </p>
 
-# 🖥️ BM Computer (บ้านมีคอม)
-
-ร้านค้าออนไลน์จำหน่ายอุปกรณ์คอมพิวเตอร์ครบวงจร (แนว JIB · Advice · iHaveCPU)
-สร้างด้วย **React + Vite + Tailwind CSS** · ฐานข้อมูล/ล็อกอินจริงด้วย **Supabase** · deploy ฟรีบน **Cloudflare Pages**
-
-🌐 **เว็บไซต์ (Live):** https://bm-computer.pages.dev
-📦 **โค้ด:** https://github.com/manatsawintho-ragoon/bm-computer
-🗄️ **ฐานข้อมูล:** Supabase (สินค้า 24 ชิ้น · RLS เปิดทุกตาราง)
-
-> เดิมเริ่มจาก Wireframe (CSI204 Workshop #1) ปัจจุบันพัฒนาเป็น **เว็บใช้งานจริง** เต็มระบบ
+<h1 align="center">BM Computer (บ้านมีคอม)</h1>
+<p align="center">ระบบร้านค้าออนไลน์จำหน่ายอุปกรณ์คอมพิวเตอร์ · รายวิชา CSI204</p>
+<p align="center">
+  🌐 <b>เว็บไซต์:</b> <a href="https://bm-computer.pages.dev">bm-computer.pages.dev</a> ·
+  📦 <b>ซอร์สโค้ด:</b> <a href="https://github.com/manatsawintho-ragoon/bm-computer">GitHub</a>
+</p>
 
 ---
 
-## 🧭 สถานะการพัฒนา (Roadmap)
+## 1. ข้อมูลโครงงาน
+**ชื่อโครงงาน:** BM Computer (บ้านมีคอม) — ระบบร้านค้าออนไลน์จำหน่ายอุปกรณ์คอมพิวเตอร์
+**รายวิชา:** CSI204 — ดิจิทัลแพลตฟอร์มสำหรับพัฒนาซอฟต์แวร์
 
-| เฟส | งาน | สถานะ |
-|----|-----|------|
-| **0** | โครงเว็บ + ขึ้น GitHub + Deploy Cloudflare Pages (ออนไลน์มีลิงก์) | ✅ ออนไลน์ |
-| **1** | **Supabase**: schema + seed 24 สินค้า + Auth จริง + RLS + ต่อ frontend ดึงข้อมูลจริง | ✅ เสร็จ |
-| 2 | **Storefront แนว iHaveCPU**: carousel/Flash Sale/แบรนด์ (PromptPay + แกลเลอรีซูม ✅ แล้ว) | 🟡 ทำต่อ |
-| 3 | **Admin CMS**: CRUD + จัดการสไลด์/ภาพ(ลิงก์)/เนื้อหา + CRM + dynamic title & SEO | ⏳ |
+**ผู้จัดทำ**
 
-✅ เสร็จแล้ว: ออนไลน์จริง · ต่อ Supabase (สินค้า/หมวด/แบรนด์จากดาต้าเบส) · Dark/Light · 2 ภาษา · Auth popup modal + strength meter · แกลเลอรีซูม lightbox · PromptPay QR · โลโก้+favicon แบรนด์
-
----
-
-## 🛠️ เทคโนโลยี
-| ส่วน | ใช้ |
-|------|-----|
-| Frontend | React 18 + Vite + React Router |
-| Styling | Tailwind CSS v4 · Dark/Light · ฟอนต์ Inter + Sarabun |
-| i18n | ไทย/อังกฤษ (Context) |
-| Backend/DB/Auth | **Supabase** (PostgreSQL + Auth + Storage + RLS) |
-| Hosting | **Cloudflare Pages** (ฟรี · auto-deploy จาก GitHub) |
-| ชำระเงิน | PromptPay QR |
+| ลำดับ | รหัสนักศึกษา | ชื่อ-นามสกุล | ตำแหน่ง |
+|:----:|:------------:|--------------|---------|
+| 1 | 67091885 | มนัสวิน ทองดี | Project Manager |
+| 2 | 67133473 | ประสบการณ์ ผมพันธ์ | Developer (Fullstack) |
+| 3 | 67131315 | ณภัทร พิชัยรัตน์ | Developer (Fullstack) |
+| 4 | 67129568 | สิทธา ว่องคุณากร | Developer (Fullstack) |
+| 5 | 6711886 | คชาณบ สวัสดี | Developer (Fullstack) |
+| — | — | สมาชิกที่เหลือ | Developer (Fullstack) |
 
 ---
 
-## 🚀 รันในเครื่อง (Dev)
-```bash
-npm install
-npm run dev       # http://localhost:5173
-npm run build     # -> dist/
-npm run preview
+## 2. วัตถุประสงค์ของโครงงาน
+1. พัฒนา **เว็บไซต์ร้านค้าออนไลน์ที่ใช้งานได้จริง** สำหรับจำหน่ายอุปกรณ์คอมพิวเตอร์ครบวงจร
+2. ออกแบบประสบการณ์ผู้ใช้ (UX/UI) ที่ทันสมัย ใช้งานง่าย รองรับทุกอุปกรณ์ (Responsive) ทั้งโหมดสว่าง/มืด และ 2 ภาษา (ไทย/อังกฤษ)
+3. สร้างระบบที่ **ควบคุมเนื้อหาทั้งหมดได้จากหลังบ้าน (Dynamic + Admin CMS)** — เพิ่ม/แก้/ลบสินค้า สไลด์ และเนื้อหา แล้วแสดงผลบนเว็บทันที
+4. นำหลักการ **กระบวนการพัฒนาซอฟต์แวร์ (SDLC)** และเครื่องมือจริง (Git/GitHub, CI/CD) มาประยุกต์ใช้
+5. ฝึกพัฒนาระบบที่ให้ความสำคัญกับ **ความปลอดภัย ประสิทธิภาพ และความเร็ว** ในระดับใช้งานจริง
+
+---
+
+## 3. เทคโนโลยีที่ใช้ (Tech Stack)
+| ส่วน | เทคโนโลยี |
+|------|-----------|
+| **Frontend** | React 18, Vite, React Router |
+| **Styling/UI** | Tailwind CSS v4 (Design Tokens), Dark/Light Mode, ฟอนต์ Inter + Sarabun |
+| **i18n** | ระบบ 2 ภาษา (ไทย/อังกฤษ) ด้วย React Context |
+| **Backend / Database** | **Supabase** — PostgreSQL, Row Level Security (RLS) |
+| **Authentication** | Supabase Auth (Email/Password + รองรับ Google OAuth) |
+| **Storage** | Supabase Storage (รูปภาพ) |
+| **Hosting / Deploy** | **Cloudflare Pages** (CI/CD อัตโนมัติจาก GitHub) |
+| **Version Control** | Git + GitHub |
+| **Payment** | PromptPay QR |
+| **เอกสาร/ออกแบบ** | Markdown + Mermaid Diagram |
+
+---
+
+## 4. สถาปัตยกรรมระบบ (SDLC)
+ใช้กระบวนการพัฒนาแบบ **Iterative / Agile** — พัฒนาเป็นรอบ ส่งมอบเป็นเฟส และปรับปรุงต่อเนื่อง
+
+| เฟส | กิจกรรมในโครงงานนี้ |
+|-----|---------------------|
+| **1. Planning** | กำหนดขอบเขต ฟีเจอร์ กลุ่มผู้ใช้ และเทคโนโลยี |
+| **2. Design** | ออกแบบ UX/UI (ธีมแดง-ขาว-เทา), โครงสร้างหน้า (Wireframe), โมเดลข้อมูล (ERD), สถาปัตยกรรมระบบ |
+| **3. Development** | พัฒนา Frontend (React) + ต่อฐานข้อมูล Supabase + ระบบ Auth/ตะกร้า/สั่งซื้อ/หลังบ้าน |
+| **4. Testing** | ทดสอบการทำงานจริงผ่านเบราว์เซอร์ (ตะกร้า/ชำระเงิน/ออเดอร์), ตรวจ Console/Build |
+| **5. Deployment & Maintenance** | Deploy บน Cloudflare Pages (auto-deploy ทุก `git push`) + ปรับปรุงต่อเนื่อง |
+
+> ทุกการเปลี่ยนแปลงที่ push ขึ้น GitHub branch `main` จะถูก Build และ Deploy ขึ้นเว็บโดยอัตโนมัติ (CI/CD)
+
+---
+
+## 5. ขอบเขตของระบบ
+**ฟังก์ชันในระบบ (In Scope)**
+- 🛍️ หน้าร้าน (Storefront): Hero Carousel, Flash Sale (นับถอยหลัง), แถบแบรนด์, สินค้าแนะนำ/มาใหม่ — **ดึงข้อมูลจากฐานข้อมูลจริง**
+- 🔎 รายการสินค้า + ค้นหา + กรองตามหมวด/แบรนด์ + รายละเอียดสินค้า + แกลเลอรีซูม (Lightbox)
+- 🛒 ตะกร้าสินค้า (เพิ่ม/ลบ/แก้จำนวน) + ชำระเงินด้วย **PromptPay QR** + สร้างคำสั่งซื้อจริง
+- 👤 ระบบสมาชิก (สมัคร/เข้าสู่ระบบ) + ติดตามสถานะ + ประวัติการสั่งซื้อ
+- ⚙️ จัดสเปคคอม (PC Builder)
+- 🛠️ ระบบหลังบ้าน (Admin): จัดการสินค้า/หมวด/แบรนด์/สไลด์/เนื้อหา/ออเดอร์ *(กำลังพัฒนา)*
+- 🌗 Dark/Light Mode · 🌐 ไทย/อังกฤษ · 📱 Responsive
+
+**นอกขอบเขต (Out of Scope) — เฟสปัจจุบัน**
+- การเชื่อมต่อ Payment Gateway จริง (ปัจจุบันใช้ QR ตัวอย่าง) · แอปมือถือ Native · ระบบขนส่งจริง
+
+---
+
+## 6. คุณค่าของโครงการ (Value Proposition)
+- **ครบ จบ ในที่เดียว** — เลือกซื้ออุปกรณ์คอมพิวเตอร์ พร้อมฟีเจอร์ช่วยจัดสเปค
+- **คุมได้จากหลังบ้านทั้งหมด (Dynamic)** — ร้านอัปเดตสินค้า/โปรโมชัน/หน้าเว็บได้เองโดยไม่ต้องแก้โค้ด
+- **ปลอดภัย** — ควบคุมสิทธิ์การเข้าถึงข้อมูลด้วย Row Level Security ระดับฐานข้อมูล
+- **เร็วและประหยัด** — โฮสต์บน Edge Network ของ Cloudflare (ฟรี) + Query ที่ออกแบบให้เร็ว
+- **ประสบการณ์ลูกค้าดี** — UI ทันสมัย ใช้งานง่าย รองรับมือถือ ไทย/อังกฤษ และโหมดมืด
+- **พร้อมต่อยอด** — โครงสร้างพร้อมขยายสู่ระบบจริงเต็มรูปแบบ (Payment, CRM, การจัดส่ง)
+
+---
+
+## 7. System Architecture
+
+```mermaid
+graph TD
+    subgraph Client["ผู้ใช้งาน"]
+        U[ลูกค้า / แอดมิน<br/>เบราว์เซอร์ Desktop/Mobile]
+    end
+
+    subgraph Edge["Cloudflare Pages (Edge/CDN)"]
+        FE[React + Vite + Tailwind SPA<br/>Dark/Light · ไทย/อังกฤษ]
+    end
+
+    subgraph Supabase["Supabase (Backend as a Service)"]
+        AUTH[Auth<br/>Email/Password + Google OAuth]
+        DB[(PostgreSQL<br/>+ Row Level Security)]
+        ST[Storage]
+    end
+
+    PAY[PromptPay QR]
+
+    U -->|HTTPS| FE
+    FE -->|สมัคร/เข้าสู่ระบบ| AUTH
+    FE -->|อ่าน catalog ผ่าน anon + RLS| DB
+    FE -->|เขียนออเดอร์/แอดมิน ตาม role| DB
+    AUTH -. JWT session .-> FE
+    FE --> ST
+    FE --> PAY
 ```
 
----
-
-## ☁️ Deploy ขึ้น Cloudflare Pages (ครั้งเดียว → auto-deploy ตลอด)
-1. เข้า https://dash.cloudflare.com → **Workers & Pages** → **Create** → **Pages** → **Connect to Git**
-2. เลือก repo **`bm-computer`** (กด Install & Authorize Cloudflare ให้เข้าถึง GitHub)
-3. ตั้งค่า Build:
-   - **Framework preset:** `Vite`
-   - **Build command:** `npm run build`
-   - **Build output directory:** `dist`
-4. กด **Save and Deploy** → ได้ลิงก์ `https://bm-computer.pages.dev`
-
-> หลังจากนี้ทุกครั้งที่ `git push` Cloudflare จะ build + อัปเดตเว็บอัตโนมัติ (พัฒนาจากที่ไหนก็ได้)
-> ไฟล์ `public/_redirects` รองรับ SPA routing ไว้แล้ว
+**หลักการสำคัญ**
+- Frontend เป็น Static SPA เสิร์ฟผ่าน Cloudflare Edge → โหลดเร็วทั่วโลก
+- ข้อมูลทั้งหมดมาจาก Supabase แบบ Dynamic — แก้ที่ฐานข้อมูล/หลังบ้าน เว็บเปลี่ยนทันที
+- ความปลอดภัยบังคับที่ชั้นฐานข้อมูล (RLS): ลูกค้าเห็นเฉพาะข้อมูลตนเอง, แก้ catalog ได้เฉพาะ Admin
 
 ---
-
-## 📁 โครงสร้าง
-```
-bm-computer/
-├── public/            # โลโก้ favicon + _redirects (SPA)
-├── src/
-│   ├── components/     # Navbar, Footer, BrandLogo, AuthModal, ProductCard, Icons
-│   ├── pages/          # Home, ProductList, ProductDetail, Cart, Checkout, ...
-│   ├── theme/          # Dark/Light
-│   ├── i18n/           # ไทย/อังกฤษ
-│   ├── lib/            # helpers
-│   └── data/mock.js    # ข้อมูลตัวอย่าง (จะย้ายไป Supabase ในเฟส 1)
-└── docs/               # Analysis & Design, Architecture (Mermaid), Deployment
-```
-
----
-<p align="center"><sub>© 2026 BM Computer (บ้านมีคอม) · พัฒนาต่อยอดจากรายวิชา CSI204</sub></p>
+<p align="center"><sub>© 2026 BM Computer (บ้านมีคอม) · CSI204</sub></p>
