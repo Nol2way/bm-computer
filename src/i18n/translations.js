@@ -56,8 +56,7 @@ export const translations = {
       payMethod: 'วิธีชำระเงิน', yourOrder: 'คำสั่งซื้อของคุณ', confirm: 'ยืนยันการสั่งซื้อ',
       backToCart: '← กลับไปแก้ไขตะกร้า',
       promptpay: 'พร้อมเพย์ (PromptPay)', promptpayD: 'สแกน QR ชำระทันที',
-      card: 'บัตรเครดิต/เดบิต', cardD: 'รองรับผ่อน 0% 10 เดือน',
-      cod: 'เก็บเงินปลายทาง (COD)', codD: 'ชำระตอนรับสินค้า',
+      scanToPay: 'สแกน QR นี้ด้วยแอปธนาคารเพื่อชำระเงิน', qrDemo: '* QR ตัวอย่างสำหรับสาธิต (ระบบชำระเงินจริงจะต่อในเฟสถัดไป)',
     },
     auth: {
       loginTitle: 'เข้าสู่ระบบ', loginSub: 'ยินดีต้อนรับกลับสู่ BM Computer',
@@ -69,6 +68,10 @@ export const translations = {
       agree: 'ยอมรับเงื่อนไขการใช้งานและนโยบายความเป็นส่วนตัว',
       noAccount: 'ยังไม่มีบัญชี?', hasAccount: 'มีบัญชีอยู่แล้ว?',
       signup: 'สมัครสมาชิก', signin: 'เข้าสู่ระบบ',
+      fullName: 'ชื่อ-นามสกุล', phone: 'เบอร์โทรศัพท์', confirmPassword: 'ยืนยันรหัสผ่าน',
+      strength: 'ความแข็งแรงรหัสผ่าน', pwWeak: 'อ่อน', pwMid: 'ปานกลาง', pwStrong: 'แข็งแรง',
+      reqLen: 'อย่างน้อย 8 ตัวอักษร', reqNum: 'มีตัวเลข', reqSpecial: 'มีอักขระพิเศษ',
+      pwMismatch: 'รหัสผ่านไม่ตรงกัน',
     },
     track: {
       title: 'ติดตามคำสั่งซื้อ', order: 'คำสั่งซื้อ', orderedOn: 'สั่งเมื่อ',
@@ -169,8 +172,7 @@ export const translations = {
       payMethod: 'Payment method', yourOrder: 'Your order', confirm: 'Place order',
       backToCart: '← Back to cart',
       promptpay: 'PromptPay', promptpayD: 'Scan QR to pay instantly',
-      card: 'Credit/Debit card', cardD: 'Supports 0% for 10 months',
-      cod: 'Cash on delivery (COD)', codD: 'Pay when you receive',
+      scanToPay: 'Scan this QR with your banking app to pay', qrDemo: '* Demo QR (real payment gateway comes in a later phase)',
     },
     auth: {
       loginTitle: 'Sign in', loginSub: 'Welcome back to BM Computer',
@@ -182,6 +184,10 @@ export const translations = {
       agree: 'I agree to the Terms of Service and Privacy Policy',
       noAccount: "Don't have an account?", hasAccount: 'Already have an account?',
       signup: 'Sign up', signin: 'Sign in',
+      fullName: 'Full name', phone: 'Phone number', confirmPassword: 'Confirm password',
+      strength: 'Password strength', pwWeak: 'Weak', pwMid: 'Medium', pwStrong: 'Strong',
+      reqLen: 'At least 8 characters', reqNum: 'Has a number', reqSpecial: 'Has a special character',
+      pwMismatch: 'Passwords do not match',
     },
     track: {
       title: 'Track order', order: 'Order', orderedOn: 'Ordered on',

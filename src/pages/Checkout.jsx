@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom'
-import { useState } from 'react'
 import { products, fmt } from '../data/mock'
 import { Icon } from '../components/Icons'
 import { cx } from '../lib/ui'
@@ -9,16 +8,11 @@ const wrap = 'mx-auto max-w-[1200px] px-4'
 
 export default function Checkout() {
   const { t } = useLang()
-  const [pay, setPay] = useState('promptpay')
   const cart = [{ p: products[0], qty: 1 }, { p: products[3], qty: 2 }]
   const sub = cart.reduce((s, i) => s + i.p.price * i.qty, 0)
   const total = sub + (sub >= 1500 ? 0 : 80)
   const input = 'w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20'
-  const pays = [
-    { id: 'promptpay', icon: 'qr', name: t('checkout.promptpay'), desc: t('checkout.promptpayD') },
-    { id: 'card', icon: 'card', name: t('checkout.card'), desc: t('checkout.cardD') },
-    { id: 'cod', icon: 'truck', name: t('checkout.cod'), desc: t('checkout.codD') },
-  ]
+  const qr = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=PromptPay%20BMComputer%20THB${total}`
 
   return (
     <div className={`${wrap} py-6`}>
@@ -39,17 +33,15 @@ export default function Checkout() {
             <div className="mt-4"><label className="mb-1.5 block text-sm font-semibold">{t('checkout.addr')}</label><textarea className={input} rows="3" placeholder={t('checkout.addrPlaceholder')} /></div>
           </section>
 
+          {/* ชำระเงิน: PromptPay QR อย่างเดียว */}
           <section className="rounded-2xl border border-line bg-surface p-5">
             <h3 className="mb-4 font-bold">{t('checkout.payMethod')}</h3>
-            <div className="flex flex-col gap-3">
-              {pays.map((m) => (
-                <label key={m.id} className={cx('flex cursor-pointer items-center gap-3 rounded-xl border-2 p-4 transition-colors',
-                  pay === m.id ? 'border-brand-600 bg-brand-50 dark:bg-brand-600/10' : 'border-line hover:border-zinc-400')}>
-                  <input type="radio" name="pay" checked={pay === m.id} onChange={() => setPay(m.id)} className="h-4 w-4 accent-brand-600" />
-                  <Icon name={m.icon} size={22} className="text-brand-600" />
-                  <div><b>{m.name}</b><div className="text-sm text-muted">{m.desc}</div></div>
-                </label>
-              ))}
+            <div className="flex flex-col items-center gap-3 rounded-xl border-2 border-brand-600 bg-brand-50 p-6 text-center dark:bg-brand-600/10">
+              <div className="flex items-center gap-2 font-bold"><Icon name="qr" size={22} className="text-brand-600" /> {t('checkout.promptpay')}</div>
+              <img src={qr} alt="PromptPay QR" width="200" height="200" className="rounded-lg bg-white p-2" />
+              <div className="text-sm text-muted">{t('checkout.scanToPay')}</div>
+              <div className="nums text-2xl font-bold text-brand-600">฿{fmt(total)}</div>
+              <div className="text-xs text-muted">{t('checkout.qrDemo')}</div>
             </div>
           </section>
         </div>

@@ -3,13 +3,14 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "BM Computer (บ้านบีคอม) - ร้านค้าออนไลน์จำหน่ายอุปกรณ์คอมพิวเตอร์ | CSI204 Workshop #1",
+  "description": "BM Computer (บ้านมีคอม) - ร้านค้าออนไลน์จำหน่ายอุปกรณ์คอมพิวเตอร์",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.110.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.26.2"
