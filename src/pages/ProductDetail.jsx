@@ -22,6 +22,8 @@ export default function ProductDetail() {
   const [qty, setQty] = useState(1)
   const [gi, setGi] = useState(0)
   const [box, setBox] = useState(false)
+  const [copied, setCopied] = useState(false)
+  const copyLink = () => { navigator.clipboard?.writeText(window.location.href); setCopied(true); setTimeout(() => setCopied(false), 1500) }
 
   if (loading) return <div className={`${wrap} py-20 text-center text-muted`}>{t('common.loading')}</div>
   if (!p) return <div className={`${wrap} py-20 text-center`}><h2 className="text-2xl font-bold">{t('notfound.title')}</h2><Link to="/products" className="mt-4 inline-block text-brand-600">{t('list.products')}</Link></div>
@@ -66,7 +68,14 @@ export default function ProductDetail() {
             </span>
           </div>
           <h1 className="text-2xl font-bold leading-tight">{p.name}</h1>
-          <div className="flex items-center gap-2 text-sm"><span className="text-amber-500">★ {p.rating}</span><span className="text-muted">{p.reviews} {t('common.reviews')} · {t('pdp.sold')}</span></div>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+            <span className="text-amber-500">★ {p.rating}</span>
+            <span className="text-muted">{p.reviews} {t('common.reviews')}</span>
+            <span className="text-muted">· {lang === 'th' ? 'รหัสสินค้า' : 'SKU'}: {p.sku}</span>
+            <button onClick={copyLink} className="ml-auto flex items-center gap-1 text-muted transition-colors hover:text-brand-600 cursor-pointer">
+              <Icon name={copied ? 'check' : 'copy'} size={14} /> {copied ? (lang === 'th' ? 'คัดลอกแล้ว' : 'Copied') : (lang === 'th' ? 'คัดลอกลิงก์' : 'Copy link')}
+            </button>
+          </div>
 
           <div className="flex flex-wrap items-baseline gap-2.5">
             <span className="nums text-3xl font-extrabold text-brand-600">฿{fmt(p.price)}</span>

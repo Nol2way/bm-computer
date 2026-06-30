@@ -3,14 +3,21 @@ import { supabase, isSupabaseConfigured } from './supabase'
 // แปลง row จาก Supabase -> รูปแบบที่คอมโพเนนต์ใช้ (cat = slug ตรงกับ i18n cats.*)
 function mapProduct(row) {
   const onSale = row.sale_price && row.sale_price < row.price
+  const price = onSale ? row.sale_price : row.price
+  const old = onSale ? row.price : row.old_price
+  const discount = old && old > price ? Math.round(((old - price) / old) * 100) : 0
   return {
     id: row.slug,
     slug: row.slug,
+    sku: 'BM-' + String(row.slug).toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10),
     name: row.name,
     cat: row.categories?.slug,
     brand: row.brands?.name,
-    price: onSale ? row.sale_price : row.price,
-    old: onSale ? row.price : row.old_price,
+    price,
+    old,
+    discount,
+    sale: !!onSale,
+    saleEndsAt: row.sale_ends_at,
     rating: row.rating,
     reviews: row.reviews_count,
     stock: row.stock,
@@ -19,6 +26,13 @@ function mapProduct(row) {
     specs: row.specs || {},
     featured: row.is_featured,
   }
+}
+
+export async function fetchBrands() {
+  if (!isSupabaseConfigured) return []
+  const { data, error } = await supabase.from('brands').select('*').order('sort', { ascending: true })
+  if (error) throw error
+  return data || []
 }
 
 const SELECT = '*, categories!inner(slug,name_th,name_en), brands(name,slug)'
@@ -48,5 +62,12 @@ export async function fetchSlides(placement) {
   if (placement) q = q.eq('placement', placement)
   const { data, error } = await q
   if (error) throw error
-  return data || []
+  // กันสไลด์ซ้ำ (เผื่อ seed ถูกรันหลายรอบ) — ยึดตาม image_url+title
+  const seen = new Set()
+  return (data || []).filter((s) => {
+    const k = `${s.image_url}|${s.title}`
+    if (seen.has(k)) return false
+    seen.add(k)
+    return true
+  })
 }

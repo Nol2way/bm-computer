@@ -1,0 +1,57 @@
+import { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { Icon } from './Icons'
+import { cx } from '../lib/ui'
+
+// แบนเนอร์เลื่อนอัตโนมัติ (เคารพ prefers-reduced-motion) + ปุ่ม/จุด
+export default function HeroCarousel({ slides }) {
+  const [i, setI] = useState(0)
+  const timer = useRef(null)
+  const n = slides.length
+  const go = (d) => setI((x) => (x + d + n) % n)
+
+  useEffect(() => {
+    if (n <= 1) return
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    timer.current = setInterval(() => setI((x) => (x + 1) % n), 5000)
+    return () => clearInterval(timer.current)
+  }, [n])
+
+  const pause = () => clearInterval(timer.current)
+
+  if (!n) return <div className="aspect-[1200/440] animate-pulse rounded-2xl bg-surface2" />
+
+  const Slide = ({ s }) => {
+    const img = <img src={s.image_url} alt={s.title || ''} className="h-full w-full object-cover" loading="eager"
+      onError={(e) => { e.currentTarget.src = 'https://placehold.co/1200x440/dc2626/ffffff?text=BM+Computer' }} />
+    return s.link ? <Link to={s.link} className="block h-full">{img}</Link> : img
+  }
+
+  return (
+    <div className="relative overflow-hidden rounded-2xl border border-line bg-surface2" onMouseEnter={pause}
+      onMouseLeave={() => { if (n > 1 && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) timer.current = setInterval(() => setI((x) => (x + 1) % n), 5000) }}>
+      <div className="aspect-[1200/440]">
+        {slides.map((s, idx) => (
+          <div key={s.id || idx} className={cx('absolute inset-0 transition-opacity duration-500', idx === i ? 'opacity-100' : 'pointer-events-none opacity-0')}>
+            <Slide s={s} />
+          </div>
+        ))}
+      </div>
+
+      {n > 1 && (
+        <>
+          <button onClick={() => go(-1)} aria-label="prev"
+            className="absolute left-3 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-black/40 text-white transition hover:bg-black/60 cursor-pointer"><Icon name="chevronLeft" /></button>
+          <button onClick={() => go(1)} aria-label="next"
+            className="absolute right-3 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-black/40 text-white transition hover:bg-black/60 cursor-pointer"><Icon name="chevronRight" /></button>
+          <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5">
+            {slides.map((_, idx) => (
+              <button key={idx} onClick={() => setI(idx)} aria-label={`slide ${idx + 1}`}
+                className={cx('h-2 rounded-full transition-all', idx === i ? 'w-6 bg-white' : 'w-2 bg-white/50 hover:bg-white/80')} />
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}

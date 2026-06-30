@@ -57,7 +57,7 @@ export default function Cart() {
           <Line l={t('cart.shipping')} v={ship === 0 ? <b className="text-emerald-600 dark:text-emerald-400">{t('common.free')}</b> : `฿${fmt(ship)}`} />
           <div className="mt-3 flex justify-between border-t border-line pt-4 text-lg font-bold"><span>{t('cart.total')}</span><b className="nums text-brand-600">฿{fmt(total)}</b></div>
           <Link to="/checkout" className="mt-4 block rounded-xl bg-brand-600 py-3 text-center font-semibold text-white transition-colors hover:bg-brand-700">{t('cart.checkout')}</Link>
-          <p className="mt-3 text-center text-xs text-muted">{t('cart.secure')}</p>
+          <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-xs text-muted"><Icon name="lock" size={13} /> {t('cart.secure')}</p>
         </aside>
       </div>
     </div>

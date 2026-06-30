@@ -2,6 +2,7 @@ import { Routes, Route, useLocation, Navigate } from 'react-router-dom'
 import { useEffect } from 'react'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
+import { Icon } from './components/Icons'
 import { AuthModalProvider, useAuthModal } from './components/AuthModal'
 
 import Home from './pages/Home'
@@ -32,8 +33,9 @@ export default function App() {
   return (
     <AuthModalProvider>
       <div className="flex min-h-dvh flex-col bg-bg text-fg">
-        <div className="bg-zinc-900 px-4 py-1.5 text-center text-xs text-zinc-400">
-          🚚 ส่งฟรีทั่วไทยเมื่อช้อปครบ 1,500 บาท · ของแท้ประกันศูนย์ · ผ่อน 0% 10 เดือน
+        <div className="flex items-center justify-center gap-2 bg-zinc-900 px-4 py-1.5 text-center text-xs text-zinc-400">
+          <Icon name="truck" size={14} className="shrink-0 text-brand-400" />
+          ส่งฟรีทั่วไทยเมื่อช้อปครบ 1,500 บาท · ของแท้ประกันศูนย์ · ผ่อน 0% 10 เดือน
         </div>
         <Navbar />
         <ScrollTop />

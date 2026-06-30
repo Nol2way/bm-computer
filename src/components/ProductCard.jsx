@@ -13,8 +13,9 @@ export default function ProductCard({ p }) {
         {p.images?.[0]
           ? <img src={p.images[0]} alt={p.name} loading="lazy" className="aspect-square w-full bg-white object-contain p-3"
               onError={(e) => { e.currentTarget.src = 'https://placehold.co/600x600/f1f1f4/9ca3af?text=BM+Computer' }} />
-          : <div className="ph grid aspect-square place-items-center text-xs font-semibold">🖼</div>}
-        {b && <span className={cx('absolute left-3 top-3 rounded-full px-2.5 py-1 text-[11px] font-semibold', b.cls)}>{badgeLabel[lang][p.badge]}</span>}
+          : <div className="ph grid aspect-square place-items-center text-zinc-400"><Icon name="image" size={40} /></div>}
+        {p.discount > 0 && <span className="absolute left-3 top-3 rounded-full bg-brand-600 px-2.5 py-1 text-[11px] font-bold text-white">-{p.discount}%</span>}
+        {b && <span className={cx('absolute right-3 top-3 rounded-full px-2.5 py-1 text-[11px] font-semibold', b.cls)}>{badgeLabel[lang][p.badge]}</span>}
       </Link>
       <div className="flex flex-1 flex-col gap-1.5 p-4">
         <span className="text-xs text-muted">{t(`cats.${p.cat}`)} · {p.brand}</span>

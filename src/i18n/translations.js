@@ -47,7 +47,7 @@ export const translations = {
       title: 'ตะกร้าสินค้า', empty: 'ยังไม่มีสินค้าในตะกร้า', continue: '← เลือกซื้อสินค้าต่อ',
       summary: 'สรุปคำสั่งซื้อ', coupon: 'กรอกโค้ดส่วนลด', subtotal: 'ยอดรวมสินค้า',
       shipping: 'ค่าจัดส่ง', total: 'ยอดชำระทั้งหมด', checkout: 'ดำเนินการชำระเงิน',
-      secure: '🔒 ชำระเงินปลอดภัยผ่านระบบที่ได้มาตรฐาน', remove: 'ลบ',
+      secure: 'ชำระเงินปลอดภัยผ่านระบบที่ได้มาตรฐาน', remove: 'ลบ',
     },
     checkout: {
       stepCart: 'ตะกร้า', stepInfo: 'ข้อมูล & ชำระเงิน', stepDone: 'เสร็จสิ้น',
@@ -163,7 +163,7 @@ export const translations = {
       title: 'Shopping cart', empty: 'Your cart is empty', continue: '← Continue shopping',
       summary: 'Order summary', coupon: 'Enter discount code', subtotal: 'Subtotal',
       shipping: 'Shipping', total: 'Total', checkout: 'Proceed to checkout',
-      secure: '🔒 Secure checkout via certified gateway', remove: 'Remove',
+      secure: 'Secure checkout via certified gateway', remove: 'Remove',
     },
     checkout: {
       stepCart: 'Cart', stepInfo: 'Info & Payment', stepDone: 'Done',

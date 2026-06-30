@@ -1,0 +1,109 @@
+# CLAUDE.md — BM Computer (บ้านมีคอม)
+
+อ่านไฟล์นี้ก่อนเริ่มงานทุกครั้ง เพื่อเข้าใจว่าโปรเจคนี้คืออะไรและกฎเหล็กที่ห้ามละเมิด
+
+---
+
+## โปรเจคนี้คืออะไร
+**BM Computer (บ้านมีคอม)** — เว็บไซต์ร้านค้าออนไลน์จำหน่ายอุปกรณ์คอมพิวเตอร์ **ที่ใช้งานจริง** (production e-commerce)
+แนวทางคล้าย JIB / Advice / iHaveCPU แต่ **ดีไซน์เป็นสไตล์ของเราเอง** (ธีมแดง-ขาว-เทา) — ไม่ลอกใครเป๊ะ ใช้แค่ "ควรมีอะไรบ้าง"
+
+- 🌐 Live: https://bm-computer.pages.dev
+- 📦 Repo: https://github.com/manatsawintho-ragoon/bm-computer (push `main` = auto-deploy)
+- 🗄️ DB/Auth: Supabase project `xclugpegrcuqmnapysnf`
+
+---
+
+## ⛔ กฎเหล็ก (ห้ามละเมิดเด็ดขาด)
+
+1. **ห้าม tech-debt / ห้าม stub / ห้าม mock logic เด็ดขาด**
+   ทุกปุ่ม ทุก action ต้อง **ทำงานได้จริง** logic ถูกต้องครบถ้วน
+   (เพิ่มลงตะกร้า=เพิ่มจริง, ชำระเงิน=สร้างออเดอร์จริงใน DB, ลบ=ลบจริง ฯลฯ)
+   ถ้าทำไม่เสร็จในรอบเดียว ให้ทำทีละฟีเจอร์ให้ **สมบูรณ์** ห้ามทิ้งครึ่งๆกลางๆ
+
+2. **Dynamic ทั้งเว็บ — ทุกอย่างคุมจากหลังบ้าน (admin)**
+   - เพิ่มสินค้า/หมวด/แบรนด์/สไลด์/แบนเนอร์/เนื้อหา ในหลังบ้าน → ขึ้นเว็บทันที
+   - ไม่เพิ่ม = ไม่ขึ้น · ห้าม hardcode รายการสินค้า/หมวด/แบรนด์/เนื้อหาในโค้ด
+   - ทุกข้อมูลที่ลูกค้าเห็น ต้องมาจาก Supabase (ยกเว้นข้อความ UI ที่อยู่ใน i18n)
+
+3. **ลำดับความสำคัญ (priority สูง→ต่ำ)**
+   1. **Security** — RLS เปิดทุกตาราง, เขียนข้อมูลได้เฉพาะ role ที่ควร, ไม่เก็บความลับใน client (anon key เปิดเผยได้, ห้าม commit service_role/PAT), validate ฝั่ง DB ด้วย policy
+   2. **Performance / DB เร็ว / เว็บเร็ว** — query เลือกเฉพาะคอลัมน์ที่ใช้, มี index, pagination เมื่อข้อมูลเยอะ, lazy-load รูป, code-split, ไม่ดึงข้อมูลซ้ำ
+   3. **UX — คิดถึงลูกค้าเสมอ ใช้งานง่าย** — flow สั้น, feedback ชัด (loading/empty/error/success), responsive, เข้าถึงได้ (a11y)
+
+4. **คิดให้รอบคอบและรอบด้านก่อนลงมือเสมอ** — วางแผนก่อนเขียนโค้ด
+
+5. **อัปเดตเอกสารตลอด** — แก้อะไรที่กระทบสถาปัตยกรรม/ฟีเจอร์ ต้องอัปเดต `README.md` และไฟล์นี้
+
+---
+
+## สถาปัตยกรรม
+| ชั้น | เทคโนโลยี |
+|------|-----------|
+| Frontend | React 18 + Vite + React Router (BrowserRouter) |
+| Styling | Tailwind CSS v4 (design tokens) · Dark/Light · ฟอนต์ Inter + Sarabun |
+| Backend/DB/Auth | **Supabase** (PostgreSQL + Auth + Storage + RLS) |
+| Hosting | **Cloudflare Pages** (auto-deploy จาก GitHub `main`) |
+| ชำระเงิน | PromptPay QR (gateway จริงเป็นเฟสถัดไป) |
+
+### Data flow
+`Supabase (RLS) → src/lib/api.js → useFetch / context → components`
+- อ่าน: ผ่าน anon key (RLS public read สำหรับ catalog)
+- เขียน (admin): ผ่าน session ของผู้ใช้ที่ `role='admin'` (RLS `is_admin()`)
+
+---
+
+## โครงสร้างโค้ด
+```
+src/
+├── lib/         supabase.js (client), api.js (query layer), useFetch.js, ui.js (helpers)
+├── theme/       ThemeContext (dark/light)
+├── i18n/        LanguageContext + translations.js (ไทย/อังกฤษ) — ข้อความ UI ทั้งหมดอยู่ที่นี่
+├── components/  Navbar, Footer, BrandLogo, Icons (SVG เท่านั้น), ProductCard,
+│                HeroCarousel, BrandBar, FlashSale, Lightbox, AuthModal, AuthForm
+├── pages/       Home, ProductList, ProductDetail, Cart, Checkout, OrderTracking,
+│                OrderHistory, PCBuilder, AdminDashboard, NotFound
+└── data/mock.js  (กำลังเลิกใช้ — ย้ายไป DB ให้หมด)
+
+supabase/        schema.sql, seed.sql, README.md (วิธี migrate)
+```
+
+## ฐานข้อมูล (ตารางหลัก)
+`categories, brands, products, slides, profiles, orders, order_items, reviews, site_settings`
+- ดูรายละเอียด + RLS ใน `supabase/schema.sql`
+- ตาราง slides ยังไม่มี unique key (กัน seed ซ้ำ) — มี TODO ใส่ constraint
+
+## คอนเวนชัน
+- **ไอคอน: SVG เท่านั้น** (ใน `components/Icons.jsx`) — **ห้ามใช้ emoji เป็นไอคอน** (หลัก ui-ux-pro-max)
+- **ข้อความทุกอย่าง 2 ภาษา** ผ่าน `t('section.key')` — ห้าม hardcode ข้อความไทย/อังกฤษในคอมโพเนนต์
+- **สี/พื้นผิว** ใช้ token (`bg-surface text-fg border-line bg-brand-600 ...`) ปรับ dark/light อัตโนมัติ
+- ราคา/ตัวเลข ใส่ class `nums` (tabular)
+
+## คำสั่ง
+```bash
+npm run dev      # dev server
+npm run build    # production build -> dist/
+npm run preview  # preview build
+```
+`.env.local` (dev) / `.env.production` (commit ได้ เพราะ anon key เปิดเผยได้) มี `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
+
+---
+
+## สถานะปัจจุบัน (อัปเดตเมื่อแก้)
+- ✅ ออนไลน์ + ต่อ Supabase จริง (สินค้า/หมวด/แบรนด์/สไลด์จาก DB)
+- ✅ หน้าแรกแบบ dynamic: Hero carousel, Flash Sale (countdown), Brand bar, สินค้าแนะนำ/มาใหม่ — ดึงจาก DB
+- ✅ Dark/Light, 2 ภาษา, Auth popup modal (สมัคร/ล็อกอินจริงผ่าน Supabase), แกลเลอรีซูม
+- 🟡 **ยังเป็น stub (ต้องทำให้จริง):** ตะกร้า (เพิ่ม/ลบ/จำนวน), checkout→สร้างออเดอร์, ค้นหา, ฟิลเตอร์/เรียงลำดับ, ติดตาม/ประวัติออเดอร์, **Admin CRUD** (เพิ่ม/แก้/ลบ สินค้า/หมวด/แบรนด์/สไลด์/เนื้อหา)
+
+## แผนทำให้ "ใช้งานได้จริงทั้งหมด" (ทำทีละชิ้นให้สมบูรณ์ ไม่ stub)
+1. **Auth state ทั้งแอป** (session/user/role) + ปุ่ม logout + การ์ดบัญชี + กั้นหน้า /admin
+2. **ตะกร้าจริง** (CartContext + persist) → เพิ่ม/ลบ/แก้จำนวน + ตัวเลขบน navbar จริง
+3. **Checkout จริง** → สร้าง `orders` + `order_items` ใน DB (ต้องล็อกอิน) → เคลียร์ตะกร้า → ติดตามได้
+4. **ค้นหา/ฟิลเตอร์/เรียงลำดับ** ทำงานจริง (query Supabase)
+5. **ติดตาม/ประวัติออเดอร์** ดึงจาก DB จริง
+6. **Admin CMS (CRUD)** — จัดการสินค้า/หมวด/แบรนด์/สไลด์/เนื้อหา/ออเดอร์ จากหลังบ้าน (เพิ่มแล้วขึ้นเว็บทันที)
+7. catalog ที่ยัง hardcode (categories/brands ใน mock.js) → ย้ายไป DB ให้หมด
+8. SEO: dynamic `<title>`/meta ต่อหน้า
+
+---
+> เป้าหมาย: เว็บที่ **ใช้งานได้จริง 100% · คุมจากหลังบ้านได้ทั้งหมด · เร็ว · ปลอดภัย · ลูกค้าใช้ง่าย**
