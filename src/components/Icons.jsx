@@ -1,0 +1,64 @@
+// ชุดไอคอน SVG สไตล์ Lucide (stroke 1.8, currentColor) — แทน emoji ทั้งหมด
+const paths = {
+  search: 'M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM21 21l-4.3-4.3',
+  cart: 'M3 3h2l2.4 12.2a2 2 0 0 0 2 1.6h8.7a2 2 0 0 0 2-1.6L23 7H6 M9 21a1 1 0 1 0 0-2 1 1 0 0 0 0 2 M19 21a1 1 0 1 0 0-2 1 1 0 0 0 0 2',
+  user: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0',
+  heart: 'M20.8 5.6a5.5 5.5 0 0 0-7.8 0L12 6.6l-1-1a5.5 5.5 0 1 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z',
+  menu: 'M3 6h18M3 12h18M3 18h18',
+  x: 'M18 6 6 18M6 6l12 12',
+  sun: 'M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10z M12 1v2 M12 21v2 M4.2 4.2l1.4 1.4 M18.4 18.4l1.4 1.4 M1 12h2 M21 12h2 M4.2 19.8l1.4-1.4 M18.4 5.6l1.4-1.4',
+  moon: 'M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z',
+  globe: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M3 12h18 M12 3a14 14 0 0 1 0 18 M12 3a14 14 0 0 0 0 18',
+  check: 'M20 6 9 17l-5-5',
+  chevronLeft: 'M15 18l-6-6 6-6',
+  chevronRight: 'M9 18l6-6-6-6',
+  plus: 'M12 5v14M5 12h14',
+  minus: 'M5 12h14',
+  trash: 'M3 6h18 M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2 M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6 M10 11v6 M14 11v6',
+  copy: 'M9 9h10a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V10a1 1 0 0 1 1-1z M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1',
+  arrowRight: 'M5 12h14M13 5l7 7-7 7',
+  shield: 'M12 3l8 3v6c0 5-3.4 7.7-8 9-4.6-1.3-8-4-8-9V6l8-3z',
+  truck: 'M3 6h11v9H3z M14 9h4l3 3v3h-7 M7.5 18a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z M17.5 18a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z',
+  card: 'M3 6h18a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1z M2 10h20',
+  wrench: 'M14.7 6.3a4 4 0 0 0 5 5l-9 9a2.8 2.8 0 0 1-4-4l8-8z',
+  qr: 'M4 4h6v6H4z M14 4h6v6h-6z M4 14h6v6H4z M14 14h2v2h-2z M18 14h2v2h-2z M14 18h2v2h-2z M18 18h2v2h-2z',
+  grid: 'M4 4h7v7H4z M13 4h7v7h-7z M4 13h7v7H4z M13 13h7v7h-7z',
+  box: 'M21 8l-9-5-9 5 9 5 9-5z M3 8v8l9 5 9-5V8 M12 13v8',
+  receipt: 'M5 3h14v18l-3-2-2 2-2-2-2 2-3-2V3z M9 8h6 M9 12h6',
+  users: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8 M22 21v-2a4 4 0 0 0-3-3.9 M16 3.1a4 4 0 0 1 0 7.8',
+  // หมวดหมู่สินค้า
+  cpu: 'M6 6h12v12H6z M9 9h6v6H9z M9 2v2 M15 2v2 M9 20v2 M15 20v2 M2 9h2 M2 15h2 M20 9h2 M20 15h2',
+  gpu: 'M3 7h17a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1h-2 M3 7v12 M3 16h12 M8 16v3 M14 16v3 M9 11.5a2 2 0 1 0 0 .01 M15.5 11h2',
+  mainboard: 'M4 4h16v16H4z M8 4v4 M8 16v4 M16 4v4 M4 8h4 M4 16h4 M12 8h4v4h-4z M11 13.5a1.5 1.5 0 1 0 0 .01',
+  ram: 'M2 9h20v7H2z M2 16v2 M22 16v2 M6 9v4 M10 9v4 M14 9v4 M18 9v4',
+  storage: 'M3 5h18v14H3z M7 5v14 M11 9h6 M11 12h6 M9 8.5a.5.5 0 1 0 0 .01',
+  monitor: 'M3 4h18v12H3z M9 20h6 M12 16v4',
+  notebook: 'M4 5h16v11H4z M2 19h20 M10 8h4',
+  gear: 'M3 7h18a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z M6 10h.01 M9 10h.01 M12 10h.01 M15 10h.01 M18 10h.01 M8 13h8',
+  psu: 'M4 4h16v16H4z M9 9a3 3 0 1 0 .01 0 M14 8h3 M9 9v.01 M7 17h2 M15 17h2',
+  case: 'M6 2h10a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z M9 5h4 M9 8h4 M9 11h4 M10 18h2',
+  cooler: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M12 12l5-3 M12 12l-5 3 M12 12l0-6 M12 12a1.5 1.5 0 1 0 .01 0',
+}
+
+export function Icon({ name, size = 20, className = '', strokeWidth = 1.8, ...rest }) {
+  const d = paths[name]
+  if (!d) return null
+  return (
+    <svg
+      viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor"
+      strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round"
+      className={className} aria-hidden="true" {...rest}
+    >
+      <path d={d} />
+    </svg>
+  )
+}
+
+export const IconGoogle = ({ size = 18 }) => (
+  <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true">
+    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.76h3.56c2.08-1.92 3.28-4.74 3.28-8.09z" />
+    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.56-2.76c-.98.66-2.23 1.06-3.72 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z" />
+    <path fill="#FBBC05" d="M5.84 14.1a6.6 6.6 0 0 1 0-4.2V7.06H2.18a11 11 0 0 0 0 9.88l3.66-2.84z" />
+    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z" />
+  </svg>
+)

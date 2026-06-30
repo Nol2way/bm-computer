@@ -1,0 +1,99 @@
+@import "tailwindcss";
+
+/* ===== Dark mode = class .dark บน <html> ===== */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ===== Design Tokens (brand + fonts) ===== */
+@theme {
+  /* Brand RED */
+  --color-brand-50:  #FEF2F2;
+  --color-brand-100: #FEE2E2;
+  --color-brand-200: #FECACA;
+  --color-brand-300: #FCA5A5;
+  --color-brand-400: #F87171;
+  --color-brand-500: #EF4444;
+  --color-brand-600: #DC2626;  /* primary */
+  --color-brand-700: #B91C1C;
+  --color-brand-800: #991B1B;
+  --color-brand-900: #7F1D1D;
+
+  /* ฟอนต์: อังกฤษ Inter, ไทย Sarabun (Inter ไม่มี glyph ไทย จึง fallback ไป Sarabun) */
+  --font-sans: "Inter", "Sarabun", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --radius-xl: 0.875rem;
+  --radius-2xl: 1.125rem;
+}
+
+/* ===== Semantic colors (สลับตาม light/dark) ===== */
+:root {
+  --bg: #F6F6F8;
+  --surface: #FFFFFF;
+  --surface-2: #F1F1F4;
+  --fg: #111317;
+  --muted: #6B7280;
+  --line: #E6E7EB;
+}
+.dark {
+  --bg: #0B0B0F;
+  --surface: #16161C;
+  --surface-2: #1E1E26;
+  --fg: #F4F4F6;
+  --muted: #9CA0AB;
+  --line: #2A2A33;
+}
+
+/* map semantic vars เข้าสู่ utility ของ Tailwind (bg-surface, text-fg, border-line ...) */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface2: var(--surface-2);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+}
+
+/* ===== Base ===== */
+@layer base {
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-sans);
+    font-feature-settings: "cv02", "cv03", "cv04";
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  h1, h2, h3, h4 { font-weight: 700; letter-spacing: -0.01em; line-height: 1.2; }
+  /* ตัวเลขราคา/ตาราง ใช้ tabular เพื่อไม่ให้ขยับ */
+  .nums { font-variant-numeric: tabular-nums; }
+  /* focus ชัดเจนเพื่อ keyboard nav */
+  :focus-visible { outline: 2px solid var(--color-brand-500); outline-offset: 2px; border-radius: 6px; }
+  ::selection { background: var(--color-brand-600); color: #fff; }
+  /* scrollbar เนียนๆ ในโหมดมืด */
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: var(--line); border-radius: 999px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+}
+
+/* ===== Utilities ===== */
+@layer utilities {
+  /* placeholder รูปสินค้า (wireframe) ที่ปรับตามธีม */
+  .ph {
+    background-image:
+      linear-gradient(135deg, var(--surface-2), color-mix(in srgb, var(--surface-2) 70%, var(--line))),
+      repeating-linear-gradient(45deg, transparent 0 14px, color-mix(in srgb, var(--fg) 4%, transparent) 14px 15px);
+    color: var(--muted);
+  }
+  .card-hover { transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+  .card-hover:hover { transform: translateY(-3px); }
+}
+
+/* เด้งเข้าเวลาเปิด modal */
+@keyframes pop {
+  from { opacity: 0; transform: scale(.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}

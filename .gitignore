@@ -1,0 +1,25 @@
+# dependencies
+node_modules/
+
+# build output
+dist/
+dist-ssr/
+
+# logs
+*.log
+npm-debug.log*
+
+# env / secrets (สำคัญมาก: ห้าม commit key ของ Supabase/Cloudflare)
+.env
+.env.local
+.env.*.local
+
+# editor / os
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+Thumbs.db
