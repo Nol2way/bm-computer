@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Link, NavLink } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { categories } from '../data/mock'
 import { Icon } from './Icons'
 import { cx } from '../lib/ui'
@@ -7,13 +7,12 @@ import BrandLogo from './BrandLogo'
 import { useTheme } from '../theme/ThemeContext'
 import { useLang } from '../i18n/LanguageContext'
 import { useAuthModal } from './AuthModal'
+import { useAuth } from '../auth/AuthContext'
+import { useCart } from '../cart/CartContext'
 
 function ActionBtn({ children, ...rest }) {
   return (
-    <button
-      className="relative grid h-10 w-10 place-items-center rounded-lg text-zinc-300 transition-colors hover:bg-white/10 hover:text-white cursor-pointer"
-      {...rest}
-    >
+    <button className="relative grid h-10 w-10 place-items-center rounded-lg text-zinc-300 transition-colors hover:bg-white/10 hover:text-white cursor-pointer" {...rest}>
       {children}
     </button>
   )
@@ -23,44 +22,75 @@ export default function Navbar() {
   const { theme, toggle } = useTheme()
   const { lang, toggle: toggleLang, t } = useLang()
   const { open: openAuth } = useAuthModal()
+  const { user, profile, isAdmin, signOut } = useAuth()
+  const { count } = useCart()
   const [open, setOpen] = useState(false)
+  const [menu, setMenu] = useState(false)
+  const menuRef = useRef(null)
+  const nav = useNavigate()
+
+  useEffect(() => {
+    const onDoc = (e) => { if (menuRef.current && !menuRef.current.contains(e.target)) setMenu(false) }
+    document.addEventListener('mousedown', onDoc)
+    return () => document.removeEventListener('mousedown', onDoc)
+  }, [])
+
+  const searchSubmit = (e) => {
+    e.preventDefault()
+    const q = new FormData(e.currentTarget).get('q')?.toString().trim()
+    nav(q ? `/products?q=${encodeURIComponent(q)}` : '/products')
+    setOpen(false)
+  }
 
   return (
     <header className="sticky top-0 z-50 bg-zinc-950 text-white shadow-lg shadow-black/20">
-      {/* แถบบน */}
       <div className="mx-auto flex h-16 max-w-[1200px] items-center gap-3 px-4">
         <button className="grid h-10 w-10 place-items-center rounded-lg text-zinc-300 hover:bg-white/10 md:hidden cursor-pointer"
-          aria-label="menu" onClick={() => setOpen((o) => !o)}>
-          <Icon name={open ? 'x' : 'menu'} />
-        </button>
+          aria-label="menu" onClick={() => setOpen((o) => !o)}><Icon name={open ? 'x' : 'menu'} /></button>
 
         <BrandLogo emblemClass="h-9 sm:h-11" textWrapClass="hidden sm:block" />
 
-        {/* ค้นหา (desktop) */}
-        <form className="hidden flex-1 items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 md:flex"
-          role="search" onSubmit={(e) => e.preventDefault()}>
+        <form className="hidden flex-1 items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 md:flex" role="search" onSubmit={searchSubmit}>
           <Icon name="search" size={18} className="text-zinc-400" />
-          <input className="w-full bg-transparent text-sm text-white placeholder:text-zinc-500 focus:outline-none"
-            placeholder={t('common.search')} aria-label={t('common.search')} />
+          <input name="q" className="w-full bg-transparent text-sm text-white placeholder:text-zinc-500 focus:outline-none" placeholder={t('common.search')} aria-label={t('common.search')} />
         </form>
 
         <div className="ml-auto flex items-center gap-1">
-          {/* สลับภาษา */}
           <button onClick={toggleLang} title={t('nav.language')}
             className="flex h-10 items-center gap-1.5 rounded-lg px-2.5 text-sm font-semibold text-zinc-300 transition-colors hover:bg-white/10 hover:text-white cursor-pointer">
             <Icon name="globe" size={18} /><span className="uppercase">{lang}</span>
           </button>
-          {/* สลับธีม */}
           <ActionBtn onClick={toggle} title={theme === 'dark' ? t('nav.lightMode') : t('nav.darkMode')} aria-label="toggle theme">
             <Icon name={theme === 'dark' ? 'sun' : 'moon'} />
           </ActionBtn>
 
-          <Link to="/track"><ActionBtn title={t('nav.track')}><Icon name="heart" /></ActionBtn></Link>
-          <ActionBtn title={t('nav.login')} onClick={() => openAuth('login')}><Icon name="user" /></ActionBtn>
+          {/* บัญชี */}
+          {user ? (
+            <div className="relative" ref={menuRef}>
+              <ActionBtn title={t('nav.account')} onClick={() => setMenu((m) => !m)}><Icon name="user" /></ActionBtn>
+              {menu && (
+                <div className="absolute right-0 top-12 w-56 overflow-hidden rounded-xl border border-line bg-surface py-1 text-fg shadow-xl">
+                  <div className="border-b border-line px-4 py-2 text-sm">
+                    <div className="truncate font-semibold">{profile?.full_name || user.email}</div>
+                    <div className="truncate text-xs text-muted">{user.email}</div>
+                  </div>
+                  <MenuItem to="/orders" icon="receipt" label={t('nav.myOrders')} onClick={() => setMenu(false)} />
+                  {isAdmin && <MenuItem to="/admin" icon="grid" label={t('nav.admin')} onClick={() => setMenu(false)} />}
+                  <button onClick={() => { setMenu(false); signOut(); nav('/') }}
+                    className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-brand-600 transition-colors hover:bg-surface2 cursor-pointer">
+                    <Icon name="x" size={16} /> {t('nav.logout')}
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <ActionBtn title={t('nav.login')} onClick={() => openAuth('login')}><Icon name="user" /></ActionBtn>
+          )}
+
           <Link to="/cart">
             <ActionBtn title={t('nav.cart')}>
               <Icon name="cart" />
-              <span className="absolute right-1 top-1 grid h-[17px] min-w-[17px] place-items-center rounded-full bg-brand-600 px-1 text-[10px] font-bold text-white">3</span>
+              {count > 0 && <span className="absolute right-1 top-1 grid h-[17px] min-w-[17px] place-items-center rounded-full bg-brand-600 px-1 text-[10px] font-bold text-white">{count}</span>}
             </ActionBtn>
           </Link>
         </div>
@@ -68,15 +98,14 @@ export default function Navbar() {
 
       {/* ค้นหา (mobile) */}
       <div className="border-t border-white/10 px-4 py-2.5 md:hidden">
-        <form className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2" role="search" onSubmit={(e) => e.preventDefault()}>
+        <form className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2" role="search" onSubmit={searchSubmit}>
           <Icon name="search" size={18} className="text-zinc-400" />
-          <input className="w-full bg-transparent text-sm text-white placeholder:text-zinc-500 focus:outline-none" placeholder={t('common.search')} />
+          <input name="q" className="w-full bg-transparent text-sm text-white placeholder:text-zinc-500 focus:outline-none" placeholder={t('common.search')} />
         </form>
       </div>
 
-      {/* แถวหมวดหมู่ */}
       <nav className={cx('border-t border-white/10', open ? 'block' : 'hidden md:block')} aria-label="categories">
-        <div className="mx-auto flex max-w-[1200px] gap-1 overflow-x-auto px-2 md:px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden flex-col md:flex-row">
+        <div className="mx-auto flex max-w-[1200px] flex-col gap-1 overflow-x-auto px-2 md:flex-row md:px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <CatLink to="/products" label={t('nav.all')} accent onClick={() => setOpen(false)} />
           {categories.map((c) => (
             <CatLink key={c.slug} to={`/products?cat=${c.slug}`} icon={c.icon} label={t(`cats.${c.slug}`)} onClick={() => setOpen(false)} />
@@ -85,6 +114,14 @@ export default function Navbar() {
         </div>
       </nav>
     </header>
+  )
+}
+
+function MenuItem({ to, icon, label, onClick }) {
+  return (
+    <Link to={to} onClick={onClick} className="flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors hover:bg-surface2">
+      <Icon name={icon} size={16} /> {label}
+    </Link>
   )
 }
 

@@ -1,12 +1,19 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { fmt } from '../data/mock'
 import { Icon } from './Icons'
 import { badgeMap, badgeLabel, cx } from '../lib/ui'
 import { useLang } from '../i18n/LanguageContext'
+import { useCart } from '../cart/CartContext'
 
 export default function ProductCard({ p }) {
   const { lang, t } = useLang()
+  const { add } = useCart()
+  const [added, setAdded] = useState(false)
   const b = p.badge ? badgeMap[p.badge] : null
+
+  const addToCart = () => { add(p, 1); setAdded(true); setTimeout(() => setAdded(false), 1200) }
+
   return (
     <article className="card-hover group flex flex-col overflow-hidden rounded-2xl border border-line bg-surface hover:border-zinc-300 hover:shadow-xl hover:shadow-black/5 dark:hover:border-zinc-700">
       <Link to={`/product/${p.id}`} className="relative block">
@@ -30,8 +37,10 @@ export default function ProductCard({ p }) {
         </span>
       </div>
       <div className="p-4 pt-0">
-        <button className="flex w-full items-center justify-center gap-2 rounded-lg bg-brand-600 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-700 cursor-pointer">
-          <Icon name="cart" size={16} /> {t('common.addToCart')}
+        <button onClick={addToCart} disabled={p.stock === 0}
+          className={cx('flex w-full items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold text-white transition-colors cursor-pointer disabled:opacity-50',
+            added ? 'bg-emerald-600' : 'bg-brand-600 hover:bg-brand-700')}>
+          <Icon name={added ? 'check' : 'cart'} size={16} /> {added ? t('common.added') : t('common.addToCart')}
         </button>
       </div>
     </article>

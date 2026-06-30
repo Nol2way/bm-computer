@@ -4,16 +4,21 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './App.jsx'
 import { ThemeProvider } from './theme/ThemeContext'
 import { LanguageProvider } from './i18n/LanguageContext'
+import { AuthProvider } from './auth/AuthContext'
+import { CartProvider } from './cart/CartContext'
 import './index.css'
 
-// BrowserRouter + public/_redirects -> URL สวย รองรับ SEO บน Cloudflare Pages
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <ThemeProvider>
       <LanguageProvider>
-        <BrowserRouter>
-          <App />
-        </BrowserRouter>
+        <AuthProvider>
+          <CartProvider>
+            <BrowserRouter>
+              <App />
+            </BrowserRouter>
+          </CartProvider>
+        </AuthProvider>
       </LanguageProvider>
     </ThemeProvider>
   </React.StrictMode>,

@@ -1,4 +1,4 @@
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { fmt } from '../data/mock'
 import ProductCard from '../components/ProductCard'
@@ -8,6 +8,7 @@ import { badgeMap, badgeLabel, cx } from '../lib/ui'
 import { useLang } from '../i18n/LanguageContext'
 import { fetchProductBySlug, fetchProducts } from '../lib/api'
 import { useFetch } from '../lib/useFetch'
+import { useCart } from '../cart/CartContext'
 
 const wrap = 'mx-auto max-w-[1200px] px-4'
 const PLACEHOLDER = 'https://placehold.co/600x600/f1f1f4/9ca3af?text=BM+Computer'
@@ -23,6 +24,9 @@ export default function ProductDetail() {
   const [gi, setGi] = useState(0)
   const [box, setBox] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [added, setAdded] = useState(false)
+  const { add } = useCart()
+  const nav = useNavigate()
   const copyLink = () => { navigator.clipboard?.writeText(window.location.href); setCopied(true); setTimeout(() => setCopied(false), 1500) }
 
   if (loading) return <div className={`${wrap} py-20 text-center text-muted`}>{t('common.loading')}</div>
@@ -93,8 +97,12 @@ export default function ProductDetail() {
               <span className="nums w-12 text-center">{qty}</span>
               <button onClick={() => setQty((q) => q + 1)} className="grid h-11 w-11 place-items-center hover:bg-surface2 cursor-pointer" aria-label="+"><Icon name="plus" size={16} /></button>
             </div>
-            <Link to="/cart" className="flex items-center gap-2 rounded-xl border border-line px-5 py-3 font-semibold transition-colors hover:bg-surface2"><Icon name="cart" size={18} /> {t('pdp.addToCart')}</Link>
-            <Link to="/checkout" className="flex-1 rounded-xl bg-brand-600 px-5 py-3 text-center font-semibold text-white transition-colors hover:bg-brand-700">{t('common.buyNow')}</Link>
+            <button onClick={() => { add(p, qty); setAdded(true); setTimeout(() => setAdded(false), 1200) }}
+              className={cx('flex items-center gap-2 rounded-xl border px-5 py-3 font-semibold transition-colors cursor-pointer',
+                added ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400' : 'border-line hover:bg-surface2')}>
+              <Icon name={added ? 'check' : 'cart'} size={18} /> {added ? t('common.added') : t('pdp.addToCart')}
+            </button>
+            <button onClick={() => { add(p, qty); nav('/checkout') }} className="flex-1 rounded-xl bg-brand-600 px-5 py-3 text-center font-semibold text-white transition-colors hover:bg-brand-700 cursor-pointer">{t('common.buyNow')}</button>
           </div>
 
           <ul className="mt-1 flex flex-col gap-2 text-sm">

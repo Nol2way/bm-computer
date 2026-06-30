@@ -35,6 +35,52 @@ export async function fetchBrands() {
   return data || []
 }
 
+export async function fetchCategories() {
+  if (!isSupabaseConfigured) return []
+  const { data, error } = await supabase.from('categories').select('*').order('sort', { ascending: true })
+  if (error) throw error
+  return data || []
+}
+
+// สร้างออเดอร์จริง — ดึงราคาจาก DB ใหม่ (กันราคาถูกแก้ฝั่ง client) + RLS บังคับ user_id=ตัวเอง
+export async function createOrder({ userId, items, ship }) {
+  if (!isSupabaseConfigured) throw new Error('Supabase not configured')
+  const slugs = items.map((i) => i.slug)
+  const { data: prods, error: e1 } = await supabase.from('products').select('id,slug,name,price,sale_price,stock').in('slug', slugs)
+  if (e1) throw e1
+  const bySlug = Object.fromEntries((prods || []).map((p) => [p.slug, p]))
+  const priceOf = (p) => (p.sale_price && p.sale_price < p.price ? p.sale_price : p.price)
+  const lines = items.filter((i) => bySlug[i.slug]).map((i) => {
+    const p = bySlug[i.slug]
+    return { product_id: p.id, name: p.name, price: priceOf(p), qty: i.qty }
+  })
+  if (!lines.length) throw new Error('ไม่มีสินค้าในตะกร้า')
+  const subtotal = lines.reduce((s, l) => s + l.price * l.qty, 0)
+  const total = subtotal + (subtotal >= 1500 ? 0 : 80)
+  const { data: order, error: e2 } = await supabase.from('orders').insert({
+    user_id: userId, total, status: 'pending', payment_method: 'promptpay',
+    ship_name: ship.name, ship_phone: ship.phone, ship_address: ship.address,
+  }).select().single()
+  if (e2) throw e2
+  const { error: e3 } = await supabase.from('order_items').insert(lines.map((l) => ({ ...l, order_id: order.id })))
+  if (e3) throw e3
+  return order
+}
+
+export async function fetchOrderByCode(code) {
+  if (!isSupabaseConfigured || !code) return null
+  const { data, error } = await supabase.from('orders').select('*, order_items(*)').eq('code', code).maybeSingle()
+  if (error) throw error
+  return data
+}
+
+export async function fetchMyOrders(userId) {
+  if (!isSupabaseConfigured || !userId) return []
+  const { data, error } = await supabase.from('orders').select('*, order_items(*)').eq('user_id', userId).order('created_at', { ascending: false })
+  if (error) throw error
+  return data || []
+}
+
 const SELECT = '*, categories!inner(slug,name_th,name_en), brands(name,slug)'
 
 export async function fetchProducts({ cat, featured, limit } = {}) {

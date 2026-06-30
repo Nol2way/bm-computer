@@ -9,12 +9,13 @@ export const translations = {
       inStock: 'มีสินค้าพร้อมส่ง', lowStock: 'เหลือ {n} ชิ้น', reviews: 'รีวิว',
       save: 'ประหยัด', free: 'ฟรี', baht: '฿', perMonth: '/เดือน',
       search: 'ค้นหาสินค้า เช่น การ์ดจอ, ssd, ryzen ...', clear: 'ล้างตัวกรอง',
-      apply: 'ใช้โค้ด', loading: 'กำลังโหลด...',
+      apply: 'ใช้โค้ด', loading: 'กำลังโหลด...', added: 'เพิ่มแล้ว',
     },
     nav: {
       all: 'ทั้งหมด', builder: 'จัดสเปคคอม', track: 'ติดตามคำสั่งซื้อ',
-      login: 'เข้าสู่ระบบ', cart: 'ตะกร้า', account: 'บัญชี',
+      login: 'เข้าสู่ระบบ', cart: 'ตะกร้า', account: 'บัญชีของฉัน',
       lightMode: 'โหมดสว่าง', darkMode: 'โหมดมืด', language: 'ภาษา',
+      logout: 'ออกจากระบบ', myOrders: 'คำสั่งซื้อของฉัน', admin: 'หลังบ้าน (Admin)',
     },
     cats: {
       cpu: 'ซีพียู', gpu: 'การ์ดจอ', mainboard: 'เมนบอร์ด', ram: 'แรม',
@@ -57,6 +58,7 @@ export const translations = {
       backToCart: '← กลับไปแก้ไขตะกร้า',
       promptpay: 'พร้อมเพย์ (PromptPay)', promptpayD: 'สแกน QR ชำระทันที',
       scanToPay: 'สแกน QR นี้ด้วยแอปธนาคารเพื่อชำระเงิน', qrDemo: '* QR ตัวอย่างสำหรับสาธิต (ระบบชำระเงินจริงจะต่อในเฟสถัดไป)',
+      fillAddress: 'กรุณากรอกชื่อ เบอร์โทร และที่อยู่จัดส่งให้ครบ', placing: 'กำลังสร้างคำสั่งซื้อ...', loginToOrder: 'เข้าสู่ระบบเพื่อสั่งซื้อ',
     },
     auth: {
       loginTitle: 'เข้าสู่ระบบ', loginSub: 'ยินดีต้อนรับกลับสู่ BM Computer',
@@ -82,7 +84,8 @@ export const translations = {
     },
     orders: {
       title: 'ประวัติการสั่งซื้อ', items: 'รายการ', totalLabel: 'ยอดรวม', detail: 'ดูรายละเอียด',
-      stShipping: 'กำลังจัดส่ง', stDone: 'จัดส่งสำเร็จ', stCancel: 'ยกเลิก',
+      empty: 'ยังไม่มีคำสั่งซื้อ', loginToView: 'เข้าสู่ระบบเพื่อดูคำสั่งซื้อของคุณ', shopNow: 'เริ่มช้อปปิ้ง',
+      status: { pending: 'รอชำระเงิน', paid: 'ชำระเงินแล้ว', packing: 'กำลังแพ็คสินค้า', shipping: 'กำลังจัดส่ง', done: 'จัดส่งสำเร็จ', cancel: 'ยกเลิก' },
     },
     builder: {
       title: 'จัดสเปคคอม (PC Builder)',
@@ -125,12 +128,13 @@ export const translations = {
       inStock: 'In stock', lowStock: 'Only {n} left', reviews: 'reviews',
       save: 'Save', free: 'Free', baht: '฿', perMonth: '/mo',
       search: 'Search products e.g. GPU, ssd, ryzen ...', clear: 'Clear filters',
-      apply: 'Apply', loading: 'Loading...',
+      apply: 'Apply', loading: 'Loading...', added: 'Added',
     },
     nav: {
       all: 'All', builder: 'PC Builder', track: 'Track order',
-      login: 'Sign in', cart: 'Cart', account: 'Account',
+      login: 'Sign in', cart: 'Cart', account: 'My account',
       lightMode: 'Light mode', darkMode: 'Dark mode', language: 'Language',
+      logout: 'Sign out', myOrders: 'My orders', admin: 'Admin',
     },
     cats: {
       cpu: 'CPU', gpu: 'Graphics Card', mainboard: 'Mainboard', ram: 'RAM',
@@ -173,6 +177,7 @@ export const translations = {
       backToCart: '← Back to cart',
       promptpay: 'PromptPay', promptpayD: 'Scan QR to pay instantly',
       scanToPay: 'Scan this QR with your banking app to pay', qrDemo: '* Demo QR (real payment gateway comes in a later phase)',
+      fillAddress: 'Please fill in name, phone and shipping address', placing: 'Placing order...', loginToOrder: 'Sign in to order',
     },
     auth: {
       loginTitle: 'Sign in', loginSub: 'Welcome back to BM Computer',
@@ -198,7 +203,8 @@ export const translations = {
     },
     orders: {
       title: 'Order history', items: 'items', totalLabel: 'Total', detail: 'View details',
-      stShipping: 'Shipping', stDone: 'Delivered', stCancel: 'Cancelled',
+      empty: 'No orders yet', loginToView: 'Sign in to view your orders', shopNow: 'Start shopping',
+      status: { pending: 'Pending payment', paid: 'Paid', packing: 'Packing', shipping: 'Shipping', done: 'Delivered', cancel: 'Cancelled' },
     },
     builder: {
       title: 'PC Builder',
