@@ -33,7 +33,7 @@ export default function App() {
     <AuthModalProvider>
       <div className="flex min-h-dvh flex-col bg-bg text-fg">
         <div className="bg-zinc-900 px-4 py-1.5 text-center text-xs text-zinc-400">
-          <b className="text-brand-400">WIREFRAME</b> — ต้นแบบ UI/UX ของ BM Computer · ข้อมูลตัวอย่าง ยังไม่ต่อฐานข้อมูลจริง
+          🚚 ส่งฟรีทั่วไทยเมื่อช้อปครบ 1,500 บาท · ของแท้ประกันศูนย์ · ผ่อน 0% 10 เดือน
         </div>
         <Navbar />
         <ScrollTop />

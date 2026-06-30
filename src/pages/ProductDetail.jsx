@@ -1,21 +1,34 @@
 import { useParams, Link } from 'react-router-dom'
 import { useState } from 'react'
-import { products, fmt } from '../data/mock'
+import { fmt } from '../data/mock'
 import ProductCard from '../components/ProductCard'
 import { Icon } from '../components/Icons'
+import Lightbox from '../components/Lightbox'
 import { badgeMap, badgeLabel, cx } from '../lib/ui'
 import { useLang } from '../i18n/LanguageContext'
+import { fetchProductBySlug, fetchProducts } from '../lib/api'
+import { useFetch } from '../lib/useFetch'
 
 const wrap = 'mx-auto max-w-[1200px] px-4'
+const PLACEHOLDER = 'https://placehold.co/600x600/f1f1f4/9ca3af?text=BM+Computer'
 
 export default function ProductDetail() {
   const { id } = useParams()
   const { lang, t } = useLang()
-  const p = products.find((x) => x.id === id) || products[0]
+  const { data: p, loading } = useFetch(() => fetchProductBySlug(id), [id])
+  const { data: rel } = useFetch(() => (p ? fetchProducts({ cat: p.cat }) : Promise.resolve([])), [p?.cat])
+
   const [tab, setTab] = useState('spec')
   const [qty, setQty] = useState(1)
-  const related = products.filter((x) => x.cat === p.cat && x.id !== p.id).slice(0, 4)
+  const [gi, setGi] = useState(0)
+  const [box, setBox] = useState(false)
+
+  if (loading) return <div className={`${wrap} py-20 text-center text-muted`}>{t('common.loading')}</div>
+  if (!p) return <div className={`${wrap} py-20 text-center`}><h2 className="text-2xl font-bold">{t('notfound.title')}</h2><Link to="/products" className="mt-4 inline-block text-brand-600">{t('list.products')}</Link></div>
+
+  const images = p.images.length ? p.images : [PLACEHOLDER]
   const b = p.badge ? badgeMap[p.badge] : null
+  const related = (rel || []).filter((x) => x.id !== p.id).slice(0, 4)
 
   return (
     <div className={`${wrap} py-6`}>
@@ -28,10 +41,19 @@ export default function ProductDetail() {
       <div className="grid gap-8 md:grid-cols-2">
         {/* GALLERY */}
         <div>
-          <div className="ph grid aspect-square place-items-center rounded-2xl text-sm font-semibold">🖼</div>
-          <div className="mt-3 grid grid-cols-4 gap-2">
-            {[0, 1, 2, 3].map((i) => <div key={i} className="ph aspect-square rounded-lg" />)}
-          </div>
+          <button onClick={() => setBox(true)} className="group relative block w-full overflow-hidden rounded-2xl border border-line bg-white" title="คลิกเพื่อดูเต็มจอ/ซูม">
+            <img src={images[gi]} alt={p.name} onError={(e) => { e.currentTarget.src = PLACEHOLDER }} className="aspect-square w-full object-contain p-6" />
+            <span className="absolute bottom-3 right-3 flex items-center gap-1 rounded-lg bg-black/60 px-2.5 py-1 text-xs text-white opacity-0 transition group-hover:opacity-100"><Icon name="search" size={14} /> ซูม</span>
+          </button>
+          {images.length > 1 && (
+            <div className="mt-3 grid grid-cols-4 gap-2">
+              {images.map((src, i) => (
+                <button key={i} onClick={() => setGi(i)} className={cx('overflow-hidden rounded-lg border-2 bg-white', i === gi ? 'border-brand-500' : 'border-line')}>
+                  <img src={src} alt="" onError={(e) => { e.currentTarget.src = PLACEHOLDER }} className="aspect-square w-full object-contain p-1" />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* INFO */}
@@ -90,7 +112,7 @@ export default function ProductDetail() {
               {Object.entries(p.specs).map(([k, v]) => (
                 <tr key={k} className="border-b border-line">
                   <th className="w-2/5 bg-surface2 p-3 text-left text-sm font-semibold text-muted align-top">{k}</th>
-                  <td className="p-3 text-sm">{v}</td>
+                  <td className="p-3 text-sm">{String(v)}</td>
                 </tr>
               ))}
             </tbody>
@@ -115,6 +137,8 @@ export default function ProductDetail() {
           <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">{related.map((r) => <ProductCard key={r.id} p={r} />)}</div>
         </section>
       )}
+
+      {box && <Lightbox images={images} index={gi} setIndex={setGi} onClose={() => setBox(false)} />}
     </div>
   )
 }

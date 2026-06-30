@@ -10,7 +10,10 @@ export default function ProductCard({ p }) {
   return (
     <article className="card-hover group flex flex-col overflow-hidden rounded-2xl border border-line bg-surface hover:border-zinc-300 hover:shadow-xl hover:shadow-black/5 dark:hover:border-zinc-700">
       <Link to={`/product/${p.id}`} className="relative block">
-        <div className="ph grid aspect-square place-items-center text-xs font-semibold">🖼</div>
+        {p.images?.[0]
+          ? <img src={p.images[0]} alt={p.name} loading="lazy" className="aspect-square w-full bg-white object-contain p-3"
+              onError={(e) => { e.currentTarget.src = 'https://placehold.co/600x600/f1f1f4/9ca3af?text=BM+Computer' }} />
+          : <div className="ph grid aspect-square place-items-center text-xs font-semibold">🖼</div>}
         {b && <span className={cx('absolute left-3 top-3 rounded-full px-2.5 py-1 text-[11px] font-semibold', b.cls)}>{badgeLabel[lang][p.badge]}</span>}
       </Link>
       <div className="flex flex-1 flex-col gap-1.5 p-4">

@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom'
-import { categories, products } from '../data/mock'
+import { categories } from '../data/mock'
 import ProductCard from '../components/ProductCard'
 import { Icon } from '../components/Icons'
 import { useLang } from '../i18n/LanguageContext'
+import { fetchProducts } from '../lib/api'
+import { useFetch } from '../lib/useFetch'
 
 const wrap = 'mx-auto max-w-[1200px] px-4'
 
@@ -18,8 +20,27 @@ function SectionHead({ title, to }) {
   )
 }
 
+function Skeleton() {
+  return <div className="aspect-[3/4] animate-pulse rounded-2xl border border-line bg-surface2" />
+}
+
+function Grid({ items, loading }) {
+  return (
+    <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+      {loading
+        ? Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} />)
+        : items.map((p) => <ProductCard key={p.id} p={p} />)}
+    </div>
+  )
+}
+
 export default function Home() {
   const { t } = useLang()
+  const { data, loading } = useFetch(() => fetchProducts({}), [])
+  const list = data || []
+  const featured = (list.filter((p) => p.featured).length ? list.filter((p) => p.featured) : list).slice(0, 4)
+  const newArrivals = [...list].reverse().slice(0, 4)
+
   return (
     <div className={`${wrap} py-8`}>
       {/* HERO */}
@@ -66,17 +87,13 @@ export default function Home() {
       {/* FEATURED */}
       <section className="mt-12">
         <SectionHead title={`${t('home.featured')} 🔥`} to="/products" />
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-          {products.slice(0, 4).map((p) => <ProductCard key={p.id} p={p} />)}
-        </div>
+        <Grid items={featured} loading={loading} />
       </section>
 
       {/* NEW ARRIVALS */}
       <section className="mt-12">
         <SectionHead title={t('home.newArrivals')} to="/products" />
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-          {products.slice(4, 8).map((p) => <ProductCard key={p.id} p={p} />)}
-        </div>
+        <Grid items={newArrivals} loading={loading} />
       </section>
 
       {/* TRUST BAR */}

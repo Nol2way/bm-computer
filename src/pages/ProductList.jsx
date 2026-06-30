@@ -1,9 +1,11 @@
 import { useSearchParams, Link } from 'react-router-dom'
-import { products, categories, brands } from '../data/mock'
+import { categories, brands } from '../data/mock'
 import ProductCard from '../components/ProductCard'
 import { Icon } from '../components/Icons'
 import { cx } from '../lib/ui'
 import { useLang } from '../i18n/LanguageContext'
+import { fetchProducts } from '../lib/api'
+import { useFetch } from '../lib/useFetch'
 
 const wrap = 'mx-auto max-w-[1200px] px-4'
 
@@ -11,7 +13,8 @@ export default function ProductList() {
   const { t } = useLang()
   const [params] = useSearchParams()
   const cat = params.get('cat')
-  const list = cat ? products.filter((p) => p.cat === cat) : products
+  const { data, loading } = useFetch(() => fetchProducts({ cat }), [cat])
+  const list = data || []
   const title = cat ? t(`cats.${cat}`) : t('list.title')
   const input = 'w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20'
 
@@ -75,7 +78,7 @@ export default function ProductList() {
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div>
               <h1 className="text-xl font-bold sm:text-2xl">{title}</h1>
-              <span className="text-sm text-muted">{t('list.found', { n: list.length })}</span>
+              <span className="text-sm text-muted">{loading ? t('common.loading') : t('list.found', { n: list.length })}</span>
             </div>
             <div className="flex items-center gap-2">
               <label className="text-sm text-muted">{t('list.sortBy')}</label>
@@ -89,23 +92,16 @@ export default function ProductList() {
           </div>
 
           <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
-            {list.map((p) => <ProductCard key={p.id} p={p} />)}
+            {loading
+              ? Array.from({ length: 8 }).map((_, i) => <div key={i} className="aspect-[3/4] animate-pulse rounded-2xl border border-line bg-surface2" />)
+              : list.map((p) => <ProductCard key={p.id} p={p} />)}
           </div>
 
-          <div className="mt-8 flex justify-center gap-1.5">
-            <PageBtn><Icon name="chevronLeft" size={16} /></PageBtn>
-            {[1, 2, 3].map((n) => <PageBtn key={n} active={n === 1}>{n}</PageBtn>)}
-            <PageBtn><Icon name="chevronRight" size={16} /></PageBtn>
-          </div>
+          {!loading && list.length === 0 && (
+            <div className="rounded-2xl border border-line bg-surface p-12 text-center text-muted">ไม่พบสินค้าในหมวดนี้</div>
+          )}
         </section>
       </div>
     </div>
-  )
-}
-
-function PageBtn({ children, active }) {
-  return (
-    <button className={cx('grid h-9 min-w-9 place-items-center rounded-lg px-2 text-sm font-semibold transition-colors cursor-pointer',
-      active ? 'bg-brand-600 text-white' : 'border border-line hover:bg-surface2')}>{children}</button>
   )
 }
