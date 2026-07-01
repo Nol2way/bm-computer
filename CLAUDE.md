@@ -118,7 +118,12 @@ npm run preview  # preview build
 - ✅ ลบ em-dash หมด · login-gate ตะกร้า/สั่งซื้อ · ลบ admin ออกจาก footer · placeholder มาตรฐาน
 - ✅ **Admin CMS** (role-guarded): ภาพรวม + สินค้า CRUD (รูปแบบลิงก์+สเปค) + สไลด์/แบนเนอร์ CRUD (คุม carousel) + ออเดอร์ (อัปเดตสถานะ) - เขียน DB จริงผ่าน admin RLS. เข้าผ่านเมนูบัญชี (isAdmin) ที่ /admin
 - ✅ **Turnstile** ต่อ login/register แล้ว (ส่ง captchaToken ให้ Supabase) - ต้องเปิด Captcha + ใส่ secret ใน Supabase Auth เพื่อบังคับใช้จริง
-- 🟡 **ยังต้องทำ:** EasySlip verify (Pages Function `functions/api/verify-slip.js` + token ใน Cloudflare env), หน้า Profile settings (ที่อยู่ - ต้องแก้ schema เพิ่มตาราง addresses), footer redesign เต็ม, ย้าย auth session ไป HttpOnly cookie (ต้อง SSR/Pages Functions), categories ใน nav ให้ดึง DB, brands/categories CRUD ในหลังบ้าน
+- ✅ EasySlip verify (Pages Function) + Checkout 2 เฟส (อัปโหลดสลิป) - รอ SUPABASE_SERVICE_ROLE_KEY (legacy JWT) ใน Cloudflare
+- ✅ **PromptPay จริง**: `lib/promptpay.js` gen EMVCo payload + CRC (ล็อคยอด) · Admin ตั้งบัญชีรับเงิน (site_settings key='payment')
+- ✅ Carousel: แก้บั๊ก hover-all (named group/row + group/card) · auto-scroll วน 5 วิ · drag ลื่น · Footer redesign
+- ✅ Turnstile ต่อ login/register
+- 🟡 **ยังต้องทำ:** Google OAuth (ตั้ง provider ใน Supabase + Google Cloud), Profile settings (ที่อยู่ - ต้องแก้ schema, รอ connection string/MCP), ย้าย auth ไป HttpOnly cookie, categories ใน nav จาก DB, brands/categories CRUD
+- 📌 **Supabase MCP**: user จะ add เพื่อให้เรารัน migration ได้เอง (`claude mcp add --scope project --transport http supabase ...`) - reload session แล้วจะมี tool
 
 ## แผนทำให้ "ใช้งานได้จริงทั้งหมด" (ทำทีละชิ้นให้สมบูรณ์ ไม่ stub)
 1. **Auth state ทั้งแอป** (session/user/role) + ปุ่ม logout + การ์ดบัญชี + กั้นหน้า /admin
