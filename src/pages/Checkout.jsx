@@ -7,7 +7,9 @@ import { useLang } from '../i18n/LanguageContext'
 import { useCart } from '../cart/CartContext'
 import { useAuth } from '../auth/AuthContext'
 import { useAuthModal } from '../components/AuthModal'
-import { createOrder } from '../lib/api'
+import { createOrder, fetchSetting } from '../lib/api'
+import { useFetch } from '../lib/useFetch'
+import { promptpayQrUrl } from '../lib/promptpay'
 
 const wrap = 'mx-auto max-w-[1200px] px-4'
 const input = 'w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20'
@@ -104,7 +106,8 @@ function PaymentStep({ order, onPaid }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const fileRef = useRef(null)
-  const qr = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=PromptPay%20BMComputer%20${order.code}%20THB${order.total}`
+  const { data: pay } = useFetch(() => fetchSetting('payment'), [])
+  const qr = pay?.promptpay_id ? promptpayQrUrl(pay.promptpay_id, order.total) : ''
 
   async function verify() {
     if (!file) { setError(t('checkout.chooseSlip')); return }
@@ -132,9 +135,16 @@ function PaymentStep({ order, onPaid }) {
       <div className="grid gap-5 sm:grid-cols-[220px_1fr]">
         <div className="flex flex-col items-center gap-2 rounded-xl border-2 border-brand-600 bg-brand-50 p-4 text-center dark:bg-brand-600/10">
           <div className="flex items-center gap-2 text-sm font-bold"><Icon name="qr" size={18} className="text-brand-600" /> {t('checkout.promptpay')}</div>
-          <img src={qr} alt="PromptPay QR" width="180" height="180" className="rounded-lg bg-white p-2" />
-          <div className="nums text-xl font-bold text-brand-600">฿{fmt(order.total)}</div>
-          <div className="text-xs text-muted">{t('checkout.scanToPay')}</div>
+          {qr ? (
+            <>
+              <img src={qr} alt="PromptPay QR" width="180" height="180" className="rounded-lg bg-white p-2" />
+              {pay?.name && <div className="text-xs font-semibold">{pay.name}</div>}
+              <div className="nums text-xl font-bold text-brand-600">฿{fmt(order.total)}</div>
+              <div className="text-xs text-muted">{t('checkout.scanToPay')}</div>
+            </>
+          ) : (
+            <div className="py-6 text-sm text-muted">ร้านยังไม่ได้ตั้งค่าบัญชีรับเงิน<br />กรุณาติดต่อร้านค้า</div>
+          )}
         </div>
 
         <div>

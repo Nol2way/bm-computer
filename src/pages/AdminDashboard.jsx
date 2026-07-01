@@ -8,6 +8,7 @@ import AdminOverview from './admin/AdminOverview'
 import AdminProducts from './admin/AdminProducts'
 import AdminSlides from './admin/AdminSlides'
 import AdminOrders from './admin/AdminOrders'
+import AdminSettings from './admin/AdminSettings'
 
 const wrap = 'mx-auto max-w-[1200px] px-4'
 const menu = [
@@ -15,6 +16,7 @@ const menu = [
   { k: 'products', icon: 'box', label: 'สินค้า' },
   { k: 'slides', icon: 'image', label: 'สไลด์/แบนเนอร์' },
   { k: 'orders', icon: 'receipt', label: 'ออเดอร์' },
+  { k: 'settings', icon: 'wrench', label: 'ตั้งค่าชำระเงิน' },
 ]
 
 export default function AdminDashboard() {
@@ -54,6 +56,7 @@ export default function AdminDashboard() {
           {tab === 'products' && <AdminProducts />}
           {tab === 'slides' && <AdminSlides />}
           {tab === 'orders' && <AdminOrders />}
+          {tab === 'settings' && <AdminSettings />}
         </section>
       </div>
     </div>

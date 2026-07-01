@@ -138,6 +138,17 @@ export async function updateOrderStatus(id, status) {
   if (error) throw error
 }
 
+export async function fetchSetting(key) {
+  if (!isSupabaseConfigured) return null
+  const { data, error } = await supabase.from('site_settings').select('value').eq('key', key).maybeSingle()
+  if (error) throw error
+  return data?.value || null
+}
+export async function saveSetting(key, value) {
+  const { error } = await supabase.from('site_settings').upsert({ key, value }, { onConflict: 'key' })
+  if (error) throw error
+}
+
 export async function adminStats() {
   const [pc, oc, rev] = await Promise.all([
     supabase.from('products').select('id', { count: 'exact', head: true }),
