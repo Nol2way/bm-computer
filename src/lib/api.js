@@ -81,6 +81,73 @@ export async function fetchMyOrders(userId) {
   return data || []
 }
 
+// ===================== ADMIN (เขียนได้เฉพาะ role=admin ผ่าน RLS is_admin()) =====================
+export async function adminListProducts() {
+  const { data, error } = await supabase.from('products')
+    .select('*, categories(slug,name_th), brands(slug,name)').order('created_at', { ascending: false })
+  if (error) throw error
+  return data || []
+}
+export async function saveProduct(p) {
+  const row = {
+    name: p.name, slug: p.slug, category_id: p.category_id || null, brand_id: p.brand_id || null,
+    price: Number(p.price) || 0,
+    old_price: p.old_price ? Number(p.old_price) : null,
+    sale_price: p.sale_price ? Number(p.sale_price) : null,
+    stock: Number(p.stock) || 0, badge: p.badge || null,
+    images: p.images || [], specs: p.specs || {}, description: p.description || null,
+    is_active: p.is_active !== false, is_featured: !!p.is_featured,
+  }
+  const res = p.id
+    ? await supabase.from('products').update(row).eq('id', p.id)
+    : await supabase.from('products').insert(row)
+  if (res.error) throw res.error
+}
+export async function deleteProduct(id) {
+  const { error } = await supabase.from('products').delete().eq('id', id)
+  if (error) throw error
+}
+
+export async function adminListSlides() {
+  const { data, error } = await supabase.from('slides').select('*').order('placement').order('sort')
+  if (error) throw error
+  return data || []
+}
+export async function saveSlide(s) {
+  const row = {
+    placement: s.placement, title: s.title || null, image_url: s.image_url || null,
+    link: s.link || null, sort: Number(s.sort) || 0, is_active: s.is_active !== false,
+  }
+  const res = s.id
+    ? await supabase.from('slides').update(row).eq('id', s.id)
+    : await supabase.from('slides').insert(row)
+  if (res.error) throw res.error
+}
+export async function deleteSlide(id) {
+  const { error } = await supabase.from('slides').delete().eq('id', id)
+  if (error) throw error
+}
+
+export async function adminListOrders() {
+  const { data, error } = await supabase.from('orders').select('*, order_items(*)').order('created_at', { ascending: false })
+  if (error) throw error
+  return data || []
+}
+export async function updateOrderStatus(id, status) {
+  const { error } = await supabase.from('orders').update({ status }).eq('id', id)
+  if (error) throw error
+}
+
+export async function adminStats() {
+  const [pc, oc, rev] = await Promise.all([
+    supabase.from('products').select('id', { count: 'exact', head: true }),
+    supabase.from('orders').select('id', { count: 'exact', head: true }),
+    supabase.from('orders').select('total'),
+  ])
+  const revenue = (rev.data || []).reduce((s, o) => s + (o.total || 0), 0)
+  return { products: pc.count || 0, orders: oc.count || 0, revenue }
+}
+
 const SELECT = '*, categories!inner(slug,name_th,name_en), brands!inner(name,slug)'
 
 export async function fetchProducts({ cat, brand, featured, limit } = {}) {
