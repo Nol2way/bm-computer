@@ -116,7 +116,9 @@ npm run preview  # preview build
 - ✅ ค้นหา fuzzy (พิมพ์ผิดก็เจอ) + กรอง cat/brand จริง
 - ✅ Auth ทั้งแอป (session/role) + เมนูบัญชี/logout · Dark/Light · 2 ภาษา · แกลเลอรีซูม
 - ✅ ลบ em-dash หมด · login-gate ตะกร้า/สั่งซื้อ · ลบ admin ออกจาก footer · placeholder มาตรฐาน
-- 🟡 **ยังต้องทำ (ไม่ stub ทำทีละชิ้นให้จบ):** Admin CMS (CRUD สินค้า/แบรนด์/สไลด์/หมวด/ออเดอร์), EasySlip verify (Pages Function + token), Turnstile (site+secret key), หน้า Profile settings (ที่อยู่ - ต้องแก้ schema), footer redesign เต็ม, ย้าย auth session ไป HttpOnly cookie, categories ใน nav ให้ดึง DB
+- ✅ **Admin CMS** (role-guarded): ภาพรวม + สินค้า CRUD (รูปแบบลิงก์+สเปค) + สไลด์/แบนเนอร์ CRUD (คุม carousel) + ออเดอร์ (อัปเดตสถานะ) - เขียน DB จริงผ่าน admin RLS. เข้าผ่านเมนูบัญชี (isAdmin) ที่ /admin
+- ✅ **Turnstile** ต่อ login/register แล้ว (ส่ง captchaToken ให้ Supabase) - ต้องเปิด Captcha + ใส่ secret ใน Supabase Auth เพื่อบังคับใช้จริง
+- 🟡 **ยังต้องทำ:** EasySlip verify (Pages Function `functions/api/verify-slip.js` + token ใน Cloudflare env), หน้า Profile settings (ที่อยู่ - ต้องแก้ schema เพิ่มตาราง addresses), footer redesign เต็ม, ย้าย auth session ไป HttpOnly cookie (ต้อง SSR/Pages Functions), categories ใน nav ให้ดึง DB, brands/categories CRUD ในหลังบ้าน
 
 ## แผนทำให้ "ใช้งานได้จริงทั้งหมด" (ทำทีละชิ้นให้สมบูรณ์ ไม่ stub)
 1. **Auth state ทั้งแอป** (session/user/role) + ปุ่ม logout + การ์ดบัญชี + กั้นหน้า /admin
