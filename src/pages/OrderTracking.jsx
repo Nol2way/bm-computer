@@ -28,11 +28,11 @@ export default function OrderTracking() {
   )
 
   if (!user) return (
-    <Shell><Empty icon="user" title={t('orders.loginToView')}><button onClick={() => openAuth('login')} className="mt-5 rounded-xl bg-brand-600 px-6 py-3 font-semibold text-white hover:bg-brand-700">{t('auth.signin')}</button></Empty></Shell>
+    <Shell><Empty icon="user" title={t('orders.loginToView')}><button onClick={() => openAuth('login')} className="mt-5 inline-flex items-center justify-center rounded-xl bg-brand-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-brand-700 cursor-pointer">{t('auth.signin')}</button></Empty></Shell>
   )
   if (loading) return <Shell><div className="py-16 text-center text-muted">{t('common.loading')}</div></Shell>
   if (!order) return (
-    <Shell><Empty icon="receipt" title={lang === 'th' ? 'ไม่พบคำสั่งซื้อ' : 'Order not found'}><Link to="/orders" className="mt-5 rounded-xl bg-brand-600 px-6 py-3 font-semibold text-white hover:bg-brand-700">{t('track.viewHistory')}</Link></Empty></Shell>
+    <Shell><Empty icon="receipt" title={lang === 'th' ? 'ไม่พบคำสั่งซื้อ' : 'Order not found'}><Link to="/orders" className="mt-5 inline-flex items-center justify-center rounded-xl bg-brand-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-brand-700">{t('track.viewHistory')}</Link></Empty></Shell>
   )
 
   const idx = orderFlow.indexOf(order.status)
@@ -84,9 +84,9 @@ export default function OrderTracking() {
 
 function Empty({ icon, title, children }) {
   return (
-    <div className="mx-auto max-w-md rounded-2xl border border-line bg-surface p-10 text-center">
-      <div className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-full bg-surface2 text-muted"><Icon name={icon} size={28} /></div>
-      <h2 className="text-xl font-bold">{title}</h2>
+    <div className="mx-auto flex max-w-md flex-col items-center justify-center rounded-2xl border border-line bg-surface p-10 text-center shadow-xs">
+      <div className="mb-4 grid h-16 w-16 place-items-center rounded-full bg-brand-50 text-brand-600 dark:bg-brand-600/15 dark:text-brand-400"><Icon name={icon} size={28} /></div>
+      <h2 className="text-xl font-bold tracking-tight text-fg">{title}</h2>
       {children}
     </div>
   )

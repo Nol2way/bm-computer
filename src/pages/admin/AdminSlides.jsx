@@ -43,8 +43,8 @@ export default function AdminSlides() {
                   <div className="text-xs text-muted">{PLACEMENTS.find((p) => p.v === s.placement)?.l || s.placement} · {s.is_active ? 'แสดง' : 'ซ่อน'}</div>
                 </div>
                 <div className="flex shrink-0">
-                  <button onClick={() => setEditing(s)} className="rounded p-1.5 hover:bg-surface2 hover:text-brand-600 cursor-pointer"><Icon name="copy" size={16} /></button>
-                  <button onClick={() => onDelete(s)} className="rounded p-1.5 text-brand-600 hover:bg-surface2 cursor-pointer"><Icon name="trash" size={16} /></button>
+                  <button onClick={() => setEditing(s)} className="rounded p-1.5 hover:bg-surface2 hover:text-brand-600 cursor-pointer" title="แก้ไข"><Icon name="edit" size={16} /></button>
+                  <button onClick={() => onDelete(s)} className="rounded p-1.5 text-brand-600 hover:bg-surface2 cursor-pointer" title="ลบ"><Icon name="trash" size={16} /></button>
                 </div>
               </div>
             </div>

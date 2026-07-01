@@ -27,10 +27,10 @@ export default function AdminDashboard() {
   if (loading) return <div className={`${wrap} py-20 text-center text-muted`}>กำลังตรวจสอบสิทธิ์...</div>
 
   if (!user) return (
-    <Guard title="เข้าสู่ระบบสำหรับผู้ดูแล"><button onClick={() => openAuth('login')} className="mt-5 rounded-xl bg-brand-600 px-6 py-3 font-semibold text-white hover:bg-brand-700 cursor-pointer">เข้าสู่ระบบ</button></Guard>
+    <Guard title="เข้าสู่ระบบสำหรับผู้ดูแล"><button onClick={() => openAuth('login')} className="mt-5 inline-flex items-center justify-center rounded-xl bg-brand-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-brand-700 cursor-pointer">เข้าสู่ระบบ</button></Guard>
   )
   if (!isAdmin) return (
-    <Guard title="ไม่มีสิทธิ์เข้าถึงหลังบ้าน" desc="บัญชีนี้ไม่ใช่ผู้ดูแลระบบ"><Link to="/" className="mt-5 rounded-xl border border-line px-6 py-3 font-semibold hover:bg-surface2">กลับหน้าร้าน</Link></Guard>
+    <Guard title="ไม่มีสิทธิ์เข้าถึงหลังบ้าน" desc="บัญชีนี้ไม่ใช่ผู้ดูแลระบบ"><Link to="/" className="mt-5 inline-flex items-center justify-center rounded-xl border border-line px-6 py-3 font-semibold transition-colors hover:bg-surface2">กลับหน้าร้าน</Link></Guard>
   )
 
   return (
@@ -66,10 +66,10 @@ export default function AdminDashboard() {
 function Guard({ title, desc, children }) {
   return (
     <div className={`${wrap} py-16`}>
-      <div className="mx-auto max-w-md rounded-2xl border border-line bg-surface p-10 text-center">
-        <div className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-full bg-surface2 text-muted"><Icon name="lock" size={28} /></div>
-        <h2 className="text-xl font-bold">{title}</h2>
-        {desc && <p className="mt-1 text-sm text-muted">{desc}</p>}
+      <div className="mx-auto flex max-w-md flex-col items-center justify-center rounded-2xl border border-line bg-surface p-10 text-center shadow-xs">
+        <div className="mb-4 grid h-16 w-16 place-items-center rounded-full bg-brand-50 text-brand-600 dark:bg-brand-600/15 dark:text-brand-400"><Icon name="lock" size={28} /></div>
+        <h2 className="text-xl font-bold tracking-tight text-fg">{title}</h2>
+        {desc && <p className="mt-1.5 text-sm text-muted">{desc}</p>}
         {children}
       </div>
     </div>

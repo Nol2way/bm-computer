@@ -51,7 +51,7 @@ export default function AdminProducts() {
                   <td className={cx('nums p-3 font-semibold', p.stock <= 5 ? 'text-amber-600' : 'text-emerald-600')}>{p.stock}</td>
                   <td className="p-3">{p.is_active ? <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs text-emerald-600">แสดง</span> : <span className="rounded-full bg-zinc-500/15 px-2 py-0.5 text-xs text-zinc-500">ซ่อน</span>}</td>
                   <td className="whitespace-nowrap p-3">
-                    <button onClick={() => setEditing(p)} className="rounded p-1.5 hover:bg-surface2 hover:text-brand-600 cursor-pointer" title="แก้ไข"><Icon name="copy" size={16} /></button>
+                    <button onClick={() => setEditing(p)} className="rounded p-1.5 hover:bg-surface2 hover:text-brand-600 cursor-pointer" title="แก้ไข"><Icon name="edit" size={16} /></button>
                     <button onClick={() => onDelete(p)} className="rounded p-1.5 text-brand-600 hover:bg-surface2 cursor-pointer" title="ลบ"><Icon name="trash" size={16} /></button>
                   </td>
                 </tr>
