@@ -59,6 +59,9 @@ export const translations = {
       promptpay: 'พร้อมเพย์ (PromptPay)', promptpayD: 'สแกน QR ชำระทันที',
       scanToPay: 'สแกน QR นี้ด้วยแอปธนาคารเพื่อชำระเงิน', qrDemo: '* QR ตัวอย่างสำหรับสาธิต (ระบบชำระเงินจริงจะต่อในเฟสถัดไป)',
       fillAddress: 'กรุณากรอกชื่อ เบอร์โทร และที่อยู่จัดส่งให้ครบ', placing: 'กำลังสร้างคำสั่งซื้อ...', loginToOrder: 'เข้าสู่ระบบเพื่อสั่งซื้อ',
+      orderCreated: 'สร้างคำสั่งซื้อแล้ว สแกน QR โอนเงิน แล้วอัปโหลดสลิปเพื่อยืนยัน', uploadSlip: 'อัปโหลดสลิปการโอน',
+      chooseSlip: 'เลือกรูปสลิป', verifyPay: 'ตรวจสลิป & ยืนยันชำระเงิน', verifying: 'กำลังตรวจสอบสลิป...',
+      paySuccess: 'ชำระเงินสำเร็จ!', orderNo: 'คำสั่งซื้อเลขที่',
     },
     auth: {
       loginTitle: 'เข้าสู่ระบบ', loginSub: 'ยินดีต้อนรับกลับสู่ BM Computer',
@@ -178,6 +181,9 @@ export const translations = {
       promptpay: 'PromptPay', promptpayD: 'Scan QR to pay instantly',
       scanToPay: 'Scan this QR with your banking app to pay', qrDemo: '* Demo QR (real payment gateway comes in a later phase)',
       fillAddress: 'Please fill in name, phone and shipping address', placing: 'Placing order...', loginToOrder: 'Sign in to order',
+      orderCreated: 'Order created. Scan the QR to pay, then upload your slip to confirm', uploadSlip: 'Upload payment slip',
+      chooseSlip: 'Choose slip image', verifyPay: 'Verify slip & confirm payment', verifying: 'Verifying slip...',
+      paySuccess: 'Payment successful!', orderNo: 'Order no.',
     },
     auth: {
       loginTitle: 'Sign in', loginSub: 'Welcome back to BM Computer',
