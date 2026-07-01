@@ -81,12 +81,13 @@ export async function fetchMyOrders(userId) {
   return data || []
 }
 
-const SELECT = '*, categories!inner(slug,name_th,name_en), brands(name,slug)'
+const SELECT = '*, categories!inner(slug,name_th,name_en), brands!inner(name,slug)'
 
-export async function fetchProducts({ cat, featured, limit } = {}) {
+export async function fetchProducts({ cat, brand, featured, limit } = {}) {
   if (!isSupabaseConfigured) return []
   let q = supabase.from('products').select(SELECT).eq('is_active', true)
   if (cat) q = q.eq('categories.slug', cat)
+  if (brand) q = q.eq('brands.slug', brand)
   if (featured) q = q.eq('is_featured', true)
   q = q.order('created_at', { ascending: true })
   if (limit) q = q.limit(limit)

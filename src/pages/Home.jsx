@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { categories } from '../data/mock'
-import ProductCard from '../components/ProductCard'
+import ProductRow from '../components/ProductRow'
 import { Icon } from '../components/Icons'
 import HeroCarousel from '../components/HeroCarousel'
 import BrandBar from '../components/BrandBar'
@@ -25,24 +25,14 @@ function SectionHead({ title, to, icon }) {
   )
 }
 
-function Grid({ items, loading }) {
-  return (
-    <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-      {loading
-        ? Array.from({ length: 4 }).map((_, i) => <div key={i} className="aspect-[3/4] animate-pulse rounded-2xl border border-line bg-surface2" />)
-        : items.map((p) => <ProductCard key={p.id} p={p} />)}
-    </div>
-  )
-}
-
 export default function Home() {
   const { t } = useLang()
   const { data, loading } = useFetch(() => fetchProducts({}), [])
   const { data: heroSlides } = useFetch(() => fetchSlides('hero'), [])
   const list = data || []
-  const featured = (list.filter((p) => p.featured).length ? list.filter((p) => p.featured) : list).slice(0, 4)
-  const newArrivals = [...list].reverse().slice(0, 4)
-  const flash = list.filter((p) => p.sale).slice(0, 4)
+  const featured = list.filter((p) => p.featured)
+  const newArrivals = [...list].reverse().slice(0, 12)
+  const flash = list.filter((p) => p.sale)
 
   return (
     <div className={`${wrap} py-8`}>
@@ -82,7 +72,7 @@ export default function Home() {
       {/* FEATURED */}
       <section className="mt-12">
         <SectionHead title={t('home.featured')} icon="flame" to="/products" />
-        <Grid items={featured} loading={loading} />
+        <ProductRow items={featured} loading={loading} />
       </section>
 
       {/* BRAND BAR */}
@@ -91,7 +81,7 @@ export default function Home() {
       {/* NEW ARRIVALS */}
       <section className="mt-12">
         <SectionHead title={t('home.newArrivals')} to="/products" />
-        <Grid items={newArrivals} loading={loading} />
+        <ProductRow items={newArrivals} loading={loading} />
       </section>
 
       {/* TRUST BAR */}

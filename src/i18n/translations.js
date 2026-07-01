@@ -34,8 +34,8 @@ export const translations = {
       title: 'สินค้าทั้งหมด', found: 'พบ {n} รายการ', filters: 'ตัวกรอง',
       category: 'หมวดหมู่', brand: 'แบรนด์', price: 'ช่วงราคา', min: 'ต่ำสุด', max: 'สูงสุด',
       rating: 'คะแนนรีวิว', up: 'ขึ้นไป', sortBy: 'เรียงตาม',
-      sortPopular: 'ความนิยม', sortPriceAsc: 'ราคา: ต่ำ → สูง', sortPriceDesc: 'ราคา: สูง → ต่ำ', sortNew: 'สินค้ามาใหม่',
-      home: 'หน้าแรก', products: 'สินค้า',
+      sortPopular: 'ความนิยม', sortPriceAsc: 'ราคา: ต่ำ ไป สูง', sortPriceDesc: 'ราคา: สูง ไป ต่ำ', sortNew: 'สินค้ามาใหม่',
+      home: 'หน้าแรก', products: 'สินค้า', searchFor: 'ผลการค้นหา', noResults: 'ไม่พบสินค้าที่ตรงกับที่ค้นหา',
     },
     pdp: {
       specs: 'สเปคสินค้า', desc: 'รายละเอียด', reviewsTab: 'รีวิว', sold: 'ขายแล้ว 1.2k ชิ้น',
@@ -153,8 +153,8 @@ export const translations = {
       title: 'All products', found: '{n} items found', filters: 'Filters',
       category: 'Category', brand: 'Brand', price: 'Price range', min: 'Min', max: 'Max',
       rating: 'Rating', up: '& up', sortBy: 'Sort by',
-      sortPopular: 'Popularity', sortPriceAsc: 'Price: low → high', sortPriceDesc: 'Price: high → low', sortNew: 'Newest',
-      home: 'Home', products: 'Products',
+      sortPopular: 'Popularity', sortPriceAsc: 'Price: low to high', sortPriceDesc: 'Price: high to low', sortNew: 'Newest',
+      home: 'Home', products: 'Products', searchFor: 'Search results', noResults: 'No products match your search',
     },
     pdp: {
       specs: 'Specifications', desc: 'Description', reviewsTab: 'Reviews', sold: 'Sold 1.2k pcs',

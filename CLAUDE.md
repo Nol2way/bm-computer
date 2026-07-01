@@ -111,9 +111,12 @@ npm run preview  # preview build
 
 ## สถานะปัจจุบัน (อัปเดตเมื่อแก้)
 - ✅ ออนไลน์ + ต่อ Supabase จริง (สินค้า/หมวด/แบรนด์/สไลด์จาก DB)
-- ✅ หน้าแรกแบบ dynamic: Hero carousel, Flash Sale (countdown), Brand bar, สินค้าแนะนำ/มาใหม่ - ดึงจาก DB
-- ✅ Dark/Light, 2 ภาษา, Auth popup modal (สมัคร/ล็อกอินจริงผ่าน Supabase), แกลเลอรีซูม
-- 🟡 **ยังเป็น stub (ต้องทำให้จริง):** ตะกร้า (เพิ่ม/ลบ/จำนวน), checkout→สร้างออเดอร์, ค้นหา, ฟิลเตอร์/เรียงลำดับ, ติดตาม/ประวัติออเดอร์, **Admin CRUD** (เพิ่ม/แก้/ลบ สินค้า/หมวด/แบรนด์/สไลด์/เนื้อหา)
+- ✅ หน้าแรก dynamic: Hero carousel, Flash Sale (countdown), Brand bar (โลโก้จริง Simple Icons + เฉพาะแบรนด์ที่มีสินค้า), ProductRow (carousel ลากได้ 6/แถว)
+- ✅ ตะกร้าจริง + checkout สร้างออเดอร์จริง + ติดตาม/ประวัติจาก DB (login-gated)
+- ✅ ค้นหา fuzzy (พิมพ์ผิดก็เจอ) + กรอง cat/brand จริง
+- ✅ Auth ทั้งแอป (session/role) + เมนูบัญชี/logout · Dark/Light · 2 ภาษา · แกลเลอรีซูม
+- ✅ ลบ em-dash หมด · login-gate ตะกร้า/สั่งซื้อ · ลบ admin ออกจาก footer · placeholder มาตรฐาน
+- 🟡 **ยังต้องทำ (ไม่ stub ทำทีละชิ้นให้จบ):** Admin CMS (CRUD สินค้า/แบรนด์/สไลด์/หมวด/ออเดอร์), EasySlip verify (Pages Function + token), Turnstile (site+secret key), หน้า Profile settings (ที่อยู่ - ต้องแก้ schema), footer redesign เต็ม, ย้าย auth session ไป HttpOnly cookie, categories ใน nav ให้ดึง DB
 
 ## แผนทำให้ "ใช้งานได้จริงทั้งหมด" (ทำทีละชิ้นให้สมบูรณ์ ไม่ stub)
 1. **Auth state ทั้งแอป** (session/user/role) + ปุ่ม logout + การ์ดบัญชี + กั้นหน้า /admin

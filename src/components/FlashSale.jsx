@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import ProductCard from './ProductCard'
+import ProductRow from './ProductRow'
 import { Icon } from './Icons'
 import { useLang } from '../i18n/LanguageContext'
 
@@ -36,8 +36,8 @@ export default function FlashSale({ items }) {
         <span className="ml-auto text-sm text-brand-100">{lang === 'th' ? 'หมดเวลาใน' : 'Ends in'}</span>
         <div className="flex items-center gap-1 font-bold"><Box v={h} />:<Box v={m} />:<Box v={s} /></div>
       </div>
-      <div className="grid grid-cols-2 gap-3 bg-surface p-4 sm:gap-4 lg:grid-cols-4">
-        {items.slice(0, 4).map((p) => <ProductCard key={p.id} p={p} />)}
+      <div className="bg-surface p-4">
+        <ProductRow items={items} />
       </div>
     </section>
   )
