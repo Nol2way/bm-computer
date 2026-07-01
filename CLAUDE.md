@@ -62,14 +62,19 @@
 |------|-----------|
 | Frontend | React 18 + Vite + React Router (BrowserRouter) |
 | Styling | Tailwind CSS v4 (design tokens) · Dark/Light · ฟอนต์ Inter + Sarabun |
-| Backend/DB/Auth | **Supabase** (PostgreSQL + Auth + Storage + RLS) |
-| Hosting | **Cloudflare Pages** (auto-deploy จาก GitHub `main`) |
-| ชำระเงิน | PromptPay QR (gateway จริงเป็นเฟสถัดไป) |
+| **API (backend)** | **Cloudflare Worker (Hono + OpenAPI/Swagger)** - modular monolith, โฟลเดอร์ `backend/` · Swagger UI ที่ `/api/docs` |
+| Database/Auth | **Supabase** (PostgreSQL + Auth + RLS) - เข้าถึงผ่าน backend (RLS ยังเปิดเป็น defense-in-depth) |
+| Hosting | **Cloudflare Pages** (frontend) + **Cloudflare Worker** (backend) - auto-deploy จาก GitHub `main` |
+| ชำระเงิน | PromptPay QR + EasySlip verify (ผ่าน backend) |
 
-### Data flow
-`Supabase (RLS) → src/lib/api.js → useFetch / context → components`
-- อ่าน: ผ่าน anon key (RLS public read สำหรับ catalog)
-- เขียน (admin): ผ่าน session ของผู้ใช้ที่ `role='admin'` (RLS `is_admin()`)
+### Data flow (สถาปัตยกรรมใหม่ - API-based)
+`components → src/lib/apiClient.js (credentials:'include') → backend Worker → Supabase`
+- **Auth/Account/Orders/Admin/Payments:** ผ่าน backend API (`backend/src/modules/*`) เท่านั้น
+- **Session:** HttpOnly cookie (access 15 นาที / refresh 7 วัน rotation) - หมดอายุจริง ไม่ค้างตลอด
+- **สลับโหมด:** ตั้ง `VITE_API_BASE` = เปิด API · ไม่ตั้ง = fallback ต่อ Supabase ตรงแบบเดิม (ไม่พัง prod ระหว่างย้าย)
+- **RLS บังคับจริง:** backend สร้าง Supabase client "สวมสิทธิ์ user" (แนบ access token) ทุก query ต่อ DB จึงถูก RLS บังคับในนามผู้ใช้ (ไม่พึ่ง service_role)
+- **ตรวจ token:** ผ่าน Supabase `auth.getUser` (เช็ค signature+exp) - ไม่ต้องใช้ JWT secret
+- Backend ต้องการแค่ `SUPABASE_URL` + `SUPABASE_ANON_KEY` · service_role ใช้เฉพาะ verify-slip (ตัวเลือก)
 
 ---
 
@@ -85,8 +90,16 @@ src/
 │                OrderHistory, PCBuilder, AdminDashboard, NotFound
 └── data/mock.js  (กำลังเลิกใช้ - ย้ายไป DB ให้หมด)
 
-supabase/        schema.sql, seed.sql, README.md (วิธี migrate)
+supabase/        schema.sql, seed.sql, migrations/ (0001_account.sql), README.md
+
+backend/         *** Backend API แยก (Cloudflare Worker) ***
+├── src/index.ts        entry: mount modules + CORS + Swagger UI (/api/docs)
+├── src/lib/            env, supabase(admin/anon), cookies, session(jwt), middleware, turnstile, http, openapi
+├── src/modules/        auth, account, catalog, orders, admin, payments
+├── wrangler.toml       ค่าตั้ง Worker + [vars] (TTL/cookie/CORS)
+└── .dev.vars.example   ค่าลับ (คัดลอกเป็น .dev.vars) · README.md วิธีรัน/deploy
 ```
+> อ่าน `backend/README.md` ก่อนแก้ backend (โมเดล session + วิธี deploy อยู่ในนั้น)
 
 ## ฐานข้อมูล (ตารางหลัก)
 `categories, brands, products, slides, profiles, orders, order_items, reviews, site_settings`
@@ -121,9 +134,19 @@ npm run preview  # preview build
 - ✅ EasySlip verify (Pages Function) + Checkout 2 เฟส (อัปโหลดสลิป) - รอ SUPABASE_SERVICE_ROLE_KEY (legacy JWT) ใน Cloudflare
 - ✅ **PromptPay จริง**: `lib/promptpay.js` gen EMVCo payload + CRC (ล็อคยอด) · Admin ตั้งบัญชีรับเงิน (site_settings key='payment')
 - ✅ Carousel: แก้บั๊ก hover-all (named group/row + group/card) · auto-scroll วน 5 วิ · drag ลื่น · Footer redesign
-- ✅ Turnstile ต่อ login/register
-- 🟡 **ยังต้องทำ:** Google OAuth (ตั้ง provider ใน Supabase + Google Cloud), Profile settings (ที่อยู่ - ต้องแก้ schema, รอ connection string/MCP), ย้าย auth ไป HttpOnly cookie, categories ใน nav จาก DB, brands/categories CRUD
-- 📌 **Supabase MCP**: user จะ add เพื่อให้เรารัน migration ได้เอง (`claude mcp add --scope project --transport http supabase ...`) - reload session แล้วจะมี tool
+- ✅ **Backend API แยก (Cloudflare Worker · Hono + OpenAPI/Swagger)** ที่ `backend/` - modular monolith (auth/account/catalog/orders/admin/payments) · Swagger UI `/api/docs` · 32 endpoints
+- ✅ **Session หมดอายุจริง**: ห่อ Supabase Auth + HttpOnly cookie (access 15 นาที / refresh 7 วัน rotation) · apiClient auto-refresh เมื่อ 401 · ไม่ค้าง session อีกต่อไป
+- ✅ **บัญชีของฉัน (My Account)** ตามดีไซน์ iHaveCPU: ข้อมูลส่วนตัว (วันเกิด/LINE/FB) · ที่อยู่จัดส่ง CRUD · ที่อยู่ใบกำกับภาษี CRUD · ช่องทางชำระเงิน CRUD · สินค้าที่ถูกใจ (wishlist + ปุ่มหัวใจบนการ์ด) · การ์ดสรุปออเดอร์ 4 ใบ (`/account`)
+- ✅ migration `supabase/migrations/0001_account.sql`: ขยาย profiles + ตาราง addresses/tax_profiles/payment_methods/wishlist + RLS own-row (apply แล้ว)
+- ✅ **frontend ย้ายมาเรียก backend ครบ** เมื่อเปิด API (`src/lib/api.js` สลับ apiEnabled): catalog/products/slides/brands/categories + orders (create/my/track) + admin (products/slides/orders/stats/settings) + checkout verify-slip · ยังมี fallback Supabase ตรงเมื่อปิด API
+- ✅ **ทดสอบ E2E กับ Supabase จริงแล้ว**: register/login/refresh/logout, /me, profile, สร้าง+ลิสต์ address (RLS-scoped), summary, validation (tax_id 13 หลัก), 401 เมื่อไม่มี cookie, catalog ผ่าน vite proxy - ผ่านทั้งหมด (สร้าง user ทดสอบแล้วลบทิ้ง)
+- ✅ backend รันด้วยแค่ `SUPABASE_URL`+`SUPABASE_ANON_KEY` (public - อยู่ใน wrangler.toml [vars]) - ไม่ต้อง service_role/JWT secret
+- ✅ **Deploy แล้ว**: worker live ที่ `https://bm-computer-api.manatsawin-tho.workers.dev` (Swagger `/api/docs`) · `.env.production` ตั้ง `VITE_API_BASE` ชี้ worker -> Cloudflare Pages build จะเปิด API ให้เอง
+- ✅ **Google OAuth ผ่าน backend**: client ทำ OAuth (supabase-js) -> `POST /api/auth/session` โอน token เข้าเป็น HttpOnly cookie -> signOut client (session อยู่ที่ cookie ที่เดียว) · ต้องเปิด Google provider + redirect URL ใน Supabase Auth ให้ทำงานจริง
+- ✅ **verify-slip**: อยู่ที่ Cloudflare Pages Function `/api/verify-slip` (มี service_role - server-trust กันปลอมสถานะจ่าย) · worker มี `/api/payments/verify-slip` เตรียมไว้ (ใช้เมื่อใส่ service_role ให้ worker)
+- 🟡 **เฟสถัดไป:** เปิด Google provider ใน Supabase (Google Cloud OAuth client + redirect), (ตัวเลือก) ย้าย verify-slip มา worker เมื่อใส่ service_role, ตั้ง Supabase JWT expiry ≈900s, categories ใน nav จาก DB, brands/categories CRUD
+- ⚠️ **คุกกี้ข้ามโดเมน** (pages.dev -> workers.dev) ใช้ SameSite=None+Secure - ทำงานบน Chrome แต่บางเบราว์เซอร์ที่บล็อก third-party cookie อาจมีปัญหา · ทางแก้ระยะยาว: ผูก worker เข้าโดเมนเดียวกับ frontend (custom domain/route) แล้วใช้ SameSite=Lax
+- 📌 **Supabase MCP**: ใช้รัน migration ได้เอง (apply_migration) - migration 0001 apply แล้ว
 
 ## แผนทำให้ "ใช้งานได้จริงทั้งหมด" (ทำทีละชิ้นให้สมบูรณ์ ไม่ stub)
 1. **Auth state ทั้งแอป** (session/user/role) + ปุ่ม logout + การ์ดบัญชี + กั้นหน้า /admin

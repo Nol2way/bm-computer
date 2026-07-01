@@ -1,0 +1,27 @@
+# BM Computer - Backend API (Cloudflare Worker)
+# deploy:  npx wrangler deploy
+# dev:     npx wrangler dev   (ฟังที่ http://localhost:8787)
+name = "bm-computer-api"
+main = "src/index.ts"
+compatibility_date = "2024-11-27"
+compatibility_flags = ["nodejs_compat"]
+
+# ---- ค่าที่ไม่ลับ (แก้ได้ตรงนี้) ----
+[vars]
+# Supabase (public: anon key ออกแบบให้เปิดเผยได้ - ความปลอดภัยจริงอยู่ที่ RLS)
+SUPABASE_URL = "https://xclugpegrcuqmnapysnf.supabase.co"
+SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhjbHVncGVncmN1cW1uYXB5c25mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI4NDExNTYsImV4cCI6MjA5ODQxNzE1Nn0.cyIBPA0NaDsK9L2AujUTa59C-CGzlsMvCuHAkd8-sxo"
+# origin ของ frontend ที่อนุญาตให้เรียก API (คั่นด้วย , ได้หลายค่า)
+FRONTEND_ORIGIN = "http://localhost:5173,https://bm-computer.pages.dev"
+# อายุ token (วินาที) - access สั้นตามมาตรฐานสากล (OWASP: 15 นาที) / refresh 7 วัน
+ACCESS_TTL = "900"
+REFRESH_TTL = "604800"
+# คุกกี้: prod ข้ามโดเมน = SameSite=None + Secure ; dev (ผ่าน vite proxy) = Lax + ไม่ต้อง Secure
+COOKIE_SAMESITE = "None"
+COOKIE_SECURE = "true"
+
+# ---- ค่าลับ (อย่าใส่ที่นี่) ----
+# dev:  ใส่ในไฟล์ backend/.dev.vars  (ดู .dev.vars.example)
+# prod: npx wrangler secret put <NAME>
+#   จำเป็น: SUPABASE_URL, SUPABASE_ANON_KEY
+#   ตัวเลือก: SUPABASE_SERVICE_ROLE_KEY (เฉพาะ verify-slip), TURNSTILE_SECRET, EASYSLIP_API_TOKEN

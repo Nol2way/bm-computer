@@ -14,6 +14,12 @@ import OrderTracking from './pages/OrderTracking'
 import OrderHistory from './pages/OrderHistory'
 import PCBuilder from './pages/PCBuilder'
 import AdminDashboard from './pages/AdminDashboard'
+import AccountLayout from './pages/account/AccountLayout'
+import Profile from './pages/account/Profile'
+import Addresses from './pages/account/Addresses'
+import TaxProfiles from './pages/account/TaxProfiles'
+import PaymentMethods from './pages/account/PaymentMethods'
+import Wishlist from './pages/account/Wishlist'
 import NotFound from './pages/NotFound'
 
 function ScrollTop() {
@@ -51,6 +57,13 @@ export default function App() {
             <Route path="/track" element={<OrderTracking />} />
             <Route path="/orders" element={<OrderHistory />} />
             <Route path="/builder" element={<PCBuilder />} />
+            <Route path="/account" element={<AccountLayout />}>
+              <Route index element={<Profile />} />
+              <Route path="addresses" element={<Addresses />} />
+              <Route path="tax" element={<TaxProfiles />} />
+              <Route path="payment" element={<PaymentMethods />} />
+              <Route path="wishlist" element={<Wishlist />} />
+            </Route>
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

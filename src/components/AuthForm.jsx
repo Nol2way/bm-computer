@@ -2,6 +2,9 @@ import { useState } from 'react'
 import { IconGoogle, Icon } from './Icons'
 import { useLang } from '../i18n/LanguageContext'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
+import { apiEnabled } from '../lib/apiClient'
+import { authApi } from '../lib/accountApi'
+import { useAuth } from '../auth/AuthContext'
 import Turnstile, { turnstileEnabled } from './Turnstile'
 
 const input = 'w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20'
@@ -17,6 +20,7 @@ function checkPw(pw) {
 
 export default function AuthForm({ view, setView, onClose }) {
   const { t } = useLang()
+  const { reload } = useAuth()
   const isLogin = view === 'login'
   const [f, setF] = useState({ fullName: '', phone: '', email: '', password: '', confirm: '' })
   const [loading, setLoading] = useState(false)
@@ -40,24 +44,39 @@ export default function AuthForm({ view, setView, onClose }) {
     e.preventDefault()
     setError(''); setOk('')
     if (!canSubmit) return
-    if (!isSupabaseConfigured) {
+    if (!apiEnabled && !isSupabaseConfigured) {
       setError('ยังไม่ได้เชื่อม Supabase (ใส่ VITE_SUPABASE_ANON_KEY ใน .env.local)')
       return
     }
     setLoading(true)
     try {
-      const captchaOpt = turnstileEnabled ? { captchaToken: captcha } : {}
-      if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({ email: f.email, password: f.password, options: captchaOpt })
-        if (error) throw error
-        onClose?.()
+      const captchaToken = turnstileEnabled ? captcha : undefined
+      if (apiEnabled) {
+        // ผ่าน backend: ตั้ง HttpOnly cookie (session สั้น) แล้วโหลดผู้ใช้ใหม่
+        if (isLogin) {
+          await authApi.login({ email: f.email, password: f.password, captchaToken })
+          await reload()
+          onClose?.()
+        } else {
+          const r = await authApi.register({ email: f.email, password: f.password, full_name: f.fullName, phone: f.phone, captchaToken })
+          if (r.needsConfirm) setOk('สมัครสำเร็จ! ตรวจอีเมลเพื่อยืนยัน (ถ้าเปิด confirm email ไว้)')
+          else { await reload(); onClose?.() }
+        }
       } else {
-        const { error } = await supabase.auth.signUp({
-          email: f.email, password: f.password,
-          options: { data: { full_name: f.fullName, phone: f.phone }, ...captchaOpt },
-        })
-        if (error) throw error
-        setOk('สมัครสำเร็จ! ตรวจอีเมลเพื่อยืนยัน (ถ้าเปิด confirm email ไว้)')
+        // fallback: Supabase ตรง
+        const captchaOpt = turnstileEnabled ? { captchaToken: captcha } : {}
+        if (isLogin) {
+          const { error } = await supabase.auth.signInWithPassword({ email: f.email, password: f.password, options: captchaOpt })
+          if (error) throw error
+          onClose?.()
+        } else {
+          const { error } = await supabase.auth.signUp({
+            email: f.email, password: f.password,
+            options: { data: { full_name: f.fullName, phone: f.phone }, ...captchaOpt },
+          })
+          if (error) throw error
+          setOk('สมัครสำเร็จ! ตรวจอีเมลเพื่อยืนยัน (ถ้าเปิด confirm email ไว้)')
+        }
       }
     } catch (err) {
       setError(err.message || 'เกิดข้อผิดพลาด')
@@ -90,13 +109,17 @@ export default function AuthForm({ view, setView, onClose }) {
         <p className="mt-1 text-sm text-muted">{isLogin ? t('auth.loginSub') : t('auth.registerSub')}</p>
       </div>
 
-      <button onClick={google} disabled={gLoading} className="flex w-full items-center justify-center gap-2.5 rounded-lg border border-line bg-surface py-3 font-semibold transition-colors hover:bg-surface2 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer">
-        {gLoading ? <Icon name="loader" size={18} className="animate-spin" /> : <IconGoogle />}
-        {gLoading ? t('common.loading') : isLogin ? t('auth.googleLogin') : t('auth.googleRegister')}
-      </button>
-      <div className="my-5 flex items-center gap-3 text-xs text-muted before:h-px before:flex-1 before:bg-line after:h-px after:flex-1 after:bg-line">
-        {isLogin ? t('auth.orEmail') : t('auth.orEmailReg')}
-      </div>
+      {isSupabaseConfigured && (
+        <>
+          <button onClick={google} disabled={gLoading} className="flex w-full items-center justify-center gap-2.5 rounded-lg border border-line bg-surface py-3 font-semibold transition-colors hover:bg-surface2 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer">
+            {gLoading ? <Icon name="loader" size={18} className="animate-spin" /> : <IconGoogle />}
+            {gLoading ? t('common.loading') : isLogin ? t('auth.googleLogin') : t('auth.googleRegister')}
+          </button>
+          <div className="my-5 flex items-center gap-3 text-xs text-muted before:h-px before:flex-1 before:bg-line after:h-px after:flex-1 after:bg-line">
+            {isLogin ? t('auth.orEmail') : t('auth.orEmailReg')}
+          </div>
+        </>
+      )}
 
       {error && <div className="mb-3 rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-600 dark:text-red-400" role="alert">{error}</div>}
       {ok && <div className="mb-3 rounded-lg bg-emerald-500/10 px-3 py-2 text-sm text-emerald-600 dark:text-emerald-400">{ok}</div>}
@@ -104,17 +127,17 @@ export default function AuthForm({ view, setView, onClose }) {
       <form onSubmit={submit} className="flex flex-col gap-4">
         {!isLogin && (
           <>
-            <div><label className="mb-1.5 block text-sm font-semibold">{t('auth.fullName')}</label><input className={input} value={f.fullName} onChange={set('fullName')} autoComplete="name" /></div>
-            <div><label className="mb-1.5 block text-sm font-semibold">{t('auth.phone')}</label><input className={input} value={f.phone} onChange={set('phone')} type="tel" inputMode="tel" autoComplete="tel" /></div>
+            <div><label className="mb-1.5 block text-sm font-semibold">{t('auth.fullName')}</label><input className={input} value={f.fullName} onChange={set('fullName')} autoComplete="name" placeholder='ชื่อ-นามสกุล'/></div>
+            <div><label className="mb-1.5 block text-sm font-semibold">{t('auth.phone')}</label><input className={input} value={f.phone} onChange={set('phone')} type="tel" inputMode="tel" autoComplete="tel" placeholder='เบอร์โทรศัพท์'/></div>
           </>
         )}
-        <div><label className="mb-1.5 block text-sm font-semibold">{t('auth.email')}</label><input className={input} value={f.email} onChange={set('email')} type="email" placeholder="you@email.com" autoComplete="email" /></div>
+        <div><label className="mb-1.5 block text-sm font-semibold">{t('auth.email')}</label><input className={input} value={f.email} onChange={set('email')} type="email" placeholder="อีเมลของคุณ" autoComplete="email" /></div>
         <div>
           <div className="mb-1.5 flex items-center justify-between">
             <label className="text-sm font-semibold">{t('auth.password')}</label>
             {isLogin && <a href="#" className="text-sm text-brand-600 hover:underline">{t('auth.forgot')}</a>}
           </div>
-          <input className={input} value={f.password} onChange={set('password')} type="password" placeholder="••••••••" autoComplete={isLogin ? 'current-password' : 'new-password'} />
+          <input className={input} value={f.password} onChange={set('password')} type="password" placeholder="รหัสผ่าน" autoComplete={isLogin ? 'current-password' : 'new-password'} />
 
           {!isLogin && f.password.length > 0 && (
             <div className="mt-2">
@@ -139,7 +162,7 @@ export default function AuthForm({ view, setView, onClose }) {
         {!isLogin && (
           <div>
             <label className="mb-1.5 block text-sm font-semibold">{t('auth.confirmPassword')}</label>
-            <input className={input} value={f.confirm} onChange={set('confirm')} type="password" placeholder="••••••••" autoComplete="new-password" />
+            <input className={input} value={f.confirm} onChange={set('confirm')} type="password" placeholder="ยืนยันรหัสผ่าน" autoComplete="new-password" />
             {mismatch && <span className="mt-1 block text-xs text-red-500">{t('auth.pwMismatch')}</span>}
           </div>
         )}

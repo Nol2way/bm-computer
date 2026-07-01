@@ -9,6 +9,7 @@ import { useLang } from '../i18n/LanguageContext'
 import { useAuthModal } from './AuthModal'
 import { useAuth } from '../auth/AuthContext'
 import { useCart } from '../cart/CartContext'
+import { apiEnabled } from '../lib/apiClient'
 
 function ActionBtn({ children, ...rest }) {
   return (
@@ -74,7 +75,9 @@ export default function Navbar() {
                     <div className="truncate font-semibold">{profile?.full_name || user.email}</div>
                     <div className="truncate text-xs text-muted">{user.email}</div>
                   </div>
+                  {apiEnabled && <MenuItem to="/account" icon="user" label={t('nav.account')} onClick={() => setMenu(false)} />}
                   <MenuItem to="/orders" icon="receipt" label={t('nav.myOrders')} onClick={() => setMenu(false)} />
+                  {apiEnabled && <MenuItem to="/account/wishlist" icon="heart" label={t('nav.wishlist')} onClick={() => setMenu(false)} />}
                   {isAdmin && <MenuItem to="/admin" icon="grid" label={t('nav.admin')} onClick={() => setMenu(false)} />}
                   <button onClick={() => { setMenu(false); signOut(); nav('/') }}
                     className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-brand-600 transition-colors hover:bg-surface2 cursor-pointer">

@@ -1,0 +1,20 @@
+# คัดลอกไฟล์นี้เป็น backend/.dev.vars แล้วใส่ค่าจริง (ห้าม commit .dev.vars)
+# ค่าลับทั้งหมดของ backend อยู่ที่นี่ (wrangler dev จะอ่านให้อัตโนมัติ)
+
+# ---- Supabase (Dashboard -> Settings -> API) ----
+# แค่ 2 ค่านี้ (สาธารณะ) ก็รัน auth/account/catalog/orders/admin ได้ครบ - RLS บังคับสิทธิ์ให้เอง
+SUPABASE_URL="https://YOUR-PROJECT-ID.supabase.co"
+SUPABASE_ANON_KEY="YOUR-ANON-PUBLIC-KEY"
+# (ตัวเลือก) ต้องมีเฉพาะ verify-slip เท่านั้น (อัปเดตออเดอร์ข้าม RLS) - ความลับสูงสุด ห้ามหลุด client
+SUPABASE_SERVICE_ROLE_KEY=""
+
+# ---- Cloudflare Turnstile (กันบอท - ตรวจฝั่ง server) ----
+TURNSTILE_SECRET="YOUR-TURNSTILE-SECRET-KEY"
+
+# ---- EasySlip (ยืนยันสลิป) ----
+EASYSLIP_API_TOKEN="YOUR-EASYSLIP-TOKEN"
+
+# ---- คุกกี้สำหรับ dev (ผ่าน vite proxy = same-origin) ----
+COOKIE_SAMESITE="Lax"
+COOKIE_SECURE="false"
+FRONTEND_ORIGIN="http://localhost:5173"

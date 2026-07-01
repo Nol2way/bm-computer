@@ -116,6 +116,8 @@ function PaymentStep({ order, onPaid }) {
       const fd = new FormData()
       fd.append('image', file)
       fd.append('orderCode', order.code)
+      // verify-slip ต้องใช้ service_role (server-trust กันปลอมสถานะจ่าย) -> ผ่าน Cloudflare Pages Function เสมอ
+      // (worker มี endpoint /api/payments/verify-slip เตรียมไว้ ใช้เมื่อใส่ service_role ให้ worker ในอนาคต)
       const res = await fetch('/api/verify-slip', { method: 'POST', body: fd })
       const data = await res.json()
       if (data.ok) onPaid()

@@ -1,0 +1,223 @@
+import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+import type { AppEnv } from '../lib/env'
+import { anonClient, userClient } from '../lib/supabase'
+import { setSessionCookies, clearSessionCookies, getRefreshToken, getAccessToken } from '../lib/cookies'
+import { verifyTurnstile } from '../lib/turnstile'
+import { requireAuth } from '../lib/middleware'
+import { HttpError, badRequest, unauthorized } from '../lib/http'
+import { ErrorSchema, OkSchema, jsonBody, jsonRes, errRes } from '../lib/openapi'
+
+const TAG = ['Auth']
+
+const UserSchema = z
+  .object({
+    id: z.string(),
+    email: z.string().nullable(),
+    full_name: z.string().nullable(),
+    phone: z.string().nullable(),
+    role: z.string(),
+  })
+  .openapi('AuthUser')
+
+const LoginBody = z
+  .object({
+    email: z.string().email().openapi({ example: 'you@email.com' }),
+    password: z.string().min(1),
+    captchaToken: z.string().optional(),
+  })
+  .openapi('LoginBody')
+
+const RegisterBody = z
+  .object({
+    email: z.string().email(),
+    password: z.string().min(8),
+    full_name: z.string().min(1),
+    phone: z.string().min(1),
+    captchaToken: z.string().optional(),
+  })
+  .openapi('RegisterBody')
+
+async function loadProfile(env: AppEnv['Bindings'], token: string, id: string) {
+  const db = userClient(env, token)
+  const { data } = await db
+    .from('profiles')
+    .select('id,email,full_name,phone,role')
+    .eq('id', id)
+    .maybeSingle()
+  return data
+}
+
+export function registerAuth(app: OpenAPIHono<AppEnv>) {
+  // ---------- POST /api/auth/register ----------
+  app.openapi(
+    createRoute({
+      method: 'post',
+      path: '/api/auth/register',
+      tags: TAG,
+      summary: 'สมัครสมาชิก (ห่อ Supabase Auth + Turnstile)',
+      request: { body: jsonBody(RegisterBody) },
+      responses: {
+        200: jsonRes('สมัครสำเร็จ (อาจต้องยืนยันอีเมล)', z.object({
+          ok: z.literal(true),
+          needsConfirm: z.boolean(),
+          user: UserSchema.nullable(),
+        })),
+        400: errRes('ข้อมูลไม่ถูกต้อง / captcha ไม่ผ่าน'),
+      },
+    }),
+    async (c) => {
+      const b = c.req.valid('json')
+      const ip = c.req.header('cf-connecting-ip')
+      if (!(await verifyTurnstile(c.env, b.captchaToken, ip))) throw badRequest('ยืนยันตัวตน (captcha) ไม่ผ่าน')
+      const supa = anonClient(c.env)
+      const { data, error } = await supa.auth.signUp({
+        email: b.email,
+        password: b.password,
+        options: { data: { full_name: b.full_name, phone: b.phone } },
+      })
+      if (error) throw badRequest(error.message)
+      if (data.session) {
+        setSessionCookies(c, data.session.access_token, data.session.refresh_token)
+        const prof = await loadProfile(c.env, data.session.access_token, data.user!.id)
+        return c.json({ ok: true as const, needsConfirm: false, user: prof ?? null })
+      }
+      // เปิดยืนยันอีเมลไว้ -> ยังไม่มี session
+      return c.json({ ok: true as const, needsConfirm: true, user: null })
+    }
+  )
+
+  // ---------- POST /api/auth/login ----------
+  app.openapi(
+    createRoute({
+      method: 'post',
+      path: '/api/auth/login',
+      tags: TAG,
+      summary: 'เข้าสู่ระบบ -> ตั้ง HttpOnly cookie (access 15 นาที / refresh 7 วัน)',
+      request: { body: jsonBody(LoginBody) },
+      responses: {
+        200: jsonRes('เข้าสู่ระบบสำเร็จ', z.object({ ok: z.literal(true), user: UserSchema })),
+        400: errRes('captcha ไม่ผ่าน'),
+        401: errRes('อีเมลหรือรหัสผ่านไม่ถูกต้อง'),
+      },
+    }),
+    async (c) => {
+      const b = c.req.valid('json')
+      const ip = c.req.header('cf-connecting-ip')
+      if (!(await verifyTurnstile(c.env, b.captchaToken, ip))) throw badRequest('ยืนยันตัวตน (captcha) ไม่ผ่าน')
+      const supa = anonClient(c.env)
+      const { data, error } = await supa.auth.signInWithPassword({ email: b.email, password: b.password })
+      if (error || !data.session) throw new HttpError(401, 'อีเมลหรือรหัสผ่านไม่ถูกต้อง', 'invalid_credentials')
+      setSessionCookies(c, data.session.access_token, data.session.refresh_token)
+      const prof = await loadProfile(c.env, data.session.access_token, data.user.id)
+      return c.json({
+        ok: true as const,
+        user: prof ?? { id: data.user.id, email: data.user.email ?? null, full_name: null, phone: null, role: 'customer' },
+      })
+    }
+  )
+
+  // ---------- POST /api/auth/session (นำ session จาก OAuth ฝั่ง client เข้าเป็น HttpOnly cookie) ----------
+  app.openapi(
+    createRoute({
+      method: 'post',
+      path: '/api/auth/session',
+      tags: TAG,
+      summary: 'แลก token (เช่นจาก Google OAuth ฝั่ง client) เป็น HttpOnly cookie session',
+      request: {
+        body: jsonBody(z.object({ access_token: z.string().min(1), refresh_token: z.string().min(1) }).openapi('SessionBody')),
+      },
+      responses: {
+        200: jsonRes('ตั้ง session แล้ว', z.object({ ok: z.literal(true), user: UserSchema })),
+        401: errRes('token ไม่ถูกต้อง/หมดอายุ'),
+      },
+    }),
+    async (c) => {
+      const { access_token, refresh_token } = c.req.valid('json')
+      // ตรวจ token กับ Supabase ก่อน (กันตั้งคุกกี้จาก token ปลอม)
+      const { data, error } = await anonClient(c.env).auth.getUser(access_token)
+      if (error || !data.user) throw unauthorized('token ไม่ถูกต้องหรือหมดอายุ')
+      setSessionCookies(c, access_token, refresh_token)
+      const prof = await loadProfile(c.env, access_token, data.user.id)
+      return c.json({
+        ok: true as const,
+        user: prof ?? { id: data.user.id, email: data.user.email ?? null, full_name: null, phone: null, role: 'customer' },
+      })
+    }
+  )
+
+  // ---------- POST /api/auth/refresh ----------
+  app.openapi(
+    createRoute({
+      method: 'post',
+      path: '/api/auth/refresh',
+      tags: TAG,
+      summary: 'ต่ออายุ session ด้วย refresh cookie (rotation) - ออก access ใหม่',
+      responses: {
+        200: jsonRes('ต่ออายุสำเร็จ', OkSchema),
+        401: errRes('refresh หมดอายุ/ไม่ถูกต้อง -> ต้องเข้าสู่ระบบใหม่'),
+      },
+    }),
+    async (c) => {
+      const rt = getRefreshToken(c)
+      if (!rt) throw unauthorized('ไม่มี refresh token')
+      const supa = anonClient(c.env)
+      const { data, error } = await supa.auth.refreshSession({ refresh_token: rt })
+      if (error || !data.session) {
+        clearSessionCookies(c)
+        throw unauthorized('เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่')
+      }
+      // rotation: Supabase คืน refresh token ใหม่ทุกครั้ง -> เก็บตัวใหม่
+      setSessionCookies(c, data.session.access_token, data.session.refresh_token)
+      return c.json({ ok: true as const })
+    }
+  )
+
+  // ---------- POST /api/auth/logout ----------
+  app.openapi(
+    createRoute({
+      method: 'post',
+      path: '/api/auth/logout',
+      tags: TAG,
+      summary: 'ออกจากระบบ - เพิกถอน session ที่ Supabase + ล้างคุกกี้',
+      responses: { 200: jsonRes('ออกจากระบบแล้ว', OkSchema) },
+    }),
+    async (c) => {
+      const at = getAccessToken(c)
+      const rt = getRefreshToken(c)
+      if (at && rt) {
+        try {
+          const supa = anonClient(c.env)
+          await supa.auth.setSession({ access_token: at, refresh_token: rt })
+          await supa.auth.signOut()
+        } catch {
+          // best-effort: ถึง revoke ไม่สำเร็จก็ล้างคุกกี้ต่อ
+        }
+      }
+      clearSessionCookies(c)
+      return c.json({ ok: true as const })
+    }
+  )
+
+  // ---------- GET /api/auth/me ----------
+  app.openapi(
+    createRoute({
+      method: 'get',
+      path: '/api/auth/me',
+      tags: TAG,
+      summary: 'ข้อมูลผู้ใช้ปัจจุบัน (ต้องมี session ที่ยังไม่หมดอายุ)',
+      middleware: [requireAuth] as const,
+      responses: {
+        200: jsonRes('ผู้ใช้ปัจจุบัน', z.object({ ok: z.literal(true), user: UserSchema })),
+        401: errRes('เซสชันหมดอายุ/ไม่ได้เข้าสู่ระบบ'),
+      },
+    }),
+    async (c) => {
+      const u = c.get('user')
+      const prof = await loadProfile(c.env, c.get('token'), u.id)
+      return c.json({
+        ok: true as const,
+        user: prof ?? { id: u.id, email: u.email, full_name: null, phone: null, role: 'customer' },
+      })
+    }
+  )
+}

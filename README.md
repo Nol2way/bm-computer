@@ -42,10 +42,11 @@
 | **Frontend** | React 18, Vite, React Router |
 | **Styling/UI** | Tailwind CSS v4 (Design Tokens), Dark/Light Mode, ฟอนต์ Inter + Sarabun |
 | **i18n** | ระบบ 2 ภาษา (ไทย/อังกฤษ) ด้วย React Context |
-| **Backend / Database** | **Supabase** - PostgreSQL, Row Level Security (RLS) |
-| **Authentication** | Supabase Auth (Email/Password + รองรับ Google OAuth) |
+| **Backend / API** | **Cloudflare Worker** - Hono + OpenAPI/Swagger (modular monolith, `backend/`) · เอกสาร API อัตโนมัติที่ `/api/docs` |
+| **Database** | **Supabase** - PostgreSQL, Row Level Security (RLS) |
+| **Authentication** | Supabase Auth ห่อด้วย backend + **Session สั้น (HttpOnly cookie · access 15 นาที / refresh 7 วัน rotation)** |
 | **Storage** | Supabase Storage (รูปภาพ) |
-| **Hosting / Deploy** | **Cloudflare Pages** (CI/CD อัตโนมัติจาก GitHub) |
+| **Hosting / Deploy** | **Cloudflare Pages** (frontend) + **Cloudflare Worker** (backend API) - CI/CD จาก GitHub |
 | **Version Control** | Git + GitHub |
 | **Payment** | PromptPay QR |
 | **เอกสาร/ออกแบบ** | Markdown + Mermaid Diagram |
@@ -72,7 +73,8 @@
 - 🛍️ หน้าร้าน (Storefront): Hero Carousel, Flash Sale (นับถอยหลัง), แถบแบรนด์, สินค้าแนะนำ/มาใหม่ - **ดึงข้อมูลจากฐานข้อมูลจริง**
 - 🔎 รายการสินค้า + ค้นหา + กรองตามหมวด/แบรนด์ + รายละเอียดสินค้า + แกลเลอรีซูม (Lightbox)
 - 🛒 ตะกร้าสินค้า (เพิ่ม/ลบ/แก้จำนวน) + ชำระเงินด้วย **PromptPay QR** + สร้างคำสั่งซื้อจริง
-- 👤 ระบบสมาชิก (สมัคร/เข้าสู่ระบบ) + ติดตามสถานะ + ประวัติการสั่งซื้อ
+- 👤 ระบบสมาชิก (สมัคร/เข้าสู่ระบบ) + **session หมดอายุจริง (HttpOnly cookie)** + ติดตามสถานะ + ประวัติการสั่งซื้อ
+- 🧾 **บัญชีของฉัน (My Account):** ข้อมูลส่วนตัว · ที่อยู่จัดส่ง · ที่อยู่ใบกำกับภาษี · ช่องทางชำระเงิน · สินค้าที่ถูกใจ (Wishlist) · สรุปออเดอร์
 - ⚙️ จัดสเปคคอม (PC Builder)
 - 🛠️ ระบบหลังบ้าน (Admin): จัดการสินค้า/หมวด/แบรนด์/สไลด์/เนื้อหา/ออเดอร์ *(กำลังพัฒนา)*
 - 🌗 Dark/Light Mode · 🌐 ไทย/อังกฤษ · 📱 Responsive
@@ -104,21 +106,28 @@ graph TD
         FE[React + Vite + Tailwind SPA<br/>Dark/Light · ไทย/อังกฤษ]
     end
 
-    subgraph Supabase["Supabase (Backend as a Service)"]
-        AUTH[Auth<br/>Email/Password + Google OAuth]
+    subgraph Worker["Cloudflare Worker - Backend API"]
+        API[Hono + OpenAPI/Swagger<br/>auth · account · catalog<br/>orders · admin · payments]
+        DOCS[/Swagger UI · /api/docs/]
+    end
+
+    subgraph Supabase["Supabase"]
+        AUTHP[Auth Provider<br/>Email/Password]
         DB[(PostgreSQL<br/>+ Row Level Security)]
         ST[Storage]
     end
 
-    PAY[PromptPay QR]
+    PAY[PromptPay QR + EasySlip]
 
     U -->|HTTPS| FE
-    FE -->|สมัคร/เข้าสู่ระบบ| AUTH
-    FE -->|อ่าน catalog ผ่าน anon + RLS| DB
-    FE -->|เขียนออเดอร์/แอดมิน ตาม role| DB
-    AUTH -. JWT session .-> FE
-    FE --> ST
-    FE --> PAY
+    FE -->|fetch credentials:include<br/>ส่ง HttpOnly cookie| API
+    API -. ออก access 15 นาที / refresh 7 วัน<br/>เป็น HttpOnly cookie .-> FE
+    API -->|ห่อ login/refresh| AUTHP
+    API -->|service_role + ตรวจสิทธิ์| DB
+    API -->|verify JWT ทุก request| AUTHP
+    API --> ST
+    API --> PAY
+    API --- DOCS
 ```
 
 **หลักการสำคัญ**
@@ -281,7 +290,7 @@ classDiagram
 
 **ภาพรวมของแบบจำลองคำสั่งและข้อมูล**
 - `AuthContext` และ `CartContext` เป็นตัวจัดการสถานะหลักของหน้าเว็บ
-- `ApiService` ทำหน้าที่เชื่อม React frontend กับ Supabase backend
+- `ApiService` (frontend `src/lib/apiClient.js` + `accountApi.js`) เรียก **backend API (Cloudflare Worker)** ผ่าน HTTPS พร้อมส่ง HttpOnly cookie และ auto-refresh session เมื่อหมดอายุ · backend เป็นตัวคุยกับ Supabase
 - `Product`, `Order`, และ `OrderItem` เป็นโครงสร้างข้อมูลหลักสำหรับร้านค้าออนไลน์
 
 ---
