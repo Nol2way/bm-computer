@@ -23,7 +23,7 @@
 | 2 | 67133473 | ประสบการณ์ ผมพันธ์ | Developer (Fullstack) |
 | 3 | 67131315 | ณภัทร พิชัยรัตน์ | Developer (Fullstack) |
 | 4 | 67129568 | สิทธา ว่องคุณากร | Developer (Fullstack) |
-| 5 | 6711886 | คชาณบ สวัสดี | Developer (Fullstack) |
+| 5 | 67111886 | คชาณบ สวัสดี | Developer (Fullstack) |
 
 ---
 
