@@ -1,10 +1,10 @@
-# สถาปัตยกรรมระบบ (System Architecture) — BM Computer
+# สถาปัตยกรรมระบบ (System Architecture) - BM Computer
 
 เอกสารนี้อธิบายสถาปัตยกรรมของระบบร้านค้าออนไลน์ **BM Computer (บ้านมีคอม)**
 ทั้งในเฟส **Wireframe** (ปัจจุบัน) และเฟส **ระบบจริง** (อนาคต) พร้อมแผนภาพ Mermaid
 ตาม Checklist ข้อ 5 ของ Workshop #1
 
-> 💡 GitHub เรนเดอร์ Mermaid อัตโนมัติ — เปิดไฟล์นี้บน GitHub จะเห็นเป็นแผนภาพทันที
+> 💡 GitHub เรนเดอร์ Mermaid อัตโนมัติ - เปิดไฟล์นี้บน GitHub จะเห็นเป็นแผนภาพทันที
 
 ---
 
@@ -17,14 +17,14 @@ graph TB
         B[Mobile / PWA<br/>Responsive]
     end
 
-    subgraph Edge["☁️ Cloudflare — Edge & Security"]
+    subgraph Edge["☁️ Cloudflare - Edge & Security"]
         C[CDN + Cache]
         D[WAF + DDoS Protection]
         E[SSL/TLS + Bot Management]
         F[Cloudflare Pages<br/>โฮสต์เว็บ Frontend]
     end
 
-    subgraph Backend["🗄️ Supabase — Backend as a Service"]
+    subgraph Backend["🗄️ Supabase - Backend as a Service"]
         G[Supabase Auth<br/>Email/Password + Google OAuth]
         H[(PostgreSQL<br/>+ Row Level Security)]
         I[Storage<br/>รูปสินค้า]
@@ -73,7 +73,7 @@ graph TB
 
 ## 3. สถาปัตยกรรมเฟสปัจจุบัน (Wireframe)
 
-ตอนนี้เป็น **Static SPA** ยังไม่ต่อ backend — ใช้ Mock Data เพื่อโชว์ UI/UX
+ตอนนี้เป็น **Static SPA** ยังไม่ต่อ backend - ใช้ Mock Data เพื่อโชว์ UI/UX
 
 ```mermaid
 graph LR

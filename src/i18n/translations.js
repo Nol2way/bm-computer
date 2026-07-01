@@ -141,7 +141,7 @@ export const translations = {
       storage: 'SSD / HDD', monitor: 'Monitor', notebook: 'Notebook', gear: 'Gaming Gear',
     },
     home: {
-      heroTag: 'This month', heroTitle: 'Build your dream PC — all in one place',
+      heroTag: 'This month', heroTitle: 'Build your dream PC - all in one place',
       heroDesc: 'CPUs, GPUs, mainboards, notebooks and gaming gear. Genuine with warranty, plus free build service.',
       shopNow: 'Shop now',
       promoShipTag: 'Free shipping', promoShip: '฿0 shipping', promoShipDesc: 'On orders over ฿1,500 nationwide',
@@ -208,7 +208,7 @@ export const translations = {
     },
     builder: {
       title: 'PC Builder',
-      desc: 'Pick parts one by one — we check compatibility and calculate price & power automatically.',
+      desc: 'Pick parts one by one - we check compatibility and calculate price & power automatically.',
       compat: 'All selected parts are compatible (Socket AM5 · DDR5 · enough power)',
       notChosen: 'Not selected', change: 'Change', choose: '+ Select',
       summary: 'Build summary', chosen: 'Parts selected', pieces: 'pcs',
@@ -221,7 +221,7 @@ export const translations = {
       title: 'Admin Dashboard', sub: 'BM Computer · Store management', backToShop: '← Back to shop',
       overview: 'Overview', products: 'Products', orders: 'Orders', users: 'Users',
       salesToday: "Today's sales", newOrders: 'New orders', lowStockStat: 'Low stock', newCustomers: 'New customers',
-      salesChart: 'Sales — last 7 days', addProduct: '+ Add product',
+      salesChart: 'Sales - last 7 days', addProduct: '+ Add product',
       colProduct: 'Product', colCat: 'Category', colPrice: 'Price', colStock: 'Stock', colManage: 'Manage',
       edit: 'Edit', del: 'Delete', colOrderNo: 'Order No.', colDate: 'Date', colTotal: 'Total', colStatus: 'Status',
       updateStatus: 'Update status', allStatus: 'All statuses', searchUser: 'Search users...',

@@ -3,7 +3,7 @@ import { useLang } from '../i18n/LanguageContext'
 import { fetchBrands } from '../lib/api'
 import { useFetch } from '../lib/useFetch'
 
-// แถบโลโก้แบรนด์ (เลื่อนแนวนอนบนมือถือ) — กดเพื่อกรองตามแบรนด์
+// แถบโลโก้แบรนด์ (เลื่อนแนวนอนบนมือถือ) - กดเพื่อกรองตามแบรนด์
 export default function BrandBar() {
   const { lang } = useLang()
   const { data } = useFetch(() => fetchBrands(), [])

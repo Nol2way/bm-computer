@@ -74,8 +74,8 @@ export default function Checkout() {
           <section className="rounded-2xl border border-line bg-surface p-5">
             <h3 className="mb-4 font-bold">{t('checkout.address')}</h3>
             <div className="flex flex-wrap gap-4">
-              <div className="min-w-[200px] flex-1"><label className="mb-1.5 block text-sm font-semibold">{t('checkout.name')}</label><input className={input} value={form.name} onChange={set('name')} placeholder="สมชาย ใจดี" /></div>
-              <div className="min-w-[200px] flex-1"><label className="mb-1.5 block text-sm font-semibold">{t('checkout.phone')}</label><input className={input} value={form.phone} onChange={set('phone')} placeholder="08x-xxx-xxxx" inputMode="tel" /></div>
+              <div className="min-w-[200px] flex-1"><label className="mb-1.5 block text-sm font-semibold">{t('checkout.name')}</label><input className={input} value={form.name} onChange={set('name')} autoComplete="name" /></div>
+              <div className="min-w-[200px] flex-1"><label className="mb-1.5 block text-sm font-semibold">{t('checkout.phone')}</label><input className={input} value={form.phone} onChange={set('phone')} inputMode="tel" autoComplete="tel" /></div>
             </div>
             <div className="mt-4"><label className="mb-1.5 block text-sm font-semibold">{t('checkout.addr')}</label><textarea className={input} rows="3" value={form.address} onChange={set('address')} placeholder={t('checkout.addrPlaceholder')} /></div>
           </section>

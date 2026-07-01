@@ -9,6 +9,8 @@ import { useLang } from '../i18n/LanguageContext'
 import { fetchProductBySlug, fetchProducts } from '../lib/api'
 import { useFetch } from '../lib/useFetch'
 import { useCart } from '../cart/CartContext'
+import { useAuth } from '../auth/AuthContext'
+import { useAuthModal } from '../components/AuthModal'
 
 const wrap = 'mx-auto max-w-[1200px] px-4'
 const PLACEHOLDER = 'https://placehold.co/600x600/f1f1f4/9ca3af?text=BM+Computer'
@@ -26,7 +28,11 @@ export default function ProductDetail() {
   const [copied, setCopied] = useState(false)
   const [added, setAdded] = useState(false)
   const { add } = useCart()
+  const { user } = useAuth()
+  const { open: openAuth } = useAuthModal()
   const nav = useNavigate()
+  const addToCart = () => { if (!user) { openAuth('login'); return } add(p, qty); setAdded(true); setTimeout(() => setAdded(false), 1200) }
+  const buyNow = () => { if (!user) { openAuth('login'); return } add(p, qty); nav('/checkout') }
   const copyLink = () => { navigator.clipboard?.writeText(window.location.href); setCopied(true); setTimeout(() => setCopied(false), 1500) }
 
   if (loading) return <div className={`${wrap} py-20 text-center text-muted`}>{t('common.loading')}</div>
@@ -97,12 +103,12 @@ export default function ProductDetail() {
               <span className="nums w-12 text-center">{qty}</span>
               <button onClick={() => setQty((q) => q + 1)} className="grid h-11 w-11 place-items-center hover:bg-surface2 cursor-pointer" aria-label="+"><Icon name="plus" size={16} /></button>
             </div>
-            <button onClick={() => { add(p, qty); setAdded(true); setTimeout(() => setAdded(false), 1200) }}
+            <button onClick={addToCart}
               className={cx('flex items-center gap-2 rounded-xl border px-5 py-3 font-semibold transition-colors cursor-pointer',
                 added ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400' : 'border-line hover:bg-surface2')}>
               <Icon name={added ? 'check' : 'cart'} size={18} /> {added ? t('common.added') : t('pdp.addToCart')}
             </button>
-            <button onClick={() => { add(p, qty); nav('/checkout') }} className="flex-1 rounded-xl bg-brand-600 px-5 py-3 text-center font-semibold text-white transition-colors hover:bg-brand-700 cursor-pointer">{t('common.buyNow')}</button>
+            <button onClick={buyNow} className="flex-1 rounded-xl bg-brand-600 px-5 py-3 text-center font-semibold text-white transition-colors hover:bg-brand-700 cursor-pointer">{t('common.buyNow')}</button>
           </div>
 
           <ul className="mt-1 flex flex-col gap-2 text-sm">
@@ -135,7 +141,7 @@ export default function ProductDetail() {
             </tbody>
           </table>
         )}
-        {tab === 'desc' && <p className="max-w-[70ch] text-muted">{p.name} — {t('pdp.descBody')}</p>}
+        {tab === 'desc' && <p className="max-w-[70ch] text-muted">{p.name} - {t('pdp.descBody')}</p>}
         {tab === 'review' && (
           <div>
             {[['สมชาย ก.', 5, 'ของแท้ ส่งไว แพ็คดีมากครับ ใช้งานลื่นไหล'], ['Nattapong', 4, 'คุ้มค่า ราคาดี แต่กล่องบุบนิดหน่อย']].map(([n, r, c]) => (

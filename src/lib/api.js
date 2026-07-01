@@ -42,7 +42,7 @@ export async function fetchCategories() {
   return data || []
 }
 
-// สร้างออเดอร์จริง — ดึงราคาจาก DB ใหม่ (กันราคาถูกแก้ฝั่ง client) + RLS บังคับ user_id=ตัวเอง
+// สร้างออเดอร์จริง - ดึงราคาจาก DB ใหม่ (กันราคาถูกแก้ฝั่ง client) + RLS บังคับ user_id=ตัวเอง
 export async function createOrder({ userId, items, ship }) {
   if (!isSupabaseConfigured) throw new Error('Supabase not configured')
   const slugs = items.map((i) => i.slug)
@@ -108,7 +108,7 @@ export async function fetchSlides(placement) {
   if (placement) q = q.eq('placement', placement)
   const { data, error } = await q
   if (error) throw error
-  // กันสไลด์ซ้ำ (เผื่อ seed ถูกรันหลายรอบ) — ยึดตาม image_url+title
+  // กันสไลด์ซ้ำ (เผื่อ seed ถูกรันหลายรอบ) - ยึดตาม image_url+title
   const seen = new Set()
   return (data || []).filter((s) => {
     const k = `${s.image_url}|${s.title}`

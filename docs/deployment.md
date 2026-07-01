@@ -1,4 +1,4 @@
-# แผนการ Deploy และคำแนะนำ Cloud — BM Computer
+# แผนการ Deploy และคำแนะนำ Cloud - BM Computer
 
 เอกสารนี้สรุปแผนการนำเว็บขึ้นออนไลน์ ทั้ง **เฟสส่งงาน (ฟรี ทำได้ทันที)** และ **เฟสระบบจริง**
 ตามโจทย์: โฮสต์ฟรี · อัปเดตได้ตลอดเวลา · มีฐานข้อมูลคลาวด์ · ระบบล็อกอิน + Google OAuth · ความปลอดภัย Cloudflare
@@ -19,7 +19,7 @@
 
 ---
 
-## ส่วนที่ 1 — Deploy เพื่อส่งงาน (GitHub Pages) ✅ ทำได้เลย
+## ส่วนที่ 1 - Deploy เพื่อส่งงาน (GitHub Pages) ✅ ทำได้เลย
 
 ใช้ได้ทันทีไม่ต้องตั้ง backend (เฟส Wireframe ใช้ Mock Data)
 
@@ -48,7 +48,7 @@ npm run deploy
 
 ---
 
-## ส่วนที่ 2 — Deploy ระบบจริง (Cloudflare Pages)
+## ส่วนที่ 2 - Deploy ระบบจริง (Cloudflare Pages)
 
 เหมาะกว่าเมื่อระบบโตขึ้น (โดเมนของตัวเอง + ความปลอดภัยเต็มรูปแบบ)
 
@@ -58,18 +58,18 @@ npm run deploy
    - Framework preset: **Vite**
    - Build command: `npm run build`
    - Build output directory: `dist`
-4. กด Deploy — ทุกครั้งที่ `git push` Cloudflare จะ build + อัปเดตให้อัตโนมัติ (CI/CD)
+4. กด Deploy - ทุกครั้งที่ `git push` Cloudflare จะ build + อัปเดตให้อัตโนมัติ (CI/CD)
 
 > เมื่อย้ายมา Cloudflare Pages แนะนำสลับ `HashRouter` → `BrowserRouter`
 > และเพิ่มไฟล์ `public/_redirects` หนึ่งบรรทัด: `/*  /index.html  200`
 
 ---
 
-## ส่วนที่ 3 — ฐานข้อมูล + ระบบล็อกอิน (Supabase)
+## ส่วนที่ 3 - ฐานข้อมูล + ระบบล็อกอิน (Supabase)
 
 1. สร้างโปรเจคที่ [supabase.com](https://supabase.com) (ฟรี)
 2. สร้างตารางตาม [ERD](./analysis-design.md#6-โมเดลข้อมูลเบื้องต้น-erd) (`users`, `products`, `orders`, ...)
-3. **เปิด Row Level Security (RLS)** ทุกตาราง — ให้ลูกค้าเห็นเฉพาะข้อมูลของตัวเอง
+3. **เปิด Row Level Security (RLS)** ทุกตาราง - ให้ลูกค้าเห็นเฉพาะข้อมูลของตัวเอง
 4. **ระบบล็อกอินของตัวเอง:** เปิด Email/Password ใน Authentication → Providers
 5. **Google OAuth:** Authentication → Providers → Google → ใส่ Client ID/Secret จาก Google Cloud Console
 6. ต่อกับ React:
@@ -84,11 +84,11 @@ export const supabase = createClient(
   import.meta.env.VITE_SUPABASE_ANON_KEY,
 )
 ```
-> เก็บ key ในไฟล์ `.env` (มีใน `.gitignore` แล้ว — **ห้าม commit**)
+> เก็บ key ในไฟล์ `.env` (มีใน `.gitignore` แล้ว - **ห้าม commit**)
 
 ---
 
-## ส่วนที่ 4 — ความปลอดภัย (Cloudflare Security)
+## ส่วนที่ 4 - ความปลอดภัย (Cloudflare Security)
 
 | ฟีเจอร์ | ป้องกัน | วิธีเปิด |
 |---------|--------|---------|
@@ -99,7 +99,7 @@ export const supabase = createClient(
 | **Bot Management** | บอตกวาดข้อมูล | Security → Bots |
 
 **แนวปฏิบัติด้านความปลอดภัยเพิ่มเติม**
-- ไม่เก็บข้อมูลบัตรเครดิตเอง — ส่งต่อ Payment Gateway โดยตรง
+- ไม่เก็บข้อมูลบัตรเครดิตเอง - ส่งต่อ Payment Gateway โดยตรง
 - ใช้ RLS ของ Supabase ควบคุมสิทธิ์ระดับแถวข้อมูล
 - แยก key สำหรับ dev/prod และหมุนเวียน (rotate) เป็นระยะ
 

@@ -5,14 +5,21 @@ import { Icon } from './Icons'
 import { badgeMap, badgeLabel, cx } from '../lib/ui'
 import { useLang } from '../i18n/LanguageContext'
 import { useCart } from '../cart/CartContext'
+import { useAuth } from '../auth/AuthContext'
+import { useAuthModal } from './AuthModal'
 
 export default function ProductCard({ p }) {
   const { lang, t } = useLang()
   const { add } = useCart()
+  const { user } = useAuth()
+  const { open: openAuth } = useAuthModal()
   const [added, setAdded] = useState(false)
   const b = p.badge ? badgeMap[p.badge] : null
 
-  const addToCart = () => { add(p, 1); setAdded(true); setTimeout(() => setAdded(false), 1200) }
+  const addToCart = () => {
+    if (!user) { openAuth('login'); return }
+    add(p, 1); setAdded(true); setTimeout(() => setAdded(false), 1200)
+  }
 
   return (
     <article className="card-hover group flex flex-col overflow-hidden rounded-2xl border border-line bg-surface hover:border-zinc-300 hover:shadow-xl hover:shadow-black/5 dark:hover:border-zinc-700">

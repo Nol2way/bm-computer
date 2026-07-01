@@ -1,4 +1,4 @@
-// ชุดไอคอน SVG สไตล์ Lucide (stroke 1.8, currentColor) — แทน emoji ทั้งหมด
+// ชุดไอคอน SVG สไตล์ Lucide (stroke 1.8, currentColor) - แทน emoji ทั้งหมด
 const paths = {
   search: 'M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM21 21l-4.3-4.3',
   cart: 'M3 3h2l2.4 12.2a2 2 0 0 0 2 1.6h8.7a2 2 0 0 0 2-1.6L23 7H6 M9 21a1 1 0 1 0 0-2 1 1 0 0 0 0 2 M19 21a1 1 0 1 0 0-2 1 1 0 0 0 0 2',

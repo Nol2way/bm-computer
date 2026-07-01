@@ -1,5 +1,5 @@
 -- =====================================================================
--- BM Computer — Database Schema (Supabase / PostgreSQL)
+-- BM Computer - Database Schema (Supabase / PostgreSQL)
 -- รันใน Supabase Dashboard → SQL Editor → New query → วางทั้งหมด → Run
 -- =====================================================================
 
@@ -170,7 +170,7 @@ alter table public.order_items   enable row level security;
 alter table public.reviews       enable row level security;
 alter table public.site_settings enable row level security;
 
--- อ่านสาธารณะ (catalog) — เขียนเฉพาะแอดมิน
+-- อ่านสาธารณะ (catalog) - เขียนเฉพาะแอดมิน
 do $$
 declare t text;
 begin

@@ -32,7 +32,6 @@ export default function Footer() {
             <a className={col} href="#">LINE: @bmcomputer</a>
             <a className={col} href="#">02-000-0000</a>
             <a className={col} href="#">Facebook</a>
-            <Link className={col} to="/admin">{t('footer.adminBack')}</Link>
           </div>
         </div>
         <div className="mt-8 flex flex-wrap justify-between gap-3 border-t border-white/10 pt-5 text-xs text-zinc-500">

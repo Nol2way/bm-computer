@@ -5,7 +5,7 @@ import { useLang } from '../i18n/LanguageContext'
 
 const wrap = 'mx-auto max-w-[1200px] px-4'
 
-// "จัดสเปคคอม" — ฟีเจอร์เด่นแบบเดียวกับ Solar Calculator ในตัวอย่างชีท
+// "จัดสเปคคอม" - ฟีเจอร์เด่นแบบเดียวกับ Solar Calculator ในตัวอย่างชีท
 const parts = [
   { key: 'cpu', icon: 'cpu', picked: 'AMD Ryzen 7 7800X3D', price: 13900 },
   { key: 'mb', icon: 'mainboard', picked: 'MSI MAG B650 TOMAHAWK', price: 7490 },

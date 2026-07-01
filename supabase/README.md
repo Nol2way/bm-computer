@@ -13,7 +13,7 @@ New query → วางไฟล์ [`seed.sql`](./seed.sql) → **Run**
 VITE_SUPABASE_URL=https://xclugpegrcuqmnapysnf.supabase.co
 VITE_SUPABASE_ANON_KEY=<anon public key จาก Settings → API>
 ```
-> `.env.local` ถูก gitignore แล้ว — ปลอดภัย ไม่ขึ้น GitHub
+> `.env.local` ถูก gitignore แล้ว - ปลอดภัย ไม่ขึ้น GitHub
 
 ## 4) ใส่ค่าเดียวกันบน Cloudflare Pages
 Cloudflare → โปรเจค Pages → **Settings → Environment variables** → เพิ่ม
@@ -30,4 +30,4 @@ Authentication → Providers → Google → ใส่ Client ID/Secret จาก
 แล้วเพิ่ม redirect URL ของเว็บ (เช่น `https://bm-computer.pages.dev`)
 
 ---
-**ความปลอดภัย:** ทุกตารางเปิด Row Level Security (RLS) — ลูกค้าเห็นเฉพาะข้อมูลตัวเอง, แก้ catalog/สไลด์ได้เฉพาะ `role='admin'`
+**ความปลอดภัย:** ทุกตารางเปิด Row Level Security (RLS) - ลูกค้าเห็นเฉพาะข้อมูลตัวเอง, แก้ catalog/สไลด์ได้เฉพาะ `role='admin'`
