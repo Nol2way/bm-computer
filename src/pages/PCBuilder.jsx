@@ -20,9 +20,9 @@ const DRAFT_KEY = 'bm-build-draft'
 function loadDraft() {
   try {
     const d = JSON.parse(localStorage.getItem(DRAFT_KEY))
-    if (d && Array.isArray(d.items)) return { name: d.name || '', items: d.items, budget: d.budget || '' }
+    if (d && Array.isArray(d.items)) return { name: d.name || '', items: d.items, budget: d.budget || '', buildId: d.buildId || null }
   } catch { /* ignore */ }
-  return { name: '', items: [], budget: '' }
+  return { name: '', items: [], budget: '', buildId: null }
 }
 
 export default function PCBuilder() {
@@ -60,14 +60,14 @@ export default function PCBuilder() {
   const [items, setItems] = useState(draft.items)
   const [name, setName] = useState(draft.name)
   const [budget, setBudget] = useState(draft.budget)
-  const [buildId, setBuildId] = useState(null)      // id สเปคที่โหลดมาแก้ (บันทึกทับ)
+  const [buildId, setBuildId] = useState(draft.buildId) // id สเปคที่โหลดมาแก้ (บันทึกทับ) - เก็บใน draft ด้วย
   const [picker, setPicker] = useState(null)        // slot key ที่กำลังเลือก
   const [myOpen, setMyOpen] = useState(false)
   const [shareOpen, setShareOpen] = useState(false)
   const [addedAll, setAddedAll] = useState(false)
   useEffect(() => {
-    try { localStorage.setItem(DRAFT_KEY, JSON.stringify({ name, items, budget })) } catch { /* ignore */ }
-  }, [name, items, budget])
+    try { localStorage.setItem(DRAFT_KEY, JSON.stringify({ name, items, budget, buildId })) } catch { /* ignore */ }
+  }, [name, items, budget, buildId])
 
   // ---------- โหมดดูสเปคที่แชร์ (?b=code) ----------
   const shareCode = params.get('b')

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { fmt } from '../../data/mock'
 import { Icon } from '../Icons'
 import { cx } from '../../lib/ui'
@@ -10,15 +10,23 @@ export function useBuildActions({ user, openAuth, name, setName, items, budget, 
   const [saving, setSaving] = useState(false)
   const [savedFlash, setSavedFlash] = useState(false)
   const [lastSaved, setLastSaved] = useState(null) // build ล่าสุดที่บันทึก (ใช้ในหน้าต่างแชร์)
+  // อ่าน buildId ผ่าน ref เสมอ - กัน closure เก่าอ่านค่าไม่ทัน setState แล้วสร้างสเปคซ้ำ
+  const buildIdRef = useRef(buildId)
+  buildIdRef.current = buildId
+  const savingRef = useRef(false)
 
   const save = async () => {
     if (!user) { openAuth('login'); return null }
+    if (savingRef.current) return null // กันกดซ้อน
     const buildName = name.trim() || t('builder.buildNamePh').split(' ')[0]
     if (!name.trim()) setName(buildName)
+    savingRef.current = true
     setSaving(true)
     try {
       const body = { name: buildName, items, budget: Number(budget) || null }
-      const b = buildId ? await updateBuild(buildId, body) : await createBuild(body)
+      const id = buildIdRef.current
+      const b = id ? await updateBuild(id, body) : await createBuild(body)
+      buildIdRef.current = b.id
       setBuildId(b.id)
       setLastSaved(b)
       setSavedFlash(true)
@@ -27,15 +35,11 @@ export function useBuildActions({ user, openAuth, name, setName, items, budget, 
     } catch (e) {
       alert(e.message || tOutside('common.error'))
       return null
-    } finally { setSaving(false) }
+    } finally { savingRef.current = false; setSaving(false) }
   }
 
-  // แชร์ต้องมีสเปคที่บันทึกแล้ว - ถ้ายังไม่เคยบันทึกให้บันทึกให้อัตโนมัติ
-  const ensureSaved = async () => {
-    if (!user) { openAuth('login'); return null }
-    if (buildId && lastSaved?.id === buildId) return await save() // sync ของล่าสุดก่อนแชร์
-    return await save()
-  }
+  // แชร์ต้องมีสเปคที่บันทึกแล้ว - บันทึก (สร้างหรืออัปเดต) ให้อัตโนมัติก่อนเปิดหน้าต่างแชร์
+  const ensureSaved = () => save()
 
   return { save, ensureSaved, saving, savedFlash, lastSaved, setLastSaved }
 }
