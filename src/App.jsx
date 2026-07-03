@@ -2,8 +2,10 @@ import { Routes, Route, useLocation, Navigate } from 'react-router-dom'
 import { useEffect } from 'react'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
-import { Icon } from './components/Icons'
+import { Icon, IconGoogle } from './components/Icons'
 import { AuthModalProvider, useAuthModal } from './components/AuthModal'
+import { useLang } from './i18n/LanguageContext'
+import { useAuth } from './auth/AuthContext'
 
 import Home from './pages/Home'
 import ProductList from './pages/ProductList'
@@ -35,13 +37,37 @@ function AuthRedirect({ view }) {
   return <Navigate to="/" replace />
 }
 
+// overlay ตอนกลับมาจากหน้า Google OAuth: ให้เห็นสถานะ "กำลังเข้าสู่ระบบ" ชัดเจน
+// (แทนการเห็นหน้าเว็บสถานะยังไม่ล็อกอินแวบหนึ่งแล้วค่อยเปลี่ยน)
+function GoogleSignInOverlay() {
+  const { t } = useLang()
+  const { oauthPending } = useAuth()
+  if (!oauthPending) return null
+  return (
+    <div className="fixed inset-0 z-[200] grid place-items-center bg-bg/80 backdrop-blur-sm" role="status" aria-live="polite">
+      <div className="flex flex-col items-center gap-4 rounded-2xl border border-line bg-surface px-10 py-8 shadow-2xl">
+        <div className="relative grid h-16 w-16 place-items-center">
+          <Icon name="loader" size={64} strokeWidth={1.2} className="spinner absolute inset-0 text-brand-600" />
+          <IconGoogle size={26} />
+        </div>
+        <div className="text-center">
+          <div className="font-bold">{t('auth.googleSigningIn')}</div>
+          <div className="mt-1 text-sm text-muted">{t('auth.googleWait')}</div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function App() {
+  const { t } = useLang()
   return (
     <AuthModalProvider>
       <div className="flex min-h-dvh flex-col bg-bg text-fg">
+        <GoogleSignInOverlay />
         <div className="flex items-center justify-center gap-2 bg-zinc-900 px-4 py-1.5 text-center text-xs text-zinc-400">
           <Icon name="truck" size={14} className="shrink-0 text-brand-400" />
-          ส่งฟรีทั่วไทยเมื่อช้อปครบ 1,500 บาท · ของแท้ประกันศูนย์ · ผ่อน 0% 10 เดือน
+          {t('common.topbar')}
         </div>
         <Navbar />
         <ScrollTop />

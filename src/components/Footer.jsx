@@ -4,7 +4,7 @@ import { Icon } from './Icons'
 import { useLang } from '../i18n/LanguageContext'
 
 export default function Footer() {
-  const { t, lang } = useLang()
+  const { t } = useLang()
   const col = 'block py-1 text-sm text-zinc-400 transition-colors hover:text-white'
   const social = [
     { icon: 'facebook', href: '#', label: 'Facebook' },
@@ -56,7 +56,7 @@ export default function Footer() {
 
         {/* ช่องทางชำระเงิน */}
         <div className="mt-8 flex flex-wrap items-center gap-3 border-t border-white/10 pt-6">
-          <span className="text-sm font-semibold text-white">{lang === 'th' ? 'ช่องทางชำระเงิน' : 'Payment'}</span>
+          <span className="text-sm font-semibold text-white">{t('footer.payChannel')}</span>
           <span className="flex items-center gap-1.5 rounded-lg bg-white/5 px-3 py-1.5 text-sm"><Icon name="qr" size={16} className="text-brand-400" /> PromptPay</span>
         </div>
 

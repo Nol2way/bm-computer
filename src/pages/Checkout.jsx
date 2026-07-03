@@ -51,7 +51,7 @@ export default function Checkout() {
       const order = await createOrder({ userId: user.id, items: items.map((i) => ({ slug: i.slug, qty: i.qty })), ship: form })
       setPlaced(order)
     } catch (e) {
-      setError(e.message || 'เกิดข้อผิดพลาดในการสั่งซื้อ')
+      setError(e.message || t('checkout.orderFail'))
     } finally {
       setLoading(false)
     }
@@ -121,9 +121,9 @@ function PaymentStep({ order, onPaid }) {
       const res = await fetch('/api/verify-slip', { method: 'POST', body: fd })
       const data = await res.json()
       if (data.ok) onPaid()
-      else setError(data.error || 'ตรวจสอบสลิปไม่สำเร็จ')
+      else setError(data.error || t('checkout.verifyFail'))
     } catch (e) {
-      setError('เชื่อมต่อระบบตรวจสลิปไม่ได้ (ใช้งานบนเว็บจริงเท่านั้น)')
+      setError(t('checkout.verifyConn'))
     } finally {
       setBusy(false)
     }
@@ -145,7 +145,7 @@ function PaymentStep({ order, onPaid }) {
               <div className="text-xs text-muted">{t('checkout.scanToPay')}</div>
             </>
           ) : (
-            <div className="py-6 text-sm text-muted">ร้านยังไม่ได้ตั้งค่าบัญชีรับเงิน<br />กรุณาติดต่อร้านค้า</div>
+            <div className="py-6 text-sm text-muted">{t('checkout.noPayAccount')}<br />{t('checkout.contactShop')}</div>
           )}
         </div>
 

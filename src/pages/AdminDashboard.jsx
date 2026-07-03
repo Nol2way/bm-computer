@@ -4,6 +4,7 @@ import { Icon } from '../components/Icons'
 import { cx } from '../lib/ui'
 import { useAuth } from '../auth/AuthContext'
 import { useAuthModal } from '../components/AuthModal'
+import { useLang } from '../i18n/LanguageContext'
 import AdminOverview from './admin/AdminOverview'
 import AdminProducts from './admin/AdminProducts'
 import AdminSlides from './admin/AdminSlides'
@@ -12,32 +13,37 @@ import AdminSettings from './admin/AdminSettings'
 
 const wrap = 'mx-auto max-w-[1200px] px-4'
 const menu = [
-  { k: 'overview', icon: 'grid', label: 'ภาพรวม' },
-  { k: 'products', icon: 'box', label: 'สินค้า' },
-  { k: 'slides', icon: 'image', label: 'สไลด์/แบนเนอร์' },
-  { k: 'orders', icon: 'receipt', label: 'ออเดอร์' },
-  { k: 'settings', icon: 'wrench', label: 'ตั้งค่าชำระเงิน' },
+  { k: 'overview', icon: 'grid', label: 'admin.menuOverview' },
+  { k: 'products', icon: 'box', label: 'admin.menuProducts' },
+  { k: 'slides', icon: 'image', label: 'admin.menuSlides' },
+  { k: 'orders', icon: 'receipt', label: 'admin.menuOrders' },
+  { k: 'settings', icon: 'wrench', label: 'admin.menuSettings' },
 ]
 
 export default function AdminDashboard() {
+  const { t } = useLang()
   const { user, isAdmin, loading } = useAuth()
   const { open: openAuth } = useAuthModal()
   const [tab, setTab] = useState('overview')
 
-  if (loading) return <div className={`${wrap} py-20 text-center text-muted`}>กำลังตรวจสอบสิทธิ์...</div>
+  if (loading) return (
+    <div className={`${wrap} flex items-center justify-center gap-3 py-20 text-muted`}>
+      <Icon name="loader" size={22} className="spinner" /> {t('admin.checkingAuth')}
+    </div>
+  )
 
   if (!user) return (
-    <Guard title="เข้าสู่ระบบสำหรับผู้ดูแล"><button onClick={() => openAuth('login')} className="mt-5 inline-flex items-center justify-center rounded-xl bg-brand-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-brand-700 cursor-pointer">เข้าสู่ระบบ</button></Guard>
+    <Guard title={t('admin.loginTitle')}><button onClick={() => openAuth('login')} className="mt-5 inline-flex items-center justify-center rounded-xl bg-brand-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-brand-700 cursor-pointer">{t('auth.signin')}</button></Guard>
   )
   if (!isAdmin) return (
-    <Guard title="ไม่มีสิทธิ์เข้าถึงหลังบ้าน" desc="บัญชีนี้ไม่ใช่ผู้ดูแลระบบ"><Link to="/" className="mt-5 inline-flex items-center justify-center rounded-xl border border-line px-6 py-3 font-semibold transition-colors hover:bg-surface2">กลับหน้าร้าน</Link></Guard>
+    <Guard title={t('admin.noAccess')} desc={t('admin.noAccessDesc')}><Link to="/" className="mt-5 inline-flex items-center justify-center rounded-xl border border-line px-6 py-3 font-semibold transition-colors hover:bg-surface2">{t('admin.backToShop')}</Link></Guard>
   )
 
   return (
     <div className={`${wrap} py-6`}>
       <div className="mb-5 flex items-center justify-between">
-        <div><h1 className="text-2xl font-bold">หลังบ้าน (Admin)</h1><p className="text-sm text-muted">BM Computer · จัดการร้านค้า</p></div>
-        <Link to="/" className="rounded-lg border border-line px-3 py-2 text-sm font-semibold hover:bg-surface2">กลับหน้าร้าน</Link>
+        <div><h1 className="text-2xl font-bold">{t('admin.title')}</h1><p className="text-sm text-muted">{t('admin.sub')}</p></div>
+        <Link to="/" className="rounded-lg border border-line px-3 py-2 text-sm font-semibold hover:bg-surface2">{t('admin.backToShop')}</Link>
       </div>
 
       <div className="grid items-start gap-6 lg:grid-cols-[220px_1fr]">
@@ -46,7 +52,7 @@ export default function AdminDashboard() {
             <button key={m.k} onClick={() => setTab(m.k)}
               className={cx('flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors cursor-pointer',
                 tab === m.k ? 'bg-brand-50 text-brand-600 dark:bg-brand-600/15' : 'text-fg hover:bg-surface2')}>
-              <Icon name={m.icon} size={18} /> {m.label}
+              <Icon name={m.icon} size={18} /> {t(m.label)}
             </button>
           ))}
         </aside>

@@ -86,7 +86,33 @@
   }
   .card-hover { transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
   .card-hover:hover { transform: translateY(-3px); }
+
+  /* skeleton loading: พื้น surface-2 + แสง shimmer วิ่งผ่าน (ปิดเองเมื่อ prefers-reduced-motion) */
+  .skeleton {
+    position: relative;
+    overflow: hidden;
+    background: var(--surface-2);
+    border-radius: 0.5rem;
+  }
+  .skeleton::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--fg) 6%, transparent), transparent);
+    animation: skeleton-shimmer 1.6s ease-in-out infinite;
+  }
 }
+
+@keyframes skeleton-shimmer {
+  100% { transform: translateX(100%); }
+}
+
+/* spinner หมุนนุ่มๆ (ช้ากว่า animate-spin เดิมที่ 1s ซึ่งดูเร็ว/กระตุกเกินไป) */
+@keyframes spinner-rotate {
+  to { transform: rotate(360deg); }
+}
+.spinner { animation: spinner-rotate 1.4s linear infinite; }
 
 /* เด้งเข้าเวลาเปิด modal */
 @keyframes pop {

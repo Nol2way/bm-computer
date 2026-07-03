@@ -2,6 +2,8 @@
 // - VITE_API_BASE ไม่ตั้ง = ปิดการใช้ API (frontend คงพฤติกรรมเดิม: ต่อ Supabase ตรง)
 // - VITE_API_BASE = '/'   = same-origin (dev ผ่าน vite proxy)
 // - VITE_API_BASE = URL   = ข้ามโดเมน (prod ไปที่ worker) ส่งคุกกี้ด้วย credentials:'include'
+import { tOutside } from '../i18n/translations'
+
 const RAW = import.meta.env.VITE_API_BASE || ''
 export const apiEnabled = RAW !== ''
 const BASE = RAW === '/' ? '' : RAW.replace(/\/$/, '')
@@ -41,7 +43,7 @@ async function request(path, { method = 'GET', body, isForm = false, retry = tru
   }
 
   const data = await res.json().catch(() => null)
-  if (!res.ok) throw new ApiError(data?.error || 'เกิดข้อผิดพลาด', res.status, data?.code)
+  if (!res.ok) throw new ApiError(data?.error || tOutside('common.error'), res.status, data?.code)
   return data
 }
 

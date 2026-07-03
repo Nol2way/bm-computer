@@ -21,7 +21,7 @@ function useCountdown(target) {
 }
 
 export default function FlashSale({ items }) {
-  const { lang } = useLang()
+  const { t } = useLang()
   const [target] = useState(nextEight)
   const { h, m, s } = useCountdown(target)
   if (!items?.length) return null
@@ -32,8 +32,8 @@ export default function FlashSale({ items }) {
     <section className="mt-12 overflow-hidden rounded-2xl border border-brand-200 dark:border-brand-900/60">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2 bg-gradient-to-r from-brand-700 to-brand-600 px-5 py-3 text-white">
         <Icon name="bolt" className="text-amber-300" />
-        <span className="text-lg font-extrabold tracking-wide">{lang === 'th' ? 'แฟลชเซล' : 'FLASH SALE'}</span>
-        <span className="ml-auto text-sm text-brand-100">{lang === 'th' ? 'หมดเวลาใน' : 'Ends in'}</span>
+        <span className="text-lg font-extrabold tracking-wide">{t('home.flashSale')}</span>
+        <span className="ml-auto text-sm text-brand-100">{t('home.endsIn')}</span>
         <div className="flex items-center gap-1 font-bold"><Box v={h} />:<Box v={m} />:<Box v={s} /></div>
       </div>
       <div className="bg-surface p-4">

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Icon } from '../../components/Icons'
 import { cx } from '../../lib/ui'
 import { useLang } from '../../i18n/LanguageContext'
-import { PageHead, Field, PrimaryBtn, GhostBtn, DefaultBadge, EmptyState, Spinner, inputCls } from './ui'
+import { PageHead, Field, PrimaryBtn, GhostBtn, DefaultBadge, EmptyState, CardListSkeleton, inputCls } from './ui'
 
 // คอมโพเนนต์ CRUD ทั่วไปสำหรับส่วนบัญชี (ที่อยู่ / ใบกำกับภาษี / ช่องทางชำระเงิน)
 // fields: [{ key, label, type: 'text'|'tel'|'date'|'textarea'|'select', options?, required?, span? }]
@@ -45,7 +45,7 @@ export default function AccountCrud({ title, api, fields, blank, renderItem, emp
     try { await api.update(it.id, { is_default: true }); await load() } catch (e2) { setErr(e2.message) } finally { setBusy(false) }
   }
 
-  if (items === null) return <Spinner />
+  if (items === null) return <CardListSkeleton />
 
   return (
     <div>

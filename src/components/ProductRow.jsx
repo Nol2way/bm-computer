@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import ProductCard from './ProductCard'
 import { Icon } from './Icons'
+import { ProductRowSkeleton } from './Skeleton'
 
 // แถวสินค้าแบบ carousel: ~6/แถว, ลากลื่น, เลื่อนอัตโนมัติวนทุก 5 วินาที, ปุ่มเลื่อน
 export default function ProductRow({ items = [], loading }) {
@@ -38,13 +39,7 @@ export default function ProductRow({ items = [], loading }) {
 
   const card = 'w-[152px] shrink-0 snap-start sm:w-[178px] lg:w-[186px]'
 
-  if (loading) {
-    return (
-      <div className="flex gap-3 overflow-hidden sm:gap-4">
-        {Array.from({ length: 6 }).map((_, i) => <div key={i} className={`${card} aspect-[3/4] animate-pulse rounded-2xl bg-surface2`} />)}
-      </div>
-    )
-  }
+  if (loading) return <ProductRowSkeleton cardClass={card} />
   if (!items.length) return null
 
   return (

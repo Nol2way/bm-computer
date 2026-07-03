@@ -11,6 +11,7 @@ import { useFetch } from '../lib/useFetch'
 import { useCart } from '../cart/CartContext'
 import { useAuth } from '../auth/AuthContext'
 import { useAuthModal } from '../components/AuthModal'
+import { ProductDetailSkeleton } from '../components/Skeleton'
 
 const wrap = 'mx-auto max-w-[1200px] px-4'
 const PLACEHOLDER = 'https://placehold.co/600x600/f1f1f4/9ca3af?text=BM+Computer'
@@ -35,7 +36,7 @@ export default function ProductDetail() {
   const buyNow = () => { if (!user) { openAuth('login'); return } add(p, qty); nav('/checkout') }
   const copyLink = () => { navigator.clipboard?.writeText(window.location.href); setCopied(true); setTimeout(() => setCopied(false), 1500) }
 
-  if (loading) return <div className={`${wrap} py-20 text-center text-muted`}>{t('common.loading')}</div>
+  if (loading) return <div className={`${wrap} py-6`}><ProductDetailSkeleton /></div>
   if (!p) return <div className={`${wrap} py-20 text-center`}><h2 className="text-2xl font-bold">{t('notfound.title')}</h2><Link to="/products" className="mt-4 inline-block text-brand-600">{t('list.products')}</Link></div>
 
   const images = p.images.length ? p.images : [PLACEHOLDER]
@@ -53,9 +54,9 @@ export default function ProductDetail() {
       <div className="grid gap-8 md:grid-cols-2">
         {/* GALLERY */}
         <div>
-          <button onClick={() => setBox(true)} className="group relative block w-full overflow-hidden rounded-2xl border border-line bg-white" title="คลิกเพื่อดูเต็มจอ/ซูม">
+          <button onClick={() => setBox(true)} className="group relative block w-full overflow-hidden rounded-2xl border border-line bg-white" title={t('common.clickToZoom')}>
             <img src={images[gi]} alt={p.name} onError={(e) => { e.currentTarget.src = PLACEHOLDER }} className="aspect-square w-full object-contain p-6" />
-            <span className="absolute bottom-3 right-3 flex items-center gap-1 rounded-lg bg-black/60 px-2.5 py-1 text-xs text-white opacity-0 transition group-hover:opacity-100"><Icon name="search" size={14} /> ซูม</span>
+            <span className="absolute bottom-3 right-3 flex items-center gap-1 rounded-lg bg-black/60 px-2.5 py-1 text-xs text-white opacity-0 transition group-hover:opacity-100"><Icon name="search" size={14} /> {t('common.zoom')}</span>
           </button>
           {images.length > 1 && (
             <div className="mt-3 grid grid-cols-4 gap-2">
@@ -81,9 +82,9 @@ export default function ProductDetail() {
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
             <span className="text-amber-500">★ {p.rating}</span>
             <span className="text-muted">{p.reviews} {t('common.reviews')}</span>
-            <span className="text-muted">· {lang === 'th' ? 'รหัสสินค้า' : 'SKU'}: {p.sku}</span>
+            <span className="text-muted">· {t('common.sku')}: {p.sku}</span>
             <button onClick={copyLink} className="ml-auto flex items-center gap-1 text-muted transition-colors hover:text-brand-600 cursor-pointer">
-              <Icon name={copied ? 'check' : 'copy'} size={14} /> {copied ? (lang === 'th' ? 'คัดลอกแล้ว' : 'Copied') : (lang === 'th' ? 'คัดลอกลิงก์' : 'Copy link')}
+              <Icon name={copied ? 'check' : 'copy'} size={14} /> {copied ? t('common.copied') : t('common.copyLink')}
             </button>
           </div>
 
@@ -143,13 +144,9 @@ export default function ProductDetail() {
         )}
         {tab === 'desc' && <p className="max-w-[70ch] text-muted">{p.name} - {t('pdp.descBody')}</p>}
         {tab === 'review' && (
-          <div>
-            {[['สมชาย ก.', 5, 'ของแท้ ส่งไว แพ็คดีมากครับ ใช้งานลื่นไหล'], ['Nattapong', 4, 'คุ้มค่า ราคาดี แต่กล่องบุบนิดหน่อย']].map(([n, r, c]) => (
-              <div key={n} className="grid grid-cols-[44px_1fr] gap-3 border-b border-line py-4">
-                <div className="ph aspect-square rounded-full" />
-                <div><b>{n}</b> <span className="text-amber-500">{'★'.repeat(r)}</span><p className="mt-1 text-sm text-muted">{c}</p></div>
-              </div>
-            ))}
+          <div className="grid place-items-center gap-2 rounded-2xl border border-dashed border-line bg-surface py-14 text-center text-muted">
+            <span className="text-2xl text-amber-500">★ {p.rating}</span>
+            <span className="text-sm">{t('pdp.noReviews')}</span>
           </div>
         )}
       </section>

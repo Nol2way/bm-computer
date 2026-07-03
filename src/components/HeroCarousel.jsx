@@ -19,7 +19,7 @@ export default function HeroCarousel({ slides }) {
 
   const pause = () => clearInterval(timer.current)
 
-  if (!n) return <div className="aspect-[1200/440] animate-pulse rounded-2xl bg-surface2" />
+  if (!n) return <div className="skeleton aspect-[1200/440] rounded-2xl" aria-hidden="true" />
 
   const Slide = ({ s }) => {
     const img = <img src={s.image_url} alt={s.title || ''} className="h-full w-full object-cover" loading="eager"

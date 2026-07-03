@@ -7,6 +7,7 @@ import { useAuth } from '../auth/AuthContext'
 import { useAuthModal } from '../components/AuthModal'
 import { fetchMyOrders } from '../lib/api'
 import { useFetch } from '../lib/useFetch'
+import { OrderListSkeleton } from '../components/Skeleton'
 
 const wrap = 'mx-auto max-w-[1200px] px-4'
 
@@ -26,7 +27,7 @@ export default function OrderHistory() {
       {!user ? (
         <Empty icon="user" title={t('orders.loginToView')}><button onClick={() => openAuth('login')} className="mt-5 inline-flex items-center justify-center rounded-xl bg-brand-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-brand-700 cursor-pointer">{t('auth.signin')}</button></Empty>
       ) : loading ? (
-        <div className="py-16 text-center text-muted">{t('common.loading')}</div>
+        <OrderListSkeleton />
       ) : orders.length === 0 ? (
         <Empty icon="receipt" title={t('orders.empty')}><Link to="/products" className="mt-5 inline-flex items-center justify-center rounded-xl bg-brand-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-brand-700">{t('orders.shopNow')}</Link></Empty>
       ) : (

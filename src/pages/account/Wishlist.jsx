@@ -4,7 +4,8 @@ import ProductCard from '../../components/ProductCard'
 import { useLang } from '../../i18n/LanguageContext'
 import { accountApi } from '../../lib/accountApi'
 import { useWishlist } from '../../wishlist/WishlistContext'
-import { PageHead, EmptyState, Spinner, PrimaryBtn } from './ui'
+import { PageHead, EmptyState, PrimaryBtn } from './ui'
+import { Skeleton, ProductGridSkeleton } from '../../components/Skeleton'
 
 export default function Wishlist() {
   const { t } = useLang()
@@ -18,7 +19,12 @@ export default function Wishlist() {
     return () => { alive = false }
   }, [wl.slugs])
 
-  if (items === null) return <Spinner />
+  if (items === null) return (
+    <div aria-hidden="true">
+      <div className="mb-5"><Skeleton className="h-6 w-40" /></div>
+      <ProductGridSkeleton count={4} className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4" />
+    </div>
+  )
 
   return (
     <div>

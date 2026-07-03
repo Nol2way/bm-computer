@@ -1,5 +1,6 @@
 import { supabase, isSupabaseConfigured } from './supabase'
 import { api, apiEnabled, ApiError } from './apiClient'
+import { tOutside } from '../i18n/translations'
 
 // เมื่อเปิด backend API: เรียกผ่าน backend (session อยู่ใน HttpOnly cookie)
 // เมื่อไม่เปิด: fallback ต่อ Supabase ตรง (RLS ผ่าน session ของ supabase-js)
@@ -72,7 +73,7 @@ export async function createOrder({ userId, items, ship }) {
     const p = bySlug[i.slug]
     return { product_id: p.id, name: p.name, price: priceOf(p), qty: i.qty }
   })
-  if (!lines.length) throw new Error('ไม่มีสินค้าในตะกร้า')
+  if (!lines.length) throw new Error(tOutside('common.emptyCart'))
   const subtotal = lines.reduce((s, l) => s + l.price * l.qty, 0)
   const total = subtotal + (subtotal >= 1500 ? 0 : 80)
   const { data: order, error: e2 } = await supabase.from('orders').insert({

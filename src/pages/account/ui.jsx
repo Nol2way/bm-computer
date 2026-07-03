@@ -1,5 +1,6 @@
 import { Icon } from '../../components/Icons'
 import { cx } from '../../lib/ui'
+import { Skeleton } from '../../components/Skeleton'
 
 export const inputCls = 'w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20'
 
@@ -61,5 +62,38 @@ export function EmptyState({ icon = 'box', text }) {
 }
 
 export function Spinner() {
-  return <div className="grid place-items-center py-14 text-muted"><Icon name="loader" size={28} className="animate-spin" /></div>
+  return <div className="grid place-items-center py-14 text-muted"><Icon name="loader" size={28} className="spinner" /></div>
+}
+
+// skeleton หน้า "ข้อมูลส่วนตัว": หัวเรื่อง + แถว label/value
+export function InfoSkeleton({ rows = 6 }) {
+  return (
+    <div className="rounded-2xl border border-line bg-surface p-6" aria-hidden="true">
+      <div className="mb-5 flex items-center justify-between"><Skeleton className="h-6 w-40" /><Skeleton className="h-9 w-20 rounded-lg" /></div>
+      {Array.from({ length: rows }).map((_, i) => (
+        <div key={i} className="grid grid-cols-1 gap-2 border-b border-line py-3 last:border-0 sm:grid-cols-[200px_1fr] sm:gap-4">
+          <Skeleton className="h-4 w-28" /><Skeleton className="h-4 w-2/5" />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// skeleton รายการการ์ด (ที่อยู่/ใบกำกับภาษี/ช่องทางชำระเงิน)
+export function CardListSkeleton({ count = 2 }) {
+  return (
+    <div aria-hidden="true">
+      <div className="mb-5 flex items-center justify-between"><Skeleton className="h-6 w-48" /><Skeleton className="h-10 w-28 rounded-lg" /></div>
+      <div className="grid gap-3">
+        {Array.from({ length: count }).map((_, i) => (
+          <div key={i} className="rounded-xl border border-line bg-surface p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex flex-1 flex-col gap-2"><Skeleton className="h-4 w-1/3" /><Skeleton className="h-4 w-2/3" /><Skeleton className="h-4 w-1/2" /></div>
+              <div className="flex gap-1"><Skeleton className="h-8 w-8 rounded-lg" /><Skeleton className="h-8 w-8 rounded-lg" /></div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
 }

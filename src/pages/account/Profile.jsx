@@ -3,7 +3,7 @@ import { Icon } from '../../components/Icons'
 import { useLang } from '../../i18n/LanguageContext'
 import { useAuth } from '../../auth/AuthContext'
 import { accountApi } from '../../lib/accountApi'
-import { PageHead, Field, InfoRow, PrimaryBtn, GhostBtn, inputCls, Spinner } from './ui'
+import { PageHead, Field, InfoRow, PrimaryBtn, GhostBtn, inputCls, InfoSkeleton } from './ui'
 
 export default function Profile() {
   const { t } = useLang()
@@ -37,7 +37,7 @@ export default function Profile() {
     } catch (e2) { setErr(e2.message) } finally { setSaving(false) }
   }
 
-  if (!p) return <Spinner />
+  if (!p) return <InfoSkeleton />
 
   return (
     <div className="rounded-2xl border border-line bg-surface p-6">

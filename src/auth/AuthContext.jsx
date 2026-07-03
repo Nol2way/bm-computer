@@ -6,10 +6,26 @@ import { authApi } from '../lib/accountApi'
 const Ctx = createContext(null)
 export const useAuth = () => useContext(Ctx)
 
+// เพิ่งกลับมาจากหน้า Google OAuth หรือไม่ - ใช้โชว์ overlay "กำลังเข้าสู่ระบบ"
+// เช็คจาก sessionStorage flag (ตั้งตอนกดปุ่ม Google ใน AuthForm) เพราะ supabase-js
+// ลบ token ออกจาก URL hash ก่อน React mount ทำให้เช็คจาก hash ตรงๆ ไม่ทัน
+export const OAUTH_FLAG = 'bm-oauth-return'
+// โชว์ overlay อย่างน้อยเท่านี้ กันกระพริบแวบเดียวแล้วหาย (ดูไม่ออกว่าเกิดอะไรขึ้น)
+const OAUTH_OVERLAY_MIN_MS = 900
+function isOAuthReturn() {
+  if (typeof window === 'undefined') return false
+  try {
+    return sessionStorage.getItem(OAUTH_FLAG) === '1'
+      || window.location.hash.includes('access_token=')
+      || /[?&]code=/.test(window.location.search)
+  } catch { return false }
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [oauthPending, setOauthPending] = useState(isOAuthReturn)
 
   // โหลดผู้ใช้ปัจจุบันจาก backend (session อยู่ใน HttpOnly cookie - apiClient จะ refresh ให้เองถ้า access หมดอายุ)
   const reload = useCallback(async () => {
@@ -29,6 +45,8 @@ export function AuthProvider({ children }) {
     if (!apiEnabled) return
     let alive = true
     ;(async () => {
+      const wasOauth = isOAuthReturn()
+      const started = Date.now()
       // ถ้ากลับมาจาก Google OAuth: supabase-js ฝั่ง client จะจับ session จาก URL
       // -> โอนเข้า HttpOnly cookie ผ่าน backend แล้ว signOut client (เก็บ session ที่ cookie ที่เดียว)
       if (isSupabaseConfigured) {
@@ -45,7 +63,14 @@ export function AuthProvider({ children }) {
         } catch { /* ถ้าโอนไม่สำเร็จ ค่อยให้ผู้ใช้ล็อกอินใหม่ */ }
       }
       await reload()
+      try { sessionStorage.removeItem(OAUTH_FLAG) } catch { /* ignore */ }
       if (alive) setLoading(false)
+      // คง overlay ไว้ครบขั้นต่ำก่อนปิด (กันกระพริบ)
+      if (wasOauth) {
+        const left = OAUTH_OVERLAY_MIN_MS - (Date.now() - started)
+        if (left > 0) await new Promise((r) => setTimeout(r, left))
+      }
+      if (alive) setOauthPending(false)
     })()
     return () => { alive = false }
   }, [reload])
@@ -56,7 +81,9 @@ export function AuthProvider({ children }) {
     if (!isSupabaseConfigured) { setLoading(false); return }
     supabase.auth.getSession().then(({ data }) => {
       setUser(data.session?.user || null)
+      try { sessionStorage.removeItem(OAUTH_FLAG) } catch { /* ignore */ }
       setLoading(false)
+      setOauthPending(false)
     })
     const { data } = supabase.auth.onAuthStateChange((_e, session) => setUser(session?.user || null))
     return () => data.subscription?.unsubscribe()
@@ -80,7 +107,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <Ctx.Provider value={{ user, profile, isAdmin: profile?.role === 'admin', loading, signOut, reload }}>
+    <Ctx.Provider value={{ user, profile, isAdmin: profile?.role === 'admin', loading, oauthPending, signOut, reload }}>
       {children}
     </Ctx.Provider>
   )

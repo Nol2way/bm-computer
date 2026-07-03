@@ -7,6 +7,7 @@ import { useLang } from '../i18n/LanguageContext'
 import { fetchProducts, fetchBrands } from '../lib/api'
 import { useFetch } from '../lib/useFetch'
 import { fuzzyFilter } from '../lib/search'
+import { ProductCardSkeleton } from '../components/Skeleton'
 
 const wrap = 'mx-auto max-w-[1200px] px-4'
 
@@ -82,7 +83,7 @@ export default function ProductList() {
 
           <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
             {loading
-              ? Array.from({ length: 8 }).map((_, i) => <div key={i} className="aspect-[3/4] animate-pulse rounded-2xl border border-line bg-surface2" />)
+              ? Array.from({ length: 8 }).map((_, i) => <ProductCardSkeleton key={i} />)
               : list.map((p) => <ProductCard key={p.id} p={p} />)}
           </div>
 

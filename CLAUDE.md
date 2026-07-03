@@ -114,7 +114,9 @@ backend/         *** Backend API แยก (Cloudflare Worker) ***
 
 ## คำสั่ง
 ```bash
-npm run dev      # dev server
+npm run dev      # รัน backend worker (:8787) + vite (:5173) พร้อมกันด้วย concurrently (แก้ปัญหา "ต่อ DB ไม่ได้" เพราะลืมรัน backend)
+npm run dev:web  # vite อย่างเดียว
+npm run dev:api  # backend worker อย่างเดียว
 npm run build    # production build -> dist/
 npm run preview  # preview build
 ```
@@ -144,7 +146,11 @@ npm run preview  # preview build
 - ✅ **Deploy แล้ว**: worker live ที่ `https://bm-computer-api.manatsawin-tho.workers.dev` (Swagger `/api/docs`) · `.env.production` ตั้ง `VITE_API_BASE` ชี้ worker -> Cloudflare Pages build จะเปิด API ให้เอง
 - ✅ **Google OAuth ผ่าน backend**: client ทำ OAuth (supabase-js) -> `POST /api/auth/session` โอน token เข้าเป็น HttpOnly cookie -> signOut client (session อยู่ที่ cookie ที่เดียว) · ต้องเปิด Google provider + redirect URL ใน Supabase Auth ให้ทำงานจริง
 - ✅ **verify-slip**: อยู่ที่ Cloudflare Pages Function `/api/verify-slip` (มี service_role - server-trust กันปลอมสถานะจ่าย) · worker มี `/api/payments/verify-slip` เตรียมไว้ (ใช้เมื่อใส่ service_role ให้ worker)
-- 🟡 **เฟสถัดไป:** เปิด Google provider ใน Supabase (Google Cloud OAuth client + redirect), (ตัวเลือก) ย้าย verify-slip มา worker เมื่อใส่ service_role, ตั้ง Supabase JWT expiry ≈900s, categories ใน nav จาก DB, brands/categories CRUD
+- ✅ **Skeleton loading ทั้งเว็บ**: `components/Skeleton.jsx` (ProductCard/Row/Grid, ProductDetail, Order list, Table, Slide, Form, BrandBar) + utility `.skeleton` (shimmer) ใน index.css - ใช้แทน "กำลังโหลด..."/spinner ทุกหน้า (หน้าบ้าน+บัญชี+แอดมิน)
+- ✅ **i18n ครบทุกหน้า**: แอดมินทั้งหมด + AuthForm (placeholder/error) + Checkout errors + topbar + FlashSale/BrandBar/Footer ผ่าน t() หมดแล้ว · ข้อความ error ใน lib (apiClient/api) ใช้ `tOutside()` จาก translations.js (อ่านภาษาจาก localStorage)
+- ✅ **Google OAuth UX**: overlay "กำลังเข้าสู่ระบบด้วย Google" ตอนกลับจาก OAuth (flag `bm-oauth-return` ใน sessionStorage - เช็คจาก hash ตรงๆ ไม่ได้เพราะ supabase-js ลบก่อน React mount) แสดงขั้นต่ำ 900ms กันกระพริบ · spinner ทุกตัวใช้ class `.spinner` (1.4s หมุนนุ่มกว่า animate-spin)
+- ✅ ลบรีวิวปลอมใน ProductDetail -> empty state จริง ("ยังไม่มีรีวิว") รอระบบรีวิวจริง (ตาราง reviews มีแล้ว)
+- 🟡 **เฟสถัดไป:** เปิด Google provider ใน Supabase (Google Cloud OAuth client + redirect), ระบบรีวิวจริง (เขียน/อ่านจากตาราง reviews), (ตัวเลือก) ย้าย verify-slip มา worker เมื่อใส่ service_role, ตั้ง Supabase JWT expiry ≈900s, categories ใน nav จาก DB, brands/categories CRUD
 - ⚠️ **คุกกี้ข้ามโดเมน** (pages.dev -> workers.dev) ใช้ SameSite=None+Secure - ทำงานบน Chrome แต่บางเบราว์เซอร์ที่บล็อก third-party cookie อาจมีปัญหา · ทางแก้ระยะยาว: ผูก worker เข้าโดเมนเดียวกับ frontend (custom domain/route) แล้วใช้ SameSite=Lax
 - 📌 **Supabase MCP**: ใช้รัน migration ได้เอง (apply_migration) - migration 0001 apply แล้ว
 
