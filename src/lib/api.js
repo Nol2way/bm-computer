@@ -30,6 +30,7 @@ function mapProduct(row) {
     badge: row.badge,
     images: Array.isArray(row.images) ? row.images : [],
     specs: row.specs || {},
+    attrs: row.attrs || {},
     featured: row.is_featured,
   }
 }
@@ -121,7 +122,7 @@ export async function saveProduct(p) {
     old_price: p.old_price ? Number(p.old_price) : null,
     sale_price: p.sale_price ? Number(p.sale_price) : null,
     stock: Number(p.stock) || 0, badge: p.badge || null,
-    images: p.images || [], specs: p.specs || {}, description: p.description || null,
+    images: p.images || [], specs: p.specs || {}, attrs: p.attrs || {}, description: p.description || null,
     is_active: p.is_active !== false, is_featured: !!p.is_featured,
   }
   if (apiEnabled) { await api.post('/api/admin/products', row); return }
@@ -299,6 +300,80 @@ export async function deleteCategory(id) {
   if (apiEnabled) { await api.del(`/api/admin/categories/${id}`); return }
   const { error } = await supabase.from('categories').delete().eq('id', id)
   if (error) throw error
+}
+
+// ===================== PC BUILDER =====================
+// นิยามแอตทริบิวต์ต่อหมวด (ใช้ใน builder + ฟอร์มสินค้า admin)
+export async function fetchAttributeDefs(cat) {
+  if (apiEnabled) return (await api.get('/api/catalog/attribute-defs' + qs({ cat }))).items
+  if (!isSupabaseConfigured) return []
+  let q = supabase.from('attribute_defs')
+    .select('id,category_id,key,label_th,label_en,type,unit,options,required_for_compat,show_in_specs,sort,categories!inner(slug)')
+    .order('sort', { ascending: true })
+  if (cat) q = q.eq('categories.slug', cat)
+  const { data, error } = await q
+  if (error) throw error
+  return (data || []).map((d) => ({ ...d, cat: d.categories?.slug, categories: undefined }))
+}
+
+// สเปคที่บันทึก (builds) - โหมด API ผ่าน backend · fallback เขียน Supabase ตรง (RLS own-row)
+const BUILD_SELECT = 'id,name,share_code,items,budget,is_public,created_at,updated_at'
+async function fallbackUid() {
+  const { data } = await supabase.auth.getSession()
+  const uid = data?.session?.user?.id
+  if (!uid) throw new Error(tOutside('builder.needLogin'))
+  return uid
+}
+export async function listMyBuilds() {
+  if (apiEnabled) return (await api.get('/api/builder/builds')).items
+  await fallbackUid()
+  const { data, error } = await supabase.from('builds').select(BUILD_SELECT).order('updated_at', { ascending: false })
+  if (error) throw error
+  return data || []
+}
+export async function createBuild({ name, items, budget, is_public }) {
+  if (apiEnabled) return (await api.post('/api/builder/builds', { name, items, budget: budget ?? null, is_public: !!is_public })).build
+  const uid = await fallbackUid()
+  const { data, error } = await supabase.from('builds')
+    .insert({ user_id: uid, name, items, budget: budget ?? null, is_public: !!is_public }).select(BUILD_SELECT).single()
+  if (error) throw error
+  return data
+}
+export async function updateBuild(id, patch) {
+  if (apiEnabled) return (await api.patch(`/api/builder/builds/${id}`, patch)).build
+  await fallbackUid()
+  const { data, error } = await supabase.from('builds').update(patch).eq('id', id).select(BUILD_SELECT).single()
+  if (error) throw error
+  return data
+}
+export async function deleteBuild(id) {
+  if (apiEnabled) { await api.del(`/api/builder/builds/${id}`); return }
+  await fallbackUid()
+  const { error } = await supabase.from('builds').delete().eq('id', id)
+  if (error) throw error
+}
+export async function duplicateBuild(id) {
+  if (apiEnabled) return (await api.post(`/api/builder/builds/${id}/duplicate`)).build
+  const uid = await fallbackUid()
+  const { data: src, error } = await supabase.from('builds').select('name,items,budget').eq('id', id).maybeSingle()
+  if (error) throw error
+  if (!src) throw new Error(tOutside('builder.sharedNotFound'))
+  const { data, error: e2 } = await supabase.from('builds')
+    .insert({ user_id: uid, name: (src.name + ' (สำเนา)').slice(0, 60), items: src.items, budget: src.budget })
+    .select(BUILD_SELECT).single()
+  if (e2) throw e2
+  return data
+}
+export async function fetchSharedBuild(code) {
+  if (apiEnabled) {
+    try { return (await api.get(`/api/builder/shared/${encodeURIComponent(code)}`)).build }
+    catch (e) { if (e instanceof ApiError && e.status === 404) return null; throw e }
+  }
+  if (!isSupabaseConfigured) return null
+  const { data, error } = await supabase.from('builds')
+    .select('name,items,budget,updated_at').eq('share_code', code).eq('is_public', true).maybeSingle()
+  if (error) throw error
+  return data
 }
 
 export async function fetchSlides(placement) {

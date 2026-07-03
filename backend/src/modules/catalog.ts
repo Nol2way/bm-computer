@@ -33,6 +33,7 @@ export function mapProduct(row: any) {
     badge: row.badge ?? null,
     images: Array.isArray(row.images) ? row.images : [],
     specs: row.specs || {},
+    attrs: row.attrs || {},
     featured: !!row.is_featured,
   }
 }
@@ -45,7 +46,7 @@ export const ProductSchema = z
     sale: z.boolean(), saleEndsAt: z.string().nullable(),
     rating: z.number().nullable(), reviews: z.number(), stock: z.number(),
     badge: z.string().nullable(), images: z.array(z.string()),
-    specs: z.record(z.any()), featured: z.boolean(),
+    specs: z.record(z.any()), attrs: z.record(z.any()), featured: z.boolean(),
   })
   .openapi('Product')
 
@@ -112,6 +113,34 @@ export function registerCatalog(app: OpenAPIHono<AppEnv>) {
       const { data, error } = await db.from('categories').select('*').order('sort', { ascending: true })
       if (error) throw badRequest(error.message)
       return c.json({ ok: true as const, items: data ?? [] })
+    }
+  )
+
+  // GET /api/catalog/attribute-defs - นิยามสเปคเครื่องอ่านต่อหมวด (ใช้ใน PC Builder + ฟอร์มสินค้า admin)
+  const AttrDefSchema = z.object({
+    id: z.string(), category_id: z.string(), key: z.string(),
+    label_th: z.string(), label_en: z.string(), type: z.string(),
+    unit: z.string().nullable(), options: z.array(z.string()).nullable(),
+    required_for_compat: z.boolean(), show_in_specs: z.boolean(), sort: z.number(),
+    cat: z.string().optional(),
+  }).openapi('AttributeDef')
+  app.openapi(
+    createRoute({
+      method: 'get', path: '/api/catalog/attribute-defs', tags: TAG, summary: 'นิยามแอตทริบิวต์ต่อหมวด (PC Builder)',
+      request: { query: z.object({ cat: z.string().optional() }) },
+      responses: { 200: jsonRes('สำเร็จ', z.object({ ok: z.literal(true), items: z.array(AttrDefSchema) })) },
+    }),
+    async (c) => {
+      const { cat } = c.req.valid('query')
+      const db = anonClient(c.env)
+      let q = db.from('attribute_defs')
+        .select('id,category_id,key,label_th,label_en,type,unit,options,required_for_compat,show_in_specs,sort,categories!inner(slug)')
+        .order('sort', { ascending: true })
+      if (cat) q = q.eq('categories.slug', cat)
+      const { data, error } = await q
+      if (error) throw badRequest(error.message)
+      const items = (data ?? []).map((d: any) => ({ ...d, cat: d.categories?.slug, categories: undefined }))
+      return c.json({ ok: true as const, items })
     }
   )
 

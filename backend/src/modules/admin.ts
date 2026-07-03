@@ -16,6 +16,7 @@ const ProductBody = z.object({
   price: z.number(), old_price: z.number().nullable().optional(), sale_price: z.number().nullable().optional(),
   stock: z.number().optional(), badge: z.string().nullable().optional(),
   images: z.array(z.string()).optional(), specs: z.record(z.any()).optional(),
+  attrs: z.record(z.any()).optional(),
   description: z.string().nullable().optional(), is_active: z.boolean().optional(), is_featured: z.boolean().optional(),
 }).openapi('AdminProductBody')
 
@@ -55,12 +56,14 @@ export function registerAdmin(app: OpenAPIHono<AppEnv>) {
       request: { body: jsonBody(ProductBody) }, responses: { 200: jsonRes('บันทึกแล้ว', OkSchema), 400: errRes('error'), 403: errRes('ต้องเป็นแอดมิน') } }),
     async (c) => {
       const p = c.req.valid('json')
-      const row = {
+      const row: Record<string, unknown> = {
         name: p.name, slug: p.slug, category_id: p.category_id || null, brand_id: p.brand_id || null,
         price: Number(p.price) || 0, old_price: p.old_price ?? null, sale_price: p.sale_price ?? null,
         stock: Number(p.stock) || 0, badge: p.badge || null, images: p.images || [], specs: p.specs || {},
         description: p.description || null, is_active: p.is_active !== false, is_featured: !!p.is_featured,
       }
+      // attrs ส่งมาเท่านั้นจึงอัปเดต - กัน client เก่าที่ไม่มีฟิลด์นี้เขียนทับเป็น {}
+      if (p.attrs !== undefined) row.attrs = p.attrs
       const db = authedDb(c)
       const res = p.id ? await db.from('products').update(row).eq('id', p.id) : await db.from('products').insert(row)
       if (res.error) throw badRequest(res.error.message)

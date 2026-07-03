@@ -66,15 +66,31 @@ export default function Navbar() {
             <Icon name={theme === 'dark' ? 'sun' : 'moon'} />
           </ActionBtn>
 
-          {/* บัญชี */}
+          {/* บัญชี - ล็อกอินแล้วโชว์ avatar ตัวอักษรแรก + จุดเขียว ให้รู้สถานะชัดเจน */}
           {user ? (
             <div className="relative" ref={menuRef}>
-              <ActionBtn title={t('nav.account')} onClick={() => setMenu((m) => !m)}><Icon name="user" /></ActionBtn>
+              <button title={t('nav.account')} onClick={() => setMenu((m) => !m)} aria-label={t('nav.account')}
+                className="flex h-10 items-center gap-2 rounded-lg px-1.5 transition-colors hover:bg-white/10 cursor-pointer">
+                <span className="relative">
+                  <span className="grid h-8 w-8 place-items-center rounded-full bg-brand-600 text-sm font-bold text-white ring-2 ring-white/20">
+                    {(profile?.full_name || user.email || '?').trim().charAt(0).toUpperCase()}
+                  </span>
+                  <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-zinc-950" aria-hidden="true" />
+                </span>
+                <span className="hidden max-w-[110px] truncate text-sm font-semibold text-zinc-200 lg:block">
+                  {(profile?.full_name || user.email || '').split(' ')[0]}
+                </span>
+              </button>
               {menu && (
                 <div className="absolute right-0 top-12 w-56 overflow-hidden rounded-xl border border-line bg-surface py-1 text-fg shadow-xl">
-                  <div className="border-b border-line px-4 py-2 text-sm">
-                    <div className="truncate font-semibold">{profile?.full_name || user.email}</div>
-                    <div className="truncate text-xs text-muted">{user.email}</div>
+                  <div className="flex items-center gap-2.5 border-b border-line px-4 py-2.5 text-sm">
+                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand-600 text-sm font-bold text-white">
+                      {(profile?.full_name || user.email || '?').trim().charAt(0).toUpperCase()}
+                    </span>
+                    <div className="min-w-0">
+                      <div className="truncate font-semibold">{profile?.full_name || user.email}</div>
+                      <div className="truncate text-xs text-muted">{user.email}</div>
+                    </div>
                   </div>
                   {apiEnabled && <MenuItem to="/account" icon="user" label={t('nav.account')} onClick={() => setMenu(false)} />}
                   <MenuItem to="/orders" icon="receipt" label={t('nav.myOrders')} onClick={() => setMenu(false)} />

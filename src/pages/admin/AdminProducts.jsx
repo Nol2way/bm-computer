@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Icon } from '../../components/Icons'
 import { cx } from '../../lib/ui'
 import { fmt } from '../../data/mock'
-import { adminListProducts, saveProduct, deleteProduct, fetchCategories, fetchBrands } from '../../lib/api'
+import { adminListProducts, saveProduct, deleteProduct, fetchCategories, fetchBrands, fetchAttributeDefs } from '../../lib/api'
 import { useFetch } from '../../lib/useFetch'
 import { useLang } from '../../i18n/LanguageContext'
 import { TableSkeleton } from '../../components/Skeleton'
@@ -16,6 +16,7 @@ export default function AdminProducts() {
   const { data, loading } = useFetch(() => adminListProducts(), [key])
   const { data: cats } = useFetch(() => fetchCategories(), [])
   const { data: brands } = useFetch(() => fetchBrands(), [])
+  const { data: attrDefs } = useFetch(() => fetchAttributeDefs(), [])
   const [editing, setEditing] = useState(null)
   const rows = data || []
 
@@ -64,13 +65,13 @@ export default function AdminProducts() {
         </div>
       )}
 
-      {editing && <ProductForm product={editing} cats={cats || []} brands={brands || []} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); setKey((k) => k + 1) }} />}
+      {editing && <ProductForm product={editing} cats={cats || []} brands={brands || []} attrDefs={attrDefs || []} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); setKey((k) => k + 1) }} />}
     </div>
   )
 }
 
-function ProductForm({ product, cats, brands, onClose, onSaved }) {
-  const { t } = useLang()
+function ProductForm({ product, cats, brands, attrDefs, onClose, onSaved }) {
+  const { t, lang } = useLang()
   const isNew = !product.id
   const [f, setF] = useState({
     id: product.id, name: product.name || '', slug: product.slug || '',
@@ -81,19 +82,33 @@ function ProductForm({ product, cats, brands, onClose, onSaved }) {
   })
   const [images, setImages] = useState(product.images?.length ? product.images : [''])
   const [specs, setSpecs] = useState(Object.entries(product.specs || {}).map(([k, v]) => ({ k, v: String(v) })))
+  const [attrs, setAttrs] = useState(product.attrs || {})
   const [saving, setSaving] = useState(false)
   const [err, setErr] = useState('')
   const set = (k) => (e) => setF((s) => ({ ...s, [k]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }))
+
+  // นิยาม attr ของหมวดที่เลือก (dynamic จาก attribute_defs - ไม่ hardcode ฟิลด์)
+  const catDefs = attrDefs.filter((d) => d.category_id === f.category_id).sort((a, b) => a.sort - b.sort)
+  const setAttr = (key, value) => setAttrs((a) => {
+    const next = { ...a }
+    if (value === undefined || value === null || value === '' || (Array.isArray(value) && !value.length)) delete next[key]
+    else next[key] = value
+    return next
+  })
 
   const submit = async (e) => {
     e.preventDefault(); setErr('')
     if (!f.name || !f.category_id || !f.brand_id || !f.price) { setErr(t('admin.fillRequired')); return }
     setSaving(true)
     try {
+      // เก็บเฉพาะ attr key ที่มีนิยามในหมวดปัจจุบัน (เปลี่ยนหมวดแล้วค่าหมวดเก่าไม่ติดไป)
+      const validKeys = new Set(catDefs.map((d) => d.key))
+      const cleanAttrs = Object.fromEntries(Object.entries(attrs).filter(([k]) => validKeys.has(k)))
       await saveProduct({
         ...f, slug: f.slug || slugify(f.name),
         images: images.map((s) => s.trim()).filter(Boolean),
         specs: Object.fromEntries(specs.filter((s) => s.k.trim()).map((s) => [s.k.trim(), s.v])),
+        attrs: cleanAttrs,
       })
       onSaved()
     } catch (e2) { setErr(e2.message || t('admin.saveFail')) } finally { setSaving(false) }
@@ -143,6 +158,23 @@ function ProductForm({ product, cats, brands, onClose, onSaved }) {
           <button type="button" onClick={() => setSpecs((a) => [...a, { k: '', v: '' }])} className="text-sm font-semibold text-brand-600 hover:underline cursor-pointer">{t('admin.addSpec')}</button>
         </div>
 
+        {/* สเปคเครื่องอ่านสำหรับ PC Builder - ฟอร์ม dynamic จาก attribute_defs ของหมวดที่เลือก */}
+        <div className="mt-4 rounded-xl border border-line bg-surface2/40 p-4">
+          <label className="flex items-center gap-1.5 text-sm font-semibold"><Icon name="cpu" size={15} className="text-brand-600" /> {t('admin.attrsLabel')}</label>
+          <p className="mb-3 mt-0.5 text-xs text-muted">{t('admin.attrsHint')}</p>
+          {!f.category_id ? (
+            <p className="text-sm text-muted">{t('admin.attrsPickCat')}</p>
+          ) : catDefs.length === 0 ? (
+            <p className="text-sm text-muted">{t('admin.attrsNone')}</p>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2">
+              {catDefs.map((d) => (
+                <AttrInput key={d.id} def={d} lang={lang} t={t} value={attrs[d.key]} onChange={(v) => setAttr(d.key, v)} />
+              ))}
+            </div>
+          )}
+        </div>
+
         <Field label={t('admin.descriptionLabel')} className="mt-4"><textarea className={input} rows="3" value={f.description} onChange={set('description')} /></Field>
 
         <div className="mt-4 flex gap-6">
@@ -161,4 +193,63 @@ function ProductForm({ product, cats, brands, onClose, onSaved }) {
 
 function Field({ label, children, className }) {
   return <div className={className}><label className="mb-1.5 block text-sm font-semibold">{label}</label>{children}</div>
+}
+
+// input ตามชนิดของ attribute_def: number/text/boolean/enum/enum_multi
+function AttrInput({ def, lang, t, value, onChange }) {
+  const label = (lang === 'th' ? def.label_th : def.label_en) + (def.unit ? ` (${def.unit})` : '')
+  const options = Array.isArray(def.options) ? def.options : []
+
+  if (def.type === 'boolean') {
+    const v = value === true ? 'yes' : value === false ? 'no' : ''
+    return (
+      <Field label={label}>
+        <select className={input} value={v} onChange={(e) => onChange(e.target.value === '' ? '' : e.target.value === 'yes')}>
+          <option value="">{t('admin.attrUnset')}</option>
+          <option value="yes">{t('admin.attrYes')}</option>
+          <option value="no">{t('admin.attrNo')}</option>
+        </select>
+      </Field>
+    )
+  }
+  if (def.type === 'enum') {
+    return (
+      <Field label={label}>
+        <select className={input} value={value ?? ''} onChange={(e) => onChange(e.target.value)}>
+          <option value="">{t('admin.attrUnset')}</option>
+          {options.map((o) => <option key={o} value={o}>{o}</option>)}
+        </select>
+      </Field>
+    )
+  }
+  if (def.type === 'enum_multi') {
+    const arr = Array.isArray(value) ? value : []
+    const toggle = (o) => onChange(arr.includes(o) ? arr.filter((x) => x !== o) : [...arr, o])
+    return (
+      <Field label={label} className="sm:col-span-2">
+        <div className="flex flex-wrap gap-1.5">
+          {options.map((o) => (
+            <button key={o} type="button" onClick={() => toggle(o)}
+              className={cx('rounded-full border px-3 py-1 text-xs font-semibold transition-colors cursor-pointer',
+                arr.includes(o) ? 'border-brand-600 bg-brand-600 text-white' : 'border-line hover:bg-surface2')}>
+              {o}
+            </button>
+          ))}
+        </div>
+      </Field>
+    )
+  }
+  if (def.type === 'number') {
+    return (
+      <Field label={label}>
+        <input className={input} type="number" step="any" value={value ?? ''}
+          onChange={(e) => onChange(e.target.value === '' ? '' : Number(e.target.value))} />
+      </Field>
+    )
+  }
+  return (
+    <Field label={label}>
+      <input className={input} value={value ?? ''} onChange={(e) => onChange(e.target.value)} />
+    </Field>
+  )
 }
