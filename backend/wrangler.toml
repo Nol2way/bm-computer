@@ -6,6 +6,10 @@ main = "src/index.ts"
 compatibility_date = "2024-11-27"
 compatibility_flags = ["nodejs_compat"]
 
+# เปิด logs บน Cloudflare dashboard (Workers Observability) - ไว้ debug ปัญหา prod
+[observability]
+enabled = true
+
 # ---- ค่าที่ไม่ลับ (แก้ได้ตรงนี้) ----
 [vars]
 # Supabase (public: anon key ออกแบบให้เปิดเผยได้ - ความปลอดภัยจริงอยู่ที่ RLS)

@@ -57,7 +57,9 @@ export function AuthProvider({ children }) {
               access_token: data.session.access_token,
               refresh_token: data.session.refresh_token,
             })
-            await supabase.auth.signOut()
+            // ต้อง scope:'local' เท่านั้น - ค่า default (global) จะ revoke session ที่ Supabase
+            // ทำให้ session ที่เพิ่งโอนเข้า HttpOnly cookie ตายทันที (Google login ล้มเหลวทุกครั้ง)
+            await supabase.auth.signOut({ scope: 'local' })
             window.history.replaceState({}, '', window.location.pathname + window.location.search)
           }
         } catch { /* ถ้าโอนไม่สำเร็จ ค่อยให้ผู้ใช้ล็อกอินใหม่ */ }
