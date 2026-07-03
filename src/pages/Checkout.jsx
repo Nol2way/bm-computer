@@ -8,6 +8,7 @@ import { useCart } from '../cart/CartContext'
 import { useAuth } from '../auth/AuthContext'
 import { useAuthModal } from '../components/AuthModal'
 import { createOrder, fetchSetting } from '../lib/api'
+import { api, apiEnabled, ApiError } from '../lib/apiClient'
 import { useFetch } from '../lib/useFetch'
 import { promptpayQrUrl } from '../lib/promptpay'
 import { usePageMeta } from '../lib/usePageMeta'
@@ -118,14 +119,21 @@ function PaymentStep({ order, onPaid }) {
       const fd = new FormData()
       fd.append('image', file)
       fd.append('orderCode', order.code)
-      // verify-slip ต้องใช้ service_role (server-trust กันปลอมสถานะจ่าย) -> ผ่าน Cloudflare Pages Function เสมอ
-      // (worker มี endpoint /api/payments/verify-slip เตรียมไว้ ใช้เมื่อใส่ service_role ให้ worker ในอนาคต)
-      const res = await fetch('/api/verify-slip', { method: 'POST', body: fd })
-      const data = await res.json()
-      if (data.ok) onPaid()
-      else setError(data.error || t('checkout.verifyFail'))
+      // verify-slip ต้องใช้ service_role (server-trust กันปลอมสถานะจ่าย)
+      // โหมด API: ผ่าน worker /api/payments/verify-slip · fallback: Pages Function /api/verify-slip
+      if (apiEnabled) {
+        const data = await api.postForm('/api/payments/verify-slip', fd)
+        if (data.ok) onPaid()
+        else setError(data.error || t('checkout.verifyFail'))
+      } else {
+        const res = await fetch('/api/verify-slip', { method: 'POST', body: fd })
+        const data = await res.json()
+        if (data.ok) onPaid()
+        else setError(data.error || t('checkout.verifyFail'))
+      }
     } catch (e) {
-      setError(t('checkout.verifyConn'))
+      // ApiError = server ตอบมาพร้อมข้อความจริง (เช่น สลิปซ้ำ/ยอดไม่พอ) · อื่นๆ = ต่อไม่ได้
+      setError(e instanceof ApiError ? e.message : t('checkout.verifyConn'))
     } finally {
       setBusy(false)
     }
