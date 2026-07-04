@@ -79,6 +79,9 @@ export default function Home() {
         </div>
       </section>
 
+      {/* BRAND BAR */}
+      <BrandBar />
+
       {/* FLASH SALE */}
       <FlashSale items={flash} />
 
@@ -87,9 +90,6 @@ export default function Home() {
         <SectionHead title={t('home.featured')} icon="flame" to="/products" />
         <ProductRow items={featured} loading={loading} />
       </section>
-
-      {/* BRAND BAR */}
-      <BrandBar />
 
       {/* NEW ARRIVALS */}
       <section className="mt-12">

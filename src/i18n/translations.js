@@ -58,7 +58,7 @@ export const translations = {
       heroTag: 'โปรเดือนนี้', heroTitle: 'จัดสเปคคอมในฝัน ครบ จบ ในที่เดียว',
       heroDesc: 'ซีพียู การ์ดจอ เมนบอร์ด โน้ตบุ๊ก และเกมมิ่งเกียร์ ของแท้ประกันศูนย์ พร้อมบริการจัดสเปคฟรี',
       shopNow: 'ช้อปเลย',
-      heroKicker: 'บ้านมีคอม · BM COMPUTER',
+      heroKicker: 'บ้านมีคอม',
       heroLeadStatic: 'ร้านคอมครบวงจร',
       heroSlogans: [
         'จัดสเปคคอมในฝัน ได้ในไม่กี่คลิก',
@@ -341,7 +341,7 @@ export const translations = {
       heroTag: 'This month', heroTitle: 'Build your dream PC - all in one place',
       heroDesc: 'CPUs, GPUs, mainboards, notebooks and gaming gear. Genuine with warranty, plus free build service.',
       shopNow: 'Shop now',
-      heroKicker: 'BM COMPUTER · บ้านมีคอม',
+      heroKicker: 'Baan Mee Com',
       heroLeadStatic: 'Your complete PC store',
       heroSlogans: [
         'Build your dream PC in a few clicks',
