@@ -147,9 +147,13 @@ export default function Navbar() {
           </div>
 
           <CatLink to="/products" label={t('nav.all')} onClick={() => setOpen(false)} />
-          <CatLink to="/builder" icon="cpu" label={t('nav.builder')} onClick={() => setOpen(false)} />
-          <CatLink to="/community" icon="users" label={t('nav.community')} onClick={() => setOpen(false)} />
-          <CatLink to="/track" icon="truck" label={t('nav.track')} onClick={() => setOpen(false)} />
+
+          {/* เมนูฟีเจอร์: ดันไปทางขวา แยกจากหมวดหมู่สินค้า (มือถือ: มีเส้นคั่นด้านบน) */}
+          <div className="mt-1 flex flex-col gap-1 border-t border-white/10 pt-1 md:mt-0 md:ml-auto md:flex-row md:gap-0 md:border-t-0 md:pt-0">
+            <CatLink to="/builder" icon="cpu" label={t('nav.builder')} onClick={() => setOpen(false)} />
+            <CatLink to="/community" icon="users" label={t('nav.community')} onClick={() => setOpen(false)} />
+            <CatLink to="/track" icon="truck" label={t('nav.track')} onClick={() => setOpen(false)} />
+          </div>
         </div>
       </nav>
     </header>

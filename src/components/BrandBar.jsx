@@ -6,7 +6,10 @@ import { useFetch } from '../lib/useFetch'
 import { brandLogo } from '../lib/brands'
 import { BrandBarSkeleton } from './Skeleton'
 
-// แถบแบรนด์: โลโก้จริง (Clearbit) + แสดงเฉพาะแบรนด์ที่มีสินค้าจริงในร้าน
+// กำแพงแบรนด์: โลโก้จริง (Simple Icons สีแบรนด์ / favicon) - แสดงเฉพาะแบรนด์ที่มีสินค้าจริง
+// เรียงเป็นกริดหลายแถวแบบกำแพงแบรนด์ (ตัดจำนวนไม่ให้ยาวเกิน)
+const MAX_BRANDS = 28
+
 export default function BrandBar() {
   const { t } = useLang()
   const { data: brands } = useFetch(() => fetchBrands(), [])
@@ -14,13 +17,13 @@ export default function BrandBar() {
   if (!brands || !products) return <BrandBarSkeleton />
 
   const present = new Set(products.map((p) => p.brand))
-  const list = brands.filter((b) => present.has(b.name))
+  const list = brands.filter((b) => present.has(b.name)).slice(0, MAX_BRANDS)
   if (!list.length) return null
 
   return (
-    <section className="mt-10 rounded-2xl border border-line bg-surface p-5">
-      <h2 className="mb-4 text-base font-bold">{t('home.topBrands')}</h2>
-      <div className="flex gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <section className="mt-12 rounded-2xl border border-line bg-surface p-6 sm:p-8">
+      <h2 className="mb-6 text-center text-lg font-bold">{t('home.topBrands')}</h2>
+      <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-6 sm:gap-x-10">
         {list.map((b) => <BrandChip key={b.id} b={b} />)}
       </div>
     </section>
@@ -32,10 +35,12 @@ function BrandChip({ b }) {
   const src = brandLogo(b.slug, b.logo_url)
   return (
     <Link to={`/products?brand=${b.slug}`} title={b.name}
-      className="grid h-14 min-w-[120px] flex-1 place-items-center rounded-xl border border-line bg-white px-4 transition hover:border-brand-400 hover:shadow-sm">
+      className="grid h-9 w-24 place-items-center opacity-70 transition hover:opacity-100 sm:h-10 sm:w-28">
       {err || !src
-        ? <span className="text-sm font-bold text-zinc-700">{b.name}</span>
-        : <img src={src} alt={b.name} loading="lazy" className="max-h-8 max-w-[100px] object-contain" onError={() => setErr(true)} />}
+        ? <span className="text-sm font-bold text-fg">{b.name}</span>
+        : <img src={src} alt={b.name} loading="lazy"
+            className="max-h-9 max-w-[100px] object-contain grayscale dark:brightness-0 dark:invert"
+            onError={() => setErr(true)} />}
     </Link>
   )
 }

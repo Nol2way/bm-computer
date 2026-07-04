@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import ProductRow from '../components/ProductRow'
 import { Icon } from '../components/Icons'
 import HeroCarousel from '../components/HeroCarousel'
+import Typewriter from '../components/Typewriter'
 import BrandBar from '../components/BrandBar'
 import FlashSale from '../components/FlashSale'
 import { useLang } from '../i18n/LanguageContext'
@@ -40,20 +41,26 @@ export default function Home() {
 
   return (
     <div className={`${wrap} py-8`}>
-      {/* HERO: carousel + promos */}
-      <section className="grid gap-5 lg:grid-cols-[1.4fr_1fr]">
-        <HeroCarousel slides={heroSlides || []} />
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-1">
-          <div className="flex flex-col justify-center gap-1 rounded-2xl border border-line bg-surface p-5">
-            <span className="w-fit rounded-full bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700 dark:bg-brand-600/15 dark:text-brand-400">{t('home.promoShipTag')}</span>
-            <span className="text-2xl font-bold text-brand-600">{t('home.promoShip')}</span>
-            <span className="text-sm text-muted">{t('home.promoShipDesc')}</span>
+      {/* HERO: สโลแกน (ซ้าย, พิมพ์ทีละตัว) + carousel (ขวา) */}
+      <section className="grid items-stretch gap-5 lg:grid-cols-[1fr_1.35fr]">
+        <div className="relative flex flex-col justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-zinc-900 via-zinc-900 to-brand-800 p-7 text-white sm:p-9">
+          <span className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-brand-600/30 blur-3xl" aria-hidden="true" />
+          <span className="w-fit rounded-full bg-white/10 px-3 py-1 text-xs font-semibold tracking-wider text-brand-300">{t('home.heroKicker')}</span>
+          <div className="mt-4 text-2xl font-extrabold leading-tight sm:text-3xl">
+            <span className="block text-zinc-400">{t('home.heroLeadStatic')}</span>
+            <Typewriter phrases={t('home.heroSlogans')} className="block min-h-[2.4em] text-brand-400 sm:min-h-[1.8em]" />
           </div>
-          <div className="flex flex-col justify-center gap-1 rounded-2xl bg-zinc-900 p-5 text-white">
-            <span className="text-2xl font-bold text-brand-400">{t('home.promoInstall')}</span>
-            <span className="text-sm text-zinc-400">{t('home.promoInstallDesc')}</span>
+          <p className="mt-3 text-sm text-zinc-400">{t('home.heroBrandsNote')}</p>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link to="/products" className="inline-flex items-center gap-1.5 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-700">
+              <Icon name="cart" size={16} /> {t('home.shopNow')}
+            </Link>
+            <Link to="/builder" className="inline-flex items-center gap-1.5 rounded-xl border border-white/20 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-white/10">
+              <Icon name="cpu" size={16} /> {t('home.heroBuild')}
+            </Link>
           </div>
         </div>
+        <HeroCarousel slides={heroSlides || []} />
       </section>
 
       {/* CATEGORIES */}

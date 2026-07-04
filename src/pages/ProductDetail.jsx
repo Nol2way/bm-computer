@@ -85,8 +85,9 @@ export default function ProductDetail() {
           </div>
           <h1 className="text-2xl font-bold leading-tight">{p.name}</h1>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-            <span className="text-amber-500">★ {p.rating}</span>
-            <span className="text-muted">{p.reviews} {t('common.reviews')}</span>
+            {p.reviews > 0
+              ? <><span className="text-amber-500">★ {p.rating}</span><span className="text-muted">{p.reviews} {t('common.reviews')}</span></>
+              : <span className="text-muted">{t('common.noReviews')}</span>}
             <span className="text-muted">· {t('common.sku')}: {p.sku}</span>
             <button onClick={copyLink} className="ml-auto flex items-center gap-1 text-muted transition-colors hover:text-brand-600 cursor-pointer">
               <Icon name={copied ? 'check' : 'copy'} size={14} /> {copied ? t('common.copied') : t('common.copyLink')}

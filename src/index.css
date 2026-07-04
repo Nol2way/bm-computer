@@ -120,6 +120,12 @@
   to   { opacity: 1; transform: scale(1); }
 }
 
+/* เคอร์เซอร์กระพริบสำหรับ Typewriter (สโลแกนหน้าแรก) */
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  50.01%, 100% { opacity: 0; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }

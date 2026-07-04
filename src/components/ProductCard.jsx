@@ -32,7 +32,7 @@ export default function ProductCard({ p }) {
   }
 
   return (
-    <article className="card-hover group/card flex flex-col overflow-hidden rounded-2xl border border-line bg-surface hover:border-zinc-300 hover:shadow-xl hover:shadow-black/5 dark:hover:border-zinc-700">
+    <article className="card-hover group/card flex h-full flex-col overflow-hidden rounded-2xl border border-line bg-surface hover:border-zinc-300 hover:shadow-xl hover:shadow-black/5 dark:hover:border-zinc-700">
       <div className="relative">
         <Link to={`/product/${p.id}`} className="block">
           {p.images?.[0]
@@ -52,7 +52,9 @@ export default function ProductCard({ p }) {
       <div className="flex flex-1 flex-col gap-1.5 p-4">
         <span className="text-xs text-muted">{catName(p.cat)} · {p.brand}</span>
         <Link to={`/product/${p.id}`} className="line-clamp-2 min-h-[2.6em] text-sm font-semibold leading-snug transition-colors group-hover/card:text-brand-600">{p.name}</Link>
-        <span className="flex items-center gap-1 text-xs text-amber-500">★ {p.rating} <span className="text-muted">({p.reviews})</span></span>
+        {p.reviews > 0
+          ? <span className="flex items-center gap-1 text-xs text-amber-500">★ {p.rating} <span className="text-muted">({p.reviews})</span></span>
+          : <span className="text-xs text-muted">{t('common.noReviews')}</span>}
         <div className="mt-auto flex items-baseline gap-2 pt-1">
           <span className="nums text-lg font-bold text-brand-600">฿{fmt(p.price)}</span>
           {p.old && <span className="nums text-xs text-zinc-400 line-through">฿{fmt(p.old)}</span>}

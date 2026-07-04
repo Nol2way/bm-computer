@@ -3,13 +3,17 @@ import ProductCard from './ProductCard'
 import { Icon } from './Icons'
 import { ProductRowSkeleton } from './Skeleton'
 
-// แถวสินค้าแบบ carousel: ~6/แถว, ลากลื่น, เลื่อนอัตโนมัติวนทุก 5 วินาที, ปุ่มเลื่อน
+// แถวสินค้าแบบ carousel: ~6/แถว · ลากอิสระลื่น (มี momentum/inertia) · ไม่มี scroll-snap (กันสะดุด) · ปุ่มเลื่อน
 export default function ProductRow({ items = [], loading }) {
   const ref = useRef(null)
-  const drag = useRef({ down: false, startX: 0, startLeft: 0, moved: false })
+  // เก็บสถานะการลาก + ความเร็วสำหรับ momentum
+  const drag = useRef({ down: false, startX: 0, startLeft: 0, moved: false, lastX: 0, lastT: 0, vx: 0 })
+  const inertia = useRef(0)
   const paused = useRef(false)
 
   const scrollBy = (dir) => ref.current?.scrollBy({ left: dir * ref.current.clientWidth * 0.85, behavior: 'smooth' })
+
+  const stopInertia = () => { if (inertia.current) { cancelAnimationFrame(inertia.current); inertia.current = 0 } }
 
   // เลื่อนอัตโนมัติวน (เคารพ prefers-reduced-motion)
   useEffect(() => {
@@ -24,20 +28,45 @@ export default function ProductRow({ items = [], loading }) {
     return () => clearInterval(id)
   }, [items.length])
 
+  useEffect(() => () => stopInertia(), [])
+
   const onDown = (e) => {
+    stopInertia()
     paused.current = true
-    drag.current = { down: true, startX: e.clientX, startLeft: ref.current.scrollLeft, moved: false }
+    ref.current.setPointerCapture?.(e.pointerId)
+    drag.current = { down: true, startX: e.clientX, startLeft: ref.current.scrollLeft, moved: false, lastX: e.clientX, lastT: performance.now(), vx: 0 }
   }
   const onMove = (e) => {
     if (!drag.current.down) return
-    const dx = e.clientX - drag.current.startX
-    if (Math.abs(dx) > 3) drag.current.moved = true
-    ref.current.scrollLeft = drag.current.startLeft - dx // instant = ลื่นตามนิ้ว
+    const d = drag.current
+    const dx = e.clientX - d.startX
+    if (Math.abs(dx) > 3) d.moved = true
+    ref.current.scrollLeft = d.startLeft - dx // ตามนิ้วแบบทันที
+    const now = performance.now()
+    const dt = now - d.lastT
+    if (dt > 0) d.vx = (e.clientX - d.lastX) / dt // px ต่อ ms (ทิศตามนิ้ว)
+    d.lastX = e.clientX
+    d.lastT = now
   }
-  const onUp = () => { drag.current.down = false }
+  const onUp = (e) => {
+    const d = drag.current
+    if (!d.down) return
+    d.down = false
+    ref.current.releasePointerCapture?.(e.pointerId)
+    // momentum: ปล่อยแล้วไหลต่อด้วยความเร็วตอนปล่อย แล้วค่อยๆ ช้าลง
+    let v = -d.vx * 16 // แปลงเป็น px/เฟรม (ทิศ scroll ตรงข้ามการเลื่อนนิ้ว)
+    const el = ref.current
+    const step = () => {
+      if (Math.abs(v) < 0.4) { inertia.current = 0; return }
+      el.scrollLeft += v
+      v *= 0.94 // แรงเสียดทาน
+      inertia.current = requestAnimationFrame(step)
+    }
+    if (Math.abs(v) > 1) inertia.current = requestAnimationFrame(step)
+  }
   const onClickCapture = (e) => { if (drag.current.moved) { e.preventDefault(); e.stopPropagation() } }
 
-  const card = 'w-[152px] shrink-0 snap-start sm:w-[178px] lg:w-[186px]'
+  const card = 'flex w-[152px] shrink-0 sm:w-[178px] lg:w-[186px]'
 
   if (loading) return <ProductRowSkeleton cardClass={card} />
   if (!items.length) return null
@@ -46,8 +75,8 @@ export default function ProductRow({ items = [], loading }) {
     <div className="group/row relative"
       onMouseEnter={() => { paused.current = true }} onMouseLeave={() => { paused.current = false }}>
       <div ref={ref}
-        onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerLeave={onUp} onClickCapture={onClickCapture}
-        className="flex cursor-grab snap-x gap-3 overflow-x-auto pb-2 select-none active:cursor-grabbing sm:gap-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp} onClickCapture={onClickCapture}
+        className="flex cursor-grab items-stretch gap-3 overflow-x-auto pb-2 select-none active:cursor-grabbing sm:gap-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [touch-action:pan-y]">
         {items.map((p) => (
           <div key={p.id} className={card}><ProductCard p={p} /></div>
         ))}
