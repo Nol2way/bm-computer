@@ -8,9 +8,12 @@ export default function SlideBanner({ s }) {
   const { t } = useLang()
   return (
     <div className="group relative h-full w-full overflow-hidden bg-zinc-950 text-white">
-      {/* glow แดงสองมุม - ขยายนุ่มๆ ตอน hover */}
-      <span aria-hidden="true" className="absolute -right-16 -top-16 h-56 w-56 rounded-full bg-brand-600/30 blur-3xl transition-transform duration-700 group-hover:scale-150" />
-      <span aria-hidden="true" className="absolute -bottom-20 -left-16 h-56 w-56 rounded-full bg-brand-700/20 blur-3xl transition-transform duration-700 group-hover:scale-150" />
+      {/* glow แดงสองมุม - ใช้ radial-gradient แทน filter blur (ถูกกว่ามาก
+          ไม่ทำภาพกระตุก/shimmer บนจอหรือ GPU บางรุ่นตอน carousel ครอสเฟด) */}
+      <span aria-hidden="true" className="absolute -right-24 -top-24 h-96 w-96 transition-transform duration-700 group-hover:scale-125"
+        style={{ background: 'radial-gradient(circle, rgba(220,38,38,.32) 0%, transparent 65%)' }} />
+      <span aria-hidden="true" className="absolute -bottom-28 -left-24 h-96 w-96 transition-transform duration-700 group-hover:scale-125"
+        style={{ background: 'radial-gradient(circle, rgba(185,28,28,.22) 0%, transparent 65%)' }} />
       {/* เส้นกริดจางๆ ให้มีมิติ - เฟดหายตรงขอบด้วย radial mask */}
       <span aria-hidden="true" className="absolute inset-0 opacity-[0.045]"
         style={{
@@ -19,8 +22,9 @@ export default function SlideBanner({ s }) {
           maskImage: 'radial-gradient(ellipse at center, black 40%, transparent 85%)',
           WebkitMaskImage: 'radial-gradient(ellipse at center, black 40%, transparent 85%)',
         }} />
-      {/* แสงกวาดผ่านตอน hover */}
-      <span aria-hidden="true" className="absolute inset-y-[-40%] left-[-30%] w-1/4 rotate-12 bg-white/10 blur-lg transition-transform duration-700 ease-out group-hover:translate-x-[520%]" />
+      {/* แสงกวาดผ่านตอน hover - แถบ gradient นุ่มๆ (ไม่ใช้ filter blur) */}
+      <span aria-hidden="true" className="absolute inset-y-[-40%] left-[-30%] w-1/4 rotate-12 transition-transform duration-700 ease-out group-hover:translate-x-[520%]"
+        style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,.09), transparent)' }} />
 
       {/* เนื้อหาจาก DB */}
       <div className="relative z-10 flex h-full flex-col items-center justify-center gap-2.5 px-8 text-center sm:gap-3.5">

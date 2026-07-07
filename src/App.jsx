@@ -27,7 +27,6 @@ import AdminCustomers from './pages/admin/AdminCustomers'
 import AdminSettings from './pages/admin/AdminSettings'
 import AccountLayout from './pages/account/AccountLayout'
 import Profile from './pages/account/Profile'
-import ProfilePage from './pages/ProfilePage'
 import AccountOrders from './pages/account/AccountOrders'
 import AccountTrack from './pages/account/AccountTrack'
 import Addresses from './pages/account/Addresses'
@@ -118,7 +117,8 @@ export default function App() {
           <Route path="/builder" element={<PCBuilder />} />
           <Route path="/community" element={<CommunityBuilds />} />
           <Route path="/community/:code" element={<CommunityBuilds />} />
-          <Route path="/profile" element={<ProfilePage />} />
+          {/* ลิงก์เก่า /profile -> หน้าบัญชี (กันบุ๊กมาร์กเดิมพัง) */}
+          <Route path="/profile" element={<Navigate to="/account" replace />} />
           <Route path="/account" element={<AccountLayout />}>
             <Route index element={<Profile />} />
             <Route path="orders" element={<AccountOrders />} />

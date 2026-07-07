@@ -88,7 +88,6 @@ export default function Navbar() {
                       <div className="truncate text-xs text-muted">{user.email}</div>
                     </div>
                   </div>
-                  <MenuItem to="/profile" icon="user" label={t('nav.profile')} onClick={() => setMenu(false)} />
                   {apiEnabled && <MenuItem to="/account" icon="user" label={t('nav.account')} onClick={() => setMenu(false)} />}
                   <MenuItem to="/account/orders" icon="receipt" label={t('nav.myOrders')} onClick={() => setMenu(false)} />
                   {apiEnabled && <MenuItem to="/account/wishlist" icon="heart" label={t('nav.wishlist')} onClick={() => setMenu(false)} />}

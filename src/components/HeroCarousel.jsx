@@ -36,7 +36,11 @@ export default function HeroCarousel({ slides }) {
       onMouseLeave={() => { if (n > 1 && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) timer.current = setInterval(() => setI((x) => (x + 1) % n), 5000) }}>
       <div className="aspect-[1200/440]">
         {slides.map((s, idx) => (
-          <div key={s.id || idx} className={cx('absolute inset-0 transition-opacity duration-500', idx === i ? 'opacity-100' : 'pointer-events-none opacity-0')}>
+          // visibility ซ่อนสไลด์ที่เฟดจบแล้ว - เบราว์เซอร์ไม่ต้องวาดชั้นที่มองไม่เห็นทิ้งไว้
+          // (ลดภาพกระตุกบนเครื่อง GPU อ่อน) ส่วน transition ยังครอสเฟดนุ่มเหมือนเดิม
+          <div key={s.id || idx}
+            className={cx('absolute inset-0 transition-[opacity,visibility] duration-500',
+              idx === i ? 'visible opacity-100' : 'invisible pointer-events-none opacity-0')}>
             <Slide s={s} />
           </div>
         ))}

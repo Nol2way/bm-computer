@@ -33,7 +33,7 @@ export const translations = {
       login: 'เข้าสู่ระบบ', cart: 'ตะกร้า', account: 'บัญชีของฉัน',
       lightMode: 'โหมดสว่าง', darkMode: 'โหมดมืด', language: 'ภาษา',
       logout: 'ออกจากระบบ', myOrders: 'คำสั่งซื้อของฉัน', admin: 'หลังบ้าน (Admin)',
-      wishlist: 'รายการสินค้าโปรด', profile: 'ข้อมูลส่วนตัว',
+      wishlist: 'รายการสินค้าโปรด',
     },
     community: {
       title: 'สเปคจากชุมชน', desc: 'ดูสเปคคอมที่ผู้ใช้คนอื่นจัดและแชร์ไว้ กดเปิดเพื่อดูรายละเอียดหรือนำไปใช้ต่อ',
@@ -357,7 +357,7 @@ export const translations = {
       login: 'Sign in', cart: 'Cart', account: 'My account',
       lightMode: 'Light mode', darkMode: 'Dark mode', language: 'Language',
       logout: 'Sign out', myOrders: 'My orders', admin: 'Admin',
-      wishlist: 'Wishlist', profile: 'My profile',
+      wishlist: 'Wishlist',
     },
     account: {
       title: 'My account',
