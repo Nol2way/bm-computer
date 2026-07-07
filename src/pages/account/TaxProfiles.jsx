@@ -15,11 +15,11 @@ export default function TaxProfiles() {
       { value: 'personal', label: t('account.personal') },
       { value: 'company', label: t('account.company') },
     ] },
-    { key: 'name', label: t('account.name'), required: true },
-    { key: 'tax_id', label: t('account.taxId'), required: true },
-    { key: 'branch', label: t('account.branch') },
-    { key: 'phone', label: t('account.phone'), type: 'tel' },
-    { key: 'address', label: t('account.fullAddress'), type: 'textarea', span: 2, required: true },
+    { key: 'name', label: t('account.name'), required: true, rules: ['name'], maxLength: 120 },
+    { key: 'tax_id', label: t('account.taxId'), required: true, rules: ['taxId'], numeric: true, maxLength: 13 },
+    { key: 'branch', label: t('account.branch'), maxLength: 60 },
+    { key: 'phone', label: t('account.phone'), type: 'tel', rules: ['phone'], numeric: true, maxLength: 10 },
+    { key: 'address', label: t('account.fullAddress'), type: 'textarea', span: 2, required: true, rules: ['address'], maxLength: 240 },
   ]
   const blank = { entity_type: 'personal', name: '', tax_id: '', branch: '', phone: '', address: '', is_default: false }
   const renderItem = (x) => (

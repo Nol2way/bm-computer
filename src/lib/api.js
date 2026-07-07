@@ -315,6 +315,23 @@ export async function fetchReviews(slug) {
   }))
 }
 
+// รีวิวล่าสุดทั้งร้าน (โชว์หน้าแรก) - เฉพาะที่มีข้อความ พร้อมข้อมูลสินค้า
+export async function fetchLatestReviews(limit = 8) {
+  if (apiEnabled) return (await api.get(`/api/catalog/reviews/latest?limit=${limit}`)).items
+  if (!isSupabaseConfigured) return []
+  const { data, error } = await supabase.from('reviews')
+    .select('id,rating,comment,author_name,verified,created_at, products!inner(slug,name,images,is_active)')
+    .not('comment', 'is', null).neq('comment', '')
+    .eq('products.is_active', true)
+    .order('created_at', { ascending: false }).limit(limit)
+  if (error) throw error
+  return (data || []).map((r) => ({
+    id: r.id, rating: r.rating, comment: r.comment, author_name: r.author_name,
+    verified: !!r.verified, created_at: r.created_at,
+    product: { slug: r.products.slug, name: r.products.name, image: r.products.images?.[0] || null },
+  }))
+}
+
 export async function saveReview(slug, { rating, comment }) {
   if (apiEnabled) { await api.post(`/api/catalog/products/${encodeURIComponent(slug)}/reviews`, { rating, comment }); return }
   if (!isSupabaseConfigured) throw new Error('Supabase not configured')

@@ -89,7 +89,7 @@ export default function AccountLayout() {
           <SideLink to="/account/wishlist" icon="heart" label={t('account.wishlist')} />
           <SideLink to="/account/track" icon="truck" label={t('account.trackShipping')} />
           <div className="px-3 pb-1 pt-4 text-xs font-semibold uppercase tracking-wide text-muted">{t('account.sectionAccount')}</div>
-          <SideLink to="/account" end icon="user" label={t('account.personalInfo')} />
+          <SideLink to="/account" end icon="user" label={t('account.title')} />
           <SideLink to="/account/addresses" icon="pin" label={t('account.shippingAddress')} />
           <SideLink to="/account/tax" icon="doc" label={t('account.taxAddress')} />
           <SideLink to="/account/payment" icon="card" label={t('account.paymentMethods')} />

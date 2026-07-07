@@ -33,14 +33,18 @@ export default function ProductRow({ items = [], loading }) {
   const onDown = (e) => {
     stopInertia()
     paused.current = true
-    ref.current.setPointerCapture?.(e.pointerId)
     drag.current = { down: true, startX: e.clientX, startLeft: ref.current.scrollLeft, moved: false, lastX: e.clientX, lastT: performance.now(), vx: 0 }
   }
   const onMove = (e) => {
     if (!drag.current.down) return
     const d = drag.current
     const dx = e.clientX - d.startX
-    if (Math.abs(dx) > 3) d.moved = true
+    // capture pointer เฉพาะเมื่อเริ่ม "ลาก" จริง - ถ้า capture ตั้งแต่ pointerdown
+    // เบราว์เซอร์จะ retarget click ไปที่ container ทำให้กดการ์ด/ปุ่มในแถวไม่ได้เลย
+    if (!d.moved && Math.abs(dx) > 3) {
+      d.moved = true
+      ref.current.setPointerCapture?.(e.pointerId)
+    }
     ref.current.scrollLeft = d.startLeft - dx // ตามนิ้วแบบทันที
     const now = performance.now()
     const dt = now - d.lastT

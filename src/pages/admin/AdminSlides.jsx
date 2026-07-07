@@ -4,6 +4,7 @@ import { adminListSlides, saveSlide, deleteSlide } from '../../lib/api'
 import { useFetch } from '../../lib/useFetch'
 import { useLang } from '../../i18n/LanguageContext'
 import { SlideCardSkeleton } from '../../components/Skeleton'
+import { check } from '../../lib/validate'
 
 const input = 'w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20'
 const PLACEMENTS = [
@@ -73,6 +74,8 @@ function SlideForm({ slide, onClose, onSaved }) {
   const submit = async (e) => {
     e.preventDefault(); setErr('')
     if (!f.image_url) { setErr(t('admin.imageUrlRequired')); return }
+    const urlErr = check('url', f.image_url)
+    if (urlErr) { setErr(t(urlErr)); return }
     setSaving(true)
     try { await saveSlide(f); onSaved() } catch (e2) { setErr(e2.message || t('admin.saveFail')) } finally { setSaving(false) }
   }

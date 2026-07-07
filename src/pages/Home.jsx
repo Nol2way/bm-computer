@@ -7,60 +7,103 @@ import BrandBar from '../components/BrandBar'
 import FlashSale from '../components/FlashSale'
 import { useLang } from '../i18n/LanguageContext'
 import { useCatalog } from '../catalog/CatalogContext'
-import { fetchProducts, fetchSlides } from '../lib/api'
+import { fetchProducts, fetchSlides, fetchBrands, fetchLatestReviews } from '../lib/api'
 import { useFetch } from '../lib/useFetch'
 import { Skeleton } from '../components/Skeleton'
 import { usePageMeta } from '../lib/usePageMeta'
 
 const wrap = 'mx-auto max-w-[1200px] px-4'
 
-function SectionHead({ title, to, icon }) {
+function SectionHead({ title, sub, to, icon }) {
   const { t } = useLang()
   return (
     <div className="mb-5 flex items-end justify-between gap-4">
-      <h2 className="flex items-center gap-2 text-xl font-bold sm:text-2xl">
-        {icon && <Icon name={icon} className="text-brand-600" />}{title}
-      </h2>
-      <Link to={to} className="flex shrink-0 items-center gap-1 text-sm font-semibold text-brand-600 hover:text-brand-700">
-        {t('common.viewAll')} <Icon name="arrowRight" size={16} />
-      </Link>
+      <div>
+        <h2 className="flex items-center gap-2 text-xl font-bold sm:text-2xl">
+          {icon && <Icon name={icon} className="text-brand-600" />}{title}
+        </h2>
+        {sub && <p className="mt-1 text-sm text-muted">{sub}</p>}
+      </div>
+      {to && (
+        <Link to={to} className="flex shrink-0 items-center gap-1 text-sm font-semibold text-brand-600 hover:text-brand-700">
+          {t('common.viewAll')} <Icon name="arrowRight" size={16} />
+        </Link>
+      )}
     </div>
   )
 }
 
 export default function Home() {
-  const { t } = useLang()
+  const { t, lang } = useLang()
   const { categories, loading: catsLoading, catName } = useCatalog()
   const { data, loading } = useFetch(() => fetchProducts({}), [])
   const { data: heroSlides } = useFetch(() => fetchSlides('hero'), [])
+  const { data: brands } = useFetch(() => fetchBrands(), [])
+  const { data: reviews } = useFetch(() => fetchLatestReviews(6), [])
   usePageMeta(null, t('home.heroDesc'))
   const list = data || []
   const featured = list.filter((p) => p.featured)
   const newArrivals = [...list].reverse().slice(0, 12)
   const flash = list.filter((p) => p.sale)
+  const topBrands = (brands || []).slice(0, 5)
+
+  const stats = [
+    [list.length ? `${list.length}+` : '150+', t('home.statProducts')],
+    [(brands || []).length || 39, t('home.statBrands')],
+    [categories.length || 11, t('home.statCats')],
+    ['1-2 ' + (lang === 'th' ? 'วัน' : 'days'), t('home.statShip')],
+  ]
 
   return (
     <div className={`${wrap} py-8`}>
-      {/* HERO: สโลแกน (ซ้าย, พิมพ์ทีละตัว) + carousel (ขวา) */}
-      <section className="grid items-stretch gap-5 lg:grid-cols-[1fr_1.35fr]">
-        <div className="relative flex flex-col justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-zinc-900 via-zinc-900 to-brand-800 p-7 text-white sm:p-9">
-          <span className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-brand-600/30 blur-3xl" aria-hidden="true" />
-          <span className="w-fit rounded-full bg-white/10 px-3 py-1 text-xs font-semibold tracking-wider text-brand-300">{t('home.heroKicker')}</span>
-          <div className="mt-4 text-2xl font-extrabold leading-tight sm:text-3xl">
-            <span className="block text-zinc-400">{t('home.heroLeadStatic')}</span>
-            <Typewriter phrases={t('home.heroSlogans')} className="block min-h-[2.4em] text-brand-400 sm:min-h-[1.8em]" />
-          </div>
-          <p className="mt-3 text-sm text-zinc-400">{t('home.heroBrandsNote')}</p>
+      {/* HERO: หัวใหญ่บนพื้นเรียบ (ไม่มีกล่อง gradient) + carousel ขวา - แนว landing มืออาชีพ */}
+      <section className="grid items-center gap-8 py-4 lg:grid-cols-[1fr_1.15fr] lg:gap-12 lg:py-8">
+        <div>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 px-3 py-1 text-xs font-bold tracking-wide text-brand-700 dark:bg-brand-600/15 dark:text-brand-400">
+            <Icon name="bolt" size={13} /> {t('home.heroKicker')}
+          </span>
+          <h1 className="mt-4 text-3xl font-extrabold leading-[1.2] tracking-tight sm:text-4xl xl:text-5xl">
+            <span className="block">{t('home.heroLeadStatic')}</span>
+            {/* ล็อกความสูงตายตัว: ข้อความพิมพ์/ลบยาวแค่ไหนก็ไม่ดันหน้าเว็บ */}
+            <span className="block h-[2.5em] overflow-hidden text-brand-600 sm:h-[2.5em] xl:h-[2.5em]">
+              <Typewriter phrases={t('home.heroSlogans')} />
+            </span>
+          </h1>
+          <p className="max-w-[46ch] text-base leading-relaxed text-muted">{t('home.heroDesc')}</p>
           <div className="mt-6 flex flex-wrap gap-3">
-            <Link to="/products" className="inline-flex items-center gap-1.5 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-700">
-              <Icon name="cart" size={16} /> {t('home.shopNow')}
+            <Link to="/products" className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-brand-600/25 transition-colors hover:bg-brand-700">
+              <Icon name="cart" size={17} /> {t('home.shopNow')}
             </Link>
-            <Link to="/builder" className="inline-flex items-center gap-1.5 rounded-xl border border-white/20 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-white/10">
-              <Icon name="cpu" size={16} /> {t('home.heroBuild')}
+            <Link to="/builder" className="inline-flex items-center gap-2 rounded-xl border border-line bg-surface px-6 py-3 text-sm font-bold transition-colors hover:border-brand-500 hover:text-brand-600">
+              <Icon name="cpu" size={17} /> {t('home.heroBuild')}
             </Link>
+          </div>
+          {/* แบรนด์ที่ไว้วางใจ (chips) */}
+          <div className="mt-8 border-t border-line pt-5">
+            <div className="flex items-center gap-1.5 text-sm font-semibold text-muted">
+              <Icon name="heart" size={14} className="text-brand-600" /> {t('home.trustBy')}
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {(topBrands.length ? topBrands : Array.from({ length: 5 })).map((b, i) => b ? (
+                <Link key={b.id} to={`/products?brand=${b.slug}`}
+                  className="flex items-center gap-1.5 rounded-full border border-line bg-surface px-3.5 py-1.5 text-sm font-semibold transition-colors hover:border-brand-500 hover:text-brand-600">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden="true" /> {b.name}
+                </Link>
+              ) : <Skeleton key={i} className="h-8 w-20 rounded-full" />)}
+            </div>
           </div>
         </div>
         <HeroCarousel slides={heroSlides || []} />
+      </section>
+
+      {/* แถบตัวเลขร้าน */}
+      <section className="mt-6 grid grid-cols-2 gap-3 rounded-2xl border border-line bg-surface p-5 sm:grid-cols-4">
+        {stats.map(([n, label]) => (
+          <div key={label} className="py-2 text-center">
+            <div className="nums text-2xl font-extrabold text-brand-600">{n}</div>
+            <div className="mt-1 text-xs text-muted">{label}</div>
+          </div>
+        ))}
       </section>
 
       {/* CATEGORIES */}
@@ -95,6 +138,59 @@ export default function Home() {
       <section className="mt-12">
         <SectionHead title={t('home.newArrivals')} to="/products" />
         <ProductRow items={newArrivals} loading={loading} />
+      </section>
+
+      {/* REVIEWS จากผู้ซื้อจริง */}
+      {(reviews || []).length > 0 && (
+        <section className="mt-12">
+          <SectionHead title={t('home.reviewsTitle')} sub={t('home.reviewsSub')} icon="star" />
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {reviews.map((r) => (
+              <article key={r.id} className="flex flex-col rounded-2xl border border-line bg-surface p-5">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-amber-500" aria-label={`${r.rating}/5`}>
+                    {'★'.repeat(r.rating)}<span className="text-line">{'★'.repeat(5 - r.rating)}</span>
+                  </span>
+                  {r.verified && (
+                    <span className="flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                      <Icon name="check" size={11} /> {t('home.verifiedBuyer')}
+                    </span>
+                  )}
+                </div>
+                <p className="mt-2.5 line-clamp-3 flex-1 text-sm leading-relaxed">"{r.comment}"</p>
+                <div className="mt-3 flex items-center justify-between gap-2 text-xs text-muted">
+                  <span className="font-semibold">{r.author_name || t('community.anonymous')}</span>
+                  <span>{new Date(r.created_at).toLocaleDateString(lang === 'th' ? 'th-TH' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                </div>
+                <Link to={`/product/${r.product.slug}`} className="mt-3 flex items-center gap-2.5 rounded-xl border border-line p-2 transition-colors hover:border-brand-500">
+                  {r.product.image && <img src={r.product.image} alt="" loading="lazy" className="h-9 w-9 shrink-0 rounded-lg bg-white object-contain" onError={(e) => { e.currentTarget.style.display = 'none' }} />}
+                  <span className="line-clamp-1 text-xs font-semibold">{r.product.name}</span>
+                  <Icon name="arrowRight" size={13} className="ml-auto shrink-0 text-muted" />
+                </Link>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* PC BUILDER CTA */}
+      <section className="mt-12 overflow-hidden rounded-2xl bg-zinc-950 p-8 text-white sm:p-10">
+        <div className="flex flex-wrap items-center justify-between gap-6">
+          <div className="max-w-[52ch]">
+            <h2 className="flex items-center gap-2.5 text-xl font-bold sm:text-2xl">
+              <Icon name="cpu" size={26} className="text-brand-500" /> {t('home.builderCtaTitle')}
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed text-zinc-400">{t('home.builderCtaDesc')}</p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <Link to="/builder" className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-brand-700">
+              <Icon name="cpu" size={16} /> {t('home.builderCtaBtn')}
+            </Link>
+            <Link to="/community" className="inline-flex items-center gap-2 rounded-xl border border-white/25 px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-white/10">
+              <Icon name="users" size={16} /> {t('home.builderCtaCommunity')}
+            </Link>
+          </div>
+        </div>
       </section>
 
       {/* TRUST BAR */}

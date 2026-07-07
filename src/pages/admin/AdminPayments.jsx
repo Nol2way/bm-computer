@@ -15,6 +15,10 @@ export default function AdminPayments() {
   const { data, loading } = useFetch(() => adminListOrders(), [key])
   const [busy, setBusy] = useState(null)
   const [filter, setFilter] = useState('all')
+  // ค้นหา (เลขออเดอร์/ชื่อลูกค้า) + ช่วงวันที่
+  const [q, setQ] = useState('')
+  const [from, setFrom] = useState('')
+  const [to, setTo] = useState('')
   const rows = data || []
   const label = (s) => t(`orders.status.${s}`)
 
@@ -28,12 +32,19 @@ export default function AdminPayments() {
     return { paid, pending, refunded }
   }, [rows])
 
-  const filtered = useMemo(() => rows.filter((o) => {
-    if (filter === 'paid') return PAID.includes(o.status)
-    if (filter === 'pending') return o.status === 'pending'
-    if (filter === 'refund') return o.status === 'refunded' || o.status === 'cancel_requested'
-    return true
-  }), [rows, filter])
+  const filtered = useMemo(() => {
+    const needle = q.trim().toLowerCase()
+    return rows.filter((o) => {
+      if (filter === 'paid' && !PAID.includes(o.status)) return false
+      if (filter === 'pending' && o.status !== 'pending') return false
+      if (filter === 'refund' && !(o.status === 'refunded' || o.status === 'cancel_requested')) return false
+      if (needle && !`${o.code} ${o.ship_name || ''} ${o.ship_phone || ''}`.toLowerCase().includes(needle)) return false
+      const day = new Date(o.paid_at || o.created_at).toLocaleDateString('sv') // yyyy-mm-dd ตรงกับค่า input[type=date]
+      if (from && day < from) return false
+      if (to && day > to) return false
+      return true
+    })
+  }, [rows, filter, q, from, to])
 
   const refund = async (id) => {
     if (!confirm(t('admin.approveRefund') + ' ?')) return
@@ -63,13 +74,34 @@ export default function AdminPayments() {
         ))}
       </div>
 
-      <div className="mb-4 flex flex-wrap gap-1.5">
-        {filters.map(([f, lbl]) => (
-          <button key={f} onClick={() => setFilter(f)}
-            className={cx('rounded-full px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer', filter === f ? 'bg-brand-600 text-white' : 'border border-line bg-surface hover:bg-surface2')}>
-            {lbl}
-          </button>
-        ))}
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap gap-1.5">
+          {filters.map(([f, lbl]) => (
+            <button key={f} onClick={() => setFilter(f)}
+              className={cx('rounded-full px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer', filter === f ? 'bg-brand-600 text-white' : 'border border-line bg-surface hover:bg-surface2')}>
+              {lbl}
+            </button>
+          ))}
+        </div>
+        <div className="relative min-w-[200px] flex-1 sm:max-w-[260px]">
+          <Icon name="search" size={15} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted" />
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('admin.paySearchPh')}
+            className="w-full rounded-lg border border-line bg-surface py-2 pl-8 pr-2.5 text-sm focus:border-brand-500 focus:outline-none" />
+        </div>
+        <label className="flex items-center gap-1.5 text-xs text-muted">
+          {t('admin.dateFrom')}
+          <input type="date" value={from} onChange={(e) => setFrom(e.target.value)}
+            className="rounded-lg border border-line bg-surface px-2 py-1.5 text-sm text-fg focus:border-brand-500 focus:outline-none cursor-pointer" />
+        </label>
+        <label className="flex items-center gap-1.5 text-xs text-muted">
+          {t('admin.dateTo')}
+          <input type="date" value={to} onChange={(e) => setTo(e.target.value)}
+            className="rounded-lg border border-line bg-surface px-2 py-1.5 text-sm text-fg focus:border-brand-500 focus:outline-none cursor-pointer" />
+        </label>
+        {(q || from || to) && (
+          <button onClick={() => { setQ(''); setFrom(''); setTo('') }}
+            className="text-sm font-semibold text-brand-600 hover:underline cursor-pointer">{t('common.clear')}</button>
+        )}
       </div>
 
       {loading ? <TableSkeleton rows={6} /> : filtered.length === 0 ? (

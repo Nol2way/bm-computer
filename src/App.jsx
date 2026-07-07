@@ -34,6 +34,7 @@ import Addresses from './pages/account/Addresses'
 import TaxProfiles from './pages/account/TaxProfiles'
 import PaymentMethods from './pages/account/PaymentMethods'
 import Wishlist from './pages/account/Wishlist'
+import DocsPage from './pages/docs/DocsPage'
 import NotFound from './pages/NotFound'
 
 function ScrollTop() {
@@ -100,6 +101,8 @@ export default function App() {
           <Route path="customers" element={<AdminCustomers />} />
           <Route path="settings" element={<AdminSettings />} />
         </Route>
+        {/* Docs: เลย์เอาต์เต็มหน้าแบบเดียวกับ admin (sidebar + header ของตัวเอง ไม่ใช้เปลือกหน้าร้าน) */}
+        <Route path="/docs" element={<DocsPage />} />
         {/* หน้าร้าน */}
         <Route element={<StorefrontShell />}>
           <Route path="/" element={<Home />} />

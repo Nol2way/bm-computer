@@ -11,14 +11,14 @@ export default function Addresses() {
     remove: accountApi.deleteAddress,
   }
   const fields = [
-    { key: 'label', label: t('account.label') },
-    { key: 'recipient', label: t('account.recipient'), required: true },
-    { key: 'phone', label: t('account.phone'), type: 'tel', required: true },
-    { key: 'line1', label: t('account.addressLine'), span: 2, required: true },
-    { key: 'district', label: t('account.district') },
-    { key: 'amphoe', label: t('account.amphoe') },
-    { key: 'province', label: t('account.province') },
-    { key: 'postcode', label: t('account.postcode') },
+    { key: 'label', label: t('account.label'), maxLength: 40 },
+    { key: 'recipient', label: t('account.recipient'), required: true, rules: ['name'], maxLength: 60 },
+    { key: 'phone', label: t('account.phone'), type: 'tel', required: true, rules: ['phone'], numeric: true, maxLength: 10 },
+    { key: 'line1', label: t('account.addressLine'), span: 2, required: true, maxLength: 240 },
+    { key: 'district', label: t('account.district'), maxLength: 60 },
+    { key: 'amphoe', label: t('account.amphoe'), maxLength: 60 },
+    { key: 'province', label: t('account.province'), maxLength: 60 },
+    { key: 'postcode', label: t('account.postcode'), rules: ['postcode'], numeric: true, maxLength: 5 },
   ]
   const blank = { label: '', recipient: '', phone: '', line1: '', district: '', amphoe: '', province: '', postcode: '', is_default: false }
   const renderItem = (a) => (

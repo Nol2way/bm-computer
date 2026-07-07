@@ -42,6 +42,7 @@ export default function Footer() {
             <h4 className="mb-2 font-semibold text-white">{t('footer.help')}</h4>
             <Link className={col} to="/track">{t('footer.track')}</Link>
             <Link className={col} to="/orders">{t('footer.history')}</Link>
+            <Link className={col} to="/docs">{t('footer.docs')}</Link>
             <a className={col} href="#">{t('footer.payInfo')}</a>
             <a className={col} href="#">{t('footer.warranty')}</a>
           </div>

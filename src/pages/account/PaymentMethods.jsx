@@ -18,10 +18,10 @@ export default function PaymentMethods() {
       { value: 'card', label: t('account.card') },
       { value: 'cod', label: t('account.cod') },
     ] },
-    { key: 'label', label: t('account.label') },
-    { key: 'provider', label: t('account.provider') },
-    { key: 'account_name', label: t('account.accountName') },
-    { key: 'masked', label: t('account.masked') },
+    { key: 'label', label: t('account.label'), maxLength: 40 },
+    { key: 'provider', label: t('account.provider'), maxLength: 60 },
+    { key: 'account_name', label: t('account.accountName'), maxLength: 80 },
+    { key: 'masked', label: t('account.masked'), maxLength: 30 },
   ]
   const blank = { type: 'promptpay', label: '', provider: '', account_name: '', masked: '', is_default: false }
   const renderItem = (x) => (

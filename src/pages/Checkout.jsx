@@ -13,6 +13,7 @@ import { accountApi } from '../lib/accountApi'
 import { useFetch } from '../lib/useFetch'
 import { promptpayQrUrl } from '../lib/promptpay'
 import { usePageMeta } from '../lib/usePageMeta'
+import { checkAll, MAX } from '../lib/validate'
 
 const wrap = 'mx-auto max-w-[1200px] px-4'
 const input = 'w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20'
@@ -25,12 +26,17 @@ export default function Checkout() {
   const { open: openAuth } = useAuthNav()
   const nav = useNavigate()
   const [form, setForm] = useState({ name: '', phone: '', address: '' })
+  const [fieldErrs, setFieldErrs] = useState({})
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [placed, setPlaced] = useState(null) // ออเดอร์ที่สร้างแล้ว (เข้าสู่ขั้นชำระเงิน)
   const [savedAddrs, setSavedAddrs] = useState([])
   const [addrMode, setAddrMode] = useState('new')
-  const set = (k) => (e) => setForm((s) => ({ ...s, [k]: e.target.value }))
+  const set = (k, filter) => (e) => {
+    const v = filter ? filter(e.target.value) : e.target.value
+    setForm((s) => ({ ...s, [k]: v }))
+    setFieldErrs((s) => ({ ...s, [k]: '' })) // แก้แล้วลบ error เดิมของช่องนั้น
+  }
 
   function applyAddr(a) {
     setForm((s) => ({
@@ -70,7 +76,10 @@ export default function Checkout() {
 
   async function placeOrder() {
     setError('')
-    if (!form.name.trim() || !form.phone.trim() || !form.address.trim()) { setError(t('checkout.fillAddress')); return }
+    // ตรวจครบทุกช่อง: ชื่อ 2-60 ตัว / เบอร์ไทย 9-10 หลัก / ที่อยู่อย่างน้อย 10 ตัว
+    const errs = checkAll({ name: ['required', 'name'], phone: ['required', 'phone'], address: ['required', 'address'] }, form)
+    setFieldErrs(errs)
+    if (Object.keys(errs).length) { setError(t('checkout.fillAddress')); return }
     if (!user) { openAuth('login'); return }
     setLoading(true)
     try {
@@ -96,7 +105,6 @@ export default function Checkout() {
           {!placed ? (
             <section className="rounded-2xl border border-line bg-surface p-5">
               <h3 className="mb-4 font-bold">{t('checkout.address')}</h3>
-
               {savedAddrs.length > 0 && (
                 <div className="mb-4 flex flex-col gap-2">
                   <p className="text-sm font-semibold text-muted">{t('checkout.savedAddr')}</p>
@@ -124,10 +132,22 @@ export default function Checkout() {
               {addrMode === 'new' && (
                 <>
                   <div className="flex flex-wrap gap-4">
-                    <div className="min-w-[200px] flex-1"><label className="mb-1.5 block text-sm font-semibold">{t('checkout.name')}</label><input className={input} value={form.name} onChange={set('name')} autoComplete="name" /></div>
-                    <div className="min-w-[200px] flex-1"><label className="mb-1.5 block text-sm font-semibold">{t('checkout.phone')}</label><input className={input} value={form.phone} onChange={set('phone')} inputMode="tel" autoComplete="tel" /></div>
+                    <div className="min-w-[200px] flex-1">
+                      <label className="mb-1.5 block text-sm font-semibold">{t('checkout.name')}</label>
+                      <input className={cx(input, fieldErrs.name && 'border-red-400')} value={form.name} onChange={set('name')} autoComplete="name" maxLength={MAX.name} />
+                      {fieldErrs.name && <span className="mt-1 block text-xs text-red-500">{t(fieldErrs.name)}</span>}
+                    </div>
+                    <div className="min-w-[200px] flex-1">
+                      <label className="mb-1.5 block text-sm font-semibold">{t('checkout.phone')}</label>
+                      <input className={cx(input, fieldErrs.phone && 'border-red-400')} value={form.phone} onChange={set('phone', (v) => v.replace(/[^\d]/g, ''))} inputMode="tel" autoComplete="tel" maxLength={MAX.phone} />
+                      {fieldErrs.phone && <span className="mt-1 block text-xs text-red-500">{t(fieldErrs.phone)}</span>}
+                    </div>
                   </div>
-                  <div className="mt-4"><label className="mb-1.5 block text-sm font-semibold">{t('checkout.addr')}</label><textarea className={input} rows="3" value={form.address} onChange={set('address')} placeholder={t('checkout.addrPlaceholder')} /></div>
+                  <div className="mt-4">
+                    <label className="mb-1.5 block text-sm font-semibold">{t('checkout.addr')}</label>
+                    <textarea className={cx(input, fieldErrs.address && 'border-red-400')} rows="3" value={form.address} onChange={set('address')} placeholder={t('checkout.addrPlaceholder')} maxLength={MAX.address} />
+                    {fieldErrs.address && <span className="mt-1 block text-xs text-red-500">{t(fieldErrs.address)}</span>}
+                  </div>
                 </>
               )}
               {error && <div className="mt-3 rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-600 dark:text-red-400" role="alert">{error}</div>}

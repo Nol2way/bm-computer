@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Icon } from '../../components/Icons'
 import { cx } from '../../lib/ui'
 import { fmt } from '../../data/mock'
 import { adminListProducts, saveProduct, deleteProduct, fetchCategories, fetchBrands, fetchAttributeDefs } from '../../lib/api'
+import { check, MAX } from '../../lib/validate'
 import { useFetch } from '../../lib/useFetch'
 import { useLang } from '../../i18n/LanguageContext'
 import { TableSkeleton } from '../../components/Skeleton'
@@ -18,12 +19,29 @@ export default function AdminProducts() {
   const { data: brands } = useFetch(() => fetchBrands(), [])
   const { data: attrDefs } = useFetch(() => fetchAttributeDefs(), [])
   const [editing, setEditing] = useState(null)
-  const rows = data || []
+  // ตัวกรองตาราง: ค้นหาชื่อ + หมวด + แบรนด์ + สต็อก + สถานะการแสดง
+  const [flt, setFlt] = useState({ q: '', cat: '', brand: '', stock: 'all', status: 'all' })
+  const setF = (k) => (e) => setFlt((s) => ({ ...s, [k]: e.target.value }))
+  const rows = useMemo(() => {
+    const q = flt.q.trim().toLowerCase()
+    return (data || []).filter((p) => {
+      if (q && !`${p.name} ${p.slug} ${p.brands?.name || ''}`.toLowerCase().includes(q)) return false
+      if (flt.cat && p.category_id !== flt.cat) return false
+      if (flt.brand && p.brand_id !== flt.brand) return false
+      if (flt.stock === 'low' && !(p.stock > 0 && p.stock <= 5)) return false
+      if (flt.stock === 'out' && p.stock !== 0) return false
+      if (flt.status === 'show' && !p.is_active) return false
+      if (flt.status === 'hide' && p.is_active) return false
+      return true
+    })
+  }, [data, flt])
 
   const onDelete = async (p) => {
     if (!confirm(t('admin.confirmDelProduct', { name: p.name }))) return
     try { await deleteProduct(p.id); setKey((k) => k + 1) } catch (e) { alert(`${t('admin.delFail')}: ${e.message}`) }
   }
+
+  const sel = 'rounded-lg border border-line bg-surface px-2.5 py-2 text-sm focus:border-brand-500 focus:outline-none cursor-pointer'
 
   return (
     <div>
@@ -32,6 +50,37 @@ export default function AdminProducts() {
         <button onClick={() => setEditing({})} className="flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-2 text-sm font-semibold text-white hover:bg-brand-700 cursor-pointer">
           <Icon name="plus" size={16} /> {t('admin.addProduct')}
         </button>
+      </div>
+
+      {/* แถบตัวกรอง */}
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <div className="relative min-w-[220px] flex-1 sm:max-w-[300px]">
+          <Icon name="search" size={15} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted" />
+          <input value={flt.q} onChange={setF('q')} placeholder={t('admin.searchProductPh')}
+            className="w-full rounded-lg border border-line bg-surface py-2 pl-8 pr-2.5 text-sm focus:border-brand-500 focus:outline-none" />
+        </div>
+        <select value={flt.cat} onChange={setF('cat')} className={sel} aria-label={t('admin.category')}>
+          <option value="">{t('admin.filterAllCats')}</option>
+          {(cats || []).map((c) => <option key={c.id} value={c.id}>{c.name_th}</option>)}
+        </select>
+        <select value={flt.brand} onChange={setF('brand')} className={sel} aria-label={t('admin.brand')}>
+          <option value="">{t('admin.filterAllBrands')}</option>
+          {(brands || []).map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+        </select>
+        <select value={flt.stock} onChange={setF('stock')} className={sel} aria-label={t('admin.colStock')}>
+          <option value="all">{t('admin.stockAll')}</option>
+          <option value="low">{t('admin.stockLow')}</option>
+          <option value="out">{t('admin.stockOut')}</option>
+        </select>
+        <select value={flt.status} onChange={setF('status')} className={sel} aria-label={t('admin.colStatus')}>
+          <option value="all">{t('admin.statusAll')}</option>
+          <option value="show">{t('admin.show')}</option>
+          <option value="hide">{t('admin.hide')}</option>
+        </select>
+        {(flt.q || flt.cat || flt.brand || flt.stock !== 'all' || flt.status !== 'all') && (
+          <button onClick={() => setFlt({ q: '', cat: '', brand: '', stock: 'all', status: 'all' })}
+            className="text-sm font-semibold text-brand-600 hover:underline cursor-pointer">{t('common.clear')}</button>
+        )}
       </div>
 
       {loading ? <TableSkeleton rows={6} cols={6} /> : (
@@ -62,6 +111,7 @@ export default function AdminProducts() {
               ))}
             </tbody>
           </table>
+          {rows.length === 0 && <div className="rounded-b-xl border border-t-0 border-line bg-surface p-8 text-center text-sm text-muted">{t('list.noResults')}</div>}
         </div>
       )}
 
@@ -99,6 +149,13 @@ function ProductForm({ product, cats, brands, attrDefs, onClose, onSaved }) {
   const submit = async (e) => {
     e.preventDefault(); setErr('')
     if (!f.name || !f.category_id || !f.brand_id || !f.price) { setErr(t('admin.fillRequired')); return }
+    // ตรวจรูปแบบตัวเลข/ลิงก์ก่อนบันทึก (กันข้อมูลเพี้ยนเข้าฐานข้อมูล)
+    const numErr = check('price', f.price) || check('stock', Number(f.stock))
+      || (f.old_price !== '' && f.old_price != null && check('price', f.old_price))
+      || (f.sale_price !== '' && f.sale_price != null && check('price', f.sale_price))
+    if (numErr) { setErr(t(numErr)); return }
+    const badUrl = images.map((s) => s.trim()).filter(Boolean).find((u) => check('url', u))
+    if (badUrl) { setErr(`${t('valid.url')}: ${badUrl.slice(0, 60)}`); return }
     setSaving(true)
     try {
       // เก็บเฉพาะ attr key ที่มีนิยามในหมวดปัจจุบัน (เปลี่ยนหมวดแล้วค่าหมวดเก่าไม่ติดไป)
@@ -124,14 +181,14 @@ function ProductForm({ product, cats, brands, attrDefs, onClose, onSaved }) {
         {err && <div className="mb-3 rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-600">{err}</div>}
 
         <div className="grid gap-3 sm:grid-cols-2">
-          <Field label={t('admin.productName')} className="sm:col-span-2"><input className={input} value={f.name} onChange={(e) => setF((s) => ({ ...s, name: e.target.value, slug: s.slug || slugify(e.target.value) }))} /></Field>
-          <Field label={t('admin.slugUrl')}><input className={input} value={f.slug} onChange={set('slug')} placeholder="auto" /></Field>
-          <Field label={t('admin.stock')}><input className={input} type="number" value={f.stock} onChange={set('stock')} /></Field>
+          <Field label={t('admin.productName')} className="sm:col-span-2"><input className={input} value={f.name} maxLength={MAX.productName} onChange={(e) => setF((s) => ({ ...s, name: e.target.value, slug: s.slug || slugify(e.target.value) }))} /></Field>
+          <Field label={t('admin.slugUrl')}><input className={input} value={f.slug} onChange={set('slug')} placeholder="auto" maxLength={120} /></Field>
+          <Field label={t('admin.stock')}><input className={input} type="number" min="0" step="1" value={f.stock} onChange={set('stock')} /></Field>
           <Field label={t('admin.category')}><select className={input} value={f.category_id} onChange={set('category_id')}><option value="">{t('admin.choosePh')}</option>{cats.map((c) => <option key={c.id} value={c.id}>{c.name_th}</option>)}</select></Field>
           <Field label={t('admin.brand')}><select className={input} value={f.brand_id} onChange={set('brand_id')}><option value="">{t('admin.choosePh')}</option>{brands.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}</select></Field>
-          <Field label={t('admin.price')}><input className={input} type="number" value={f.price} onChange={set('price')} /></Field>
-          <Field label={t('admin.oldPrice')}><input className={input} type="number" value={f.old_price} onChange={set('old_price')} /></Field>
-          <Field label={t('admin.salePrice')}><input className={input} type="number" value={f.sale_price} onChange={set('sale_price')} /></Field>
+          <Field label={t('admin.price')}><input className={input} type="number" min="1" value={f.price} onChange={set('price')} /></Field>
+          <Field label={t('admin.oldPrice')}><input className={input} type="number" min="1" value={f.old_price} onChange={set('old_price')} /></Field>
+          <Field label={t('admin.salePrice')}><input className={input} type="number" min="1" value={f.sale_price} onChange={set('sale_price')} /></Field>
           <Field label={t('admin.badge')}><select className={input} value={f.badge} onChange={set('badge')}><option value="">{t('admin.badgeNone')}</option><option value="best">{t('admin.badgeBest')}</option><option value="sale">{t('admin.badgeSale')}</option><option value="low">{t('admin.badgeLow')}</option></select></Field>
         </div>
 
