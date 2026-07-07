@@ -32,6 +32,8 @@ export default function Checkout() {
   const [placed, setPlaced] = useState(null) // ออเดอร์ที่สร้างแล้ว (เข้าสู่ขั้นชำระเงิน)
   const [savedAddrs, setSavedAddrs] = useState([])
   const [addrMode, setAddrMode] = useState('new')
+  // ที่อยู่ใหม่: บันทึกเข้าบัญชีให้อัตโนมัติ (ติ๊กไว้เป็นค่าเริ่มต้น) - ครั้งถัดไปไม่ต้องกรอกซ้ำ
+  const [saveAddr, setSaveAddr] = useState(true)
   const set = (k, filter) => (e) => {
     const v = filter ? filter(e.target.value) : e.target.value
     setForm((s) => ({ ...s, [k]: v }))
@@ -84,6 +86,17 @@ export default function Checkout() {
     setLoading(true)
     try {
       const order = await createOrder({ userId: user.id, items: items.map((i) => ({ slug: i.slug, qty: i.qty })), ship: form })
+      // จำที่อยู่ใหม่เข้าบัญชี (ไม่บล็อกออเดอร์ - พลาดก็แค่ครั้งหน้ากรอกใหม่)
+      if (apiEnabled && addrMode === 'new' && saveAddr) {
+        const line1 = form.address.trim()
+        const dup = savedAddrs.some((a) => [a.line1, a.district, a.amphoe, a.province, a.postcode].filter(Boolean).join(' ').trim() === line1)
+        if (!dup) {
+          accountApi.createAddress({
+            recipient: form.name.trim(), phone: form.phone.trim(), line1,
+            is_default: savedAddrs.length === 0,
+          }).catch(() => {})
+        }
+      }
       setPlaced(order)
     } catch (e) {
       setError(e.message || t('checkout.orderFail'))
@@ -123,7 +136,9 @@ export default function Checkout() {
                     </label>
                   ))}
                   <label className={cx('flex cursor-pointer items-center gap-3 rounded-xl border p-3 transition-colors', addrMode === 'new' ? 'border-brand-500 bg-brand-500/5' : 'border-line hover:border-brand-400')}>
-                    <input type="radio" name="addrMode" value="new" checked={addrMode === 'new'} onChange={() => setAddrMode('new')} className="accent-brand-600" />
+                    {/* สลับมากรอกใหม่: ล้างเฉพาะช่องที่อยู่ (คงชื่อ/เบอร์จาก profile ไว้ ไม่ให้กรอกซ้ำ) */}
+                    <input type="radio" name="addrMode" value="new" checked={addrMode === 'new'}
+                      onChange={() => { setAddrMode('new'); setForm((s) => ({ ...s, address: '' })); setFieldErrs({}) }} className="accent-brand-600" />
                     <span className="text-sm font-semibold">{t('checkout.useNewAddr')}</span>
                   </label>
                 </div>
@@ -148,6 +163,12 @@ export default function Checkout() {
                     <textarea className={cx(input, fieldErrs.address && 'border-red-400')} rows="3" value={form.address} onChange={set('address')} placeholder={t('checkout.addrPlaceholder')} maxLength={MAX.address} />
                     {fieldErrs.address && <span className="mt-1 block text-xs text-red-500">{t(fieldErrs.address)}</span>}
                   </div>
+                  {apiEnabled && (
+                    <label className="mt-3 flex cursor-pointer items-center gap-2 text-sm">
+                      <input type="checkbox" className="h-4 w-4 accent-brand-600" checked={saveAddr} onChange={(e) => setSaveAddr(e.target.checked)} />
+                      {t('checkout.saveAddr')} <span className="text-xs text-muted">({t('checkout.saveAddrHint')})</span>
+                    </label>
+                  )}
                 </>
               )}
               {error && <div className="mt-3 rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-600 dark:text-red-400" role="alert">{error}</div>}
