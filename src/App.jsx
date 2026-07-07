@@ -39,7 +39,9 @@ import NotFound from './pages/NotFound'
 
 function ScrollTop() {
   const { pathname } = useLocation()
-  useEffect(() => window.scrollTo(0, 0), [pathname])
+  // ห้ามคืนค่าของ scrollTo ออกจาก effect: บาง extension (เช่น Edge shopping assistant)
+  // patch window.scrollTo ให้คืนค่า -> React เรียกค่านั้นเป็น cleanup ตอนเปลี่ยนหน้า -> ทั้งแอป crash
+  useEffect(() => { window.scrollTo(0, 0) }, [pathname])
   return null
 }
 
