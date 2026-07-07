@@ -40,6 +40,15 @@ npm run dev
 - **สินค้าไม่ขึ้น / ล็อกอินไม่ติด** → เช็คว่าสร้าง `backend/.dev.vars` แล้ว และรันด้วย `npm run dev` (ไม่ใช่ `npm run dev:web` อย่างเดียว — backend ต้องรันคู่กัน)
 - **`.dev.vars` อย่าก็อปจาก `.dev.vars.example`** ทั้งไฟล์ เพราะข้างในเป็นค่าตัวอย่างปลอมที่จะไปทับค่าจริง ใช้แค่ 3 บรรทัดข้างบนพอ
 
+## Login / Register / Google บน localhost
+
+- **Login อีเมล+รหัสผ่าน**: ใช้ได้เลย (Turnstile ตอน dev ใช้ test key ที่ผ่านเสมอ ฝั่ง server ไม่ตรวจเพราะไม่ได้ตั้ง secret)
+- **Register**: ใช้ได้เลยเช่นกัน - ถ้าโปรเจกต์ Supabase ปิด "Confirm email" ไว้ สมัครเสร็จเข้าระบบทันที
+  (ถ้ายังเปิด Confirm email อยู่ จะขึ้นข้อความให้ไปกดยืนยันในอีเมลก่อน - แจ้งเจ้าของโปรเจกต์ให้ปิดได้ที่
+  Supabase Dashboard → Authentication → Sign In / Providers → Email → ปิด Confirm email)
+- **Google Login**: ต้องมี `http://localhost:5173/**` ใน Redirect URLs ของ Supabase
+  (Dashboard → Authentication → URL Configuration) - ตั้งครั้งเดียวใช้ได้ทั้งทีม
+
 ## หมายเหตุ
 
 - ทุกคนต่อ DB ตัวจริง (production) ก้อนเดียวกัน → **อย่าลบข้อมูลจริงตอนเทสต์** (ลบใน `/admin` = หายจากเว็บ live จริง)
