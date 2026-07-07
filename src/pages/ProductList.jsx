@@ -267,10 +267,13 @@ function PriceSlider({ bounds, draft, setDraft, onCommit }) {
             {children}
           </div>
         )}
-        renderThumb={({ props }) => (
-          <div {...props} style={props.style}
-            className="h-4 w-4 cursor-grab rounded-full border-2 border-white bg-brand-600 shadow-md focus:outline-none focus:ring-2 focus:ring-brand-500/40" />
-        )}
+        renderThumb={({ props }) => {
+          const { key, ...rest } = props // react-range ใส่ key มาใน props - ต้องส่งแยก ห้าม spread
+          return (
+            <div key={key} {...rest} style={rest.style}
+              className="h-4 w-4 cursor-grab rounded-full border-2 border-white bg-brand-600 shadow-md focus:outline-none focus:ring-2 focus:ring-brand-500/40" />
+          )
+        }}
       />
       <div className="nums mt-1 flex justify-between text-xs text-muted">
         <span>฿{fmt(vMin)}</span>
