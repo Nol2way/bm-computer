@@ -6,7 +6,7 @@ export const inputCls = 'w-full rounded-lg border border-line bg-surface px-3 py
 
 export function PageHead({ title, action }) {
   return (
-    <div className="mb-5 flex items-center justify-between gap-3">
+    <div className="no-print mb-5 flex items-center justify-between gap-3">
       <h1 className="text-xl font-bold">{title}</h1>
       {action}
     </div>

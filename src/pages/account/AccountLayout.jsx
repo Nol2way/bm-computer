@@ -61,9 +61,9 @@ export default function AccountLayout() {
   if (!user) return null
 
   return (
-    <div className="mx-auto max-w-[1200px] px-4 py-6">
+    <div className="account-shell mx-auto max-w-[1200px] px-4 py-6">
       {/* header: การ์ดโปรไฟล์ + สรุปออเดอร์ 4 ใบ */}
-      <div className="grid gap-4 lg:grid-cols-[1.4fr_2fr]">
+      <div className="no-print grid gap-4 lg:grid-cols-[1.4fr_2fr]">
         <div className="flex items-center gap-4 rounded-2xl border border-line bg-surface p-5">
           <div className="grid h-16 w-16 shrink-0 place-items-center rounded-full bg-brand-600 text-xl font-bold text-white">
             {initials(profile?.full_name, user.email)}
@@ -82,12 +82,13 @@ export default function AccountLayout() {
       </div>
 
       {/* body: sidebar + เนื้อหา */}
-      <div className="mt-6 grid gap-6 md:grid-cols-[240px_1fr]">
-        <aside className="h-fit rounded-2xl border border-line bg-surface p-3">
+      <div className="print-full mt-6 grid gap-6 md:grid-cols-[240px_1fr]">
+        <aside className="no-print h-fit rounded-2xl border border-line bg-surface p-3">
           <div className="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-muted">{t('account.sectionList')}</div>
           <SideLink to="/account/orders" icon="receipt" label={t('account.myOrders')} />
           <SideLink to="/account/wishlist" icon="heart" label={t('account.wishlist')} />
           <SideLink to="/account/track" icon="truck" label={t('account.trackShipping')} />
+          <SideLink to="/account/warranty" icon="shield" label={t('account.warranty')} />
           <div className="px-3 pb-1 pt-4 text-xs font-semibold uppercase tracking-wide text-muted">{t('account.sectionAccount')}</div>
           <SideLink to="/account" end icon="user" label={t('account.title')} />
           <SideLink to="/account/addresses" icon="pin" label={t('account.shippingAddress')} />

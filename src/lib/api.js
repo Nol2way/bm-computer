@@ -83,9 +83,9 @@ export async function fetchSearchIndex() {
 }
 
 // สร้างออเดอร์จริง - โหมด API ผ่าน backend (คิดราคาใหม่ที่ server) · fallback คิดที่นี่แล้วเขียน Supabase
-export async function createOrder({ userId, items, ship }) {
+export async function createOrder({ userId, items, ship, taxInvoice }) {
   if (apiEnabled) {
-    const { order } = await api.post('/api/orders', { items: items.map((i) => ({ slug: i.slug, qty: i.qty })), ship })
+    const { order } = await api.post('/api/orders', { items: items.map((i) => ({ slug: i.slug, qty: i.qty })), ship, ...(taxInvoice && { taxInvoice }) })
     return order
   }
   if (!isSupabaseConfigured) throw new Error('Supabase not configured')
@@ -108,7 +108,21 @@ export async function createOrder({ userId, items, ship }) {
   if (e2) throw e2
   const { error: e3 } = await supabase.from('order_items').insert(lines.map((l) => ({ ...l, order_id: order.id })))
   if (e3) throw e3
-  return order
+  // เก็บ snapshot ใบกำกับภาษีแบบ best-effort: ออเดอร์ + order_items ถูกสร้างสำเร็จไปแล้ว
+  // ถ้าขั้นนี้ล้มเหลว ไม่ควรทำให้ทั้งคำสั่งซื้อดูเหมือนล้มเหลวไปด้วย (หน้าใบกำกับภาษีมี fallback อยู่แล้ว)
+  let savedTaxInvoice = null
+  if (taxInvoice) {
+    const { error: e4 } = await supabase.from('order_tax_invoices').insert({
+      order_id: order.id, invoice_no: taxInvoice.invoiceNo || null, book_no: taxInvoice.bookNo || null,
+      addr_no: taxInvoice.addrNo || null, lane: taxInvoice.lane || null, building: taxInvoice.building || null,
+      street_no: taxInvoice.streetNo || null, village: taxInvoice.village || null, village_name: taxInvoice.villageName || null,
+      soi: taxInvoice.soi || null, street: taxInvoice.street, sub_district: taxInvoice.subDistrict,
+      district: taxInvoice.district, province: taxInvoice.province, postal_code: taxInvoice.postalCode,
+    })
+    if (e4) console.error('order_tax_invoices insert failed (order still created):', e4.message)
+    else savedTaxInvoice = taxInvoice
+  }
+  return { ...order, tax_invoice: savedTaxInvoice }
 }
 
 export async function fetchOrderByCode(code) {
@@ -148,6 +162,10 @@ export async function saveProduct(p) {
     stock: Number(p.stock) || 0, badge: p.badge || null,
     images: p.images || [], specs: p.specs || {}, attrs: p.attrs || {}, description: p.description || null,
     is_active: p.is_active !== false, is_featured: !!p.is_featured,
+    warranty_period_months: p.warranty_period_months ? Number(p.warranty_period_months) : 0,
+    warranty_conditions: p.warranty_conditions || null,
+    warranty_service_center: p.warranty_service_center || null,
+    warranty_service_phone: p.warranty_service_phone || null,
   }
   if (apiEnabled) { await api.post('/api/admin/products', row); return }
   const { id, ...rest } = row
@@ -232,6 +250,26 @@ export async function cancelOrder(id, reason) {
     return 'cancel_requested'
   }
   throw new Error(tOutside('orders.cannotCancel'))
+}
+
+// ยืนยันที่อยู่ใบกำกับภาษีของออเดอร์ (ยืนยันได้ครั้งเดียว - ล็อกที่ฝั่ง server/DB กันเปลี่ยนทีหลัง)
+export async function confirmOrderTaxInvoiceProfile(orderId, profileId) {
+  if (apiEnabled) return api.patch(`/api/orders/${orderId}/tax-invoice-profile`, { profile_id: profileId })
+  const { data: order, error: e0 } = await supabase.from('orders').select('id, tax_invoice_confirmed_profile_id, tax_invoice_confirmed_at').eq('id', orderId).maybeSingle()
+  if (e0) throw e0
+  if (!order) throw new Error(tOutside('track.notFound'))
+  if (order.tax_invoice_confirmed_profile_id) {
+    return { ok: true, profile_id: order.tax_invoice_confirmed_profile_id, confirmed_at: order.tax_invoice_confirmed_at }
+  }
+  const confirmed_at = new Date().toISOString()
+  const { data: updated, error } = await supabase.from('orders')
+    .update({ tax_invoice_confirmed_profile_id: profileId, tax_invoice_confirmed_at: confirmed_at })
+    .eq('id', orderId).is('tax_invoice_confirmed_profile_id', null)
+    .select('tax_invoice_confirmed_profile_id, tax_invoice_confirmed_at').maybeSingle()
+  if (error) throw error
+  if (updated) return { ok: true, profile_id: updated.tax_invoice_confirmed_profile_id, confirmed_at: updated.tax_invoice_confirmed_at }
+  const { data: existing } = await supabase.from('orders').select('tax_invoice_confirmed_profile_id, tax_invoice_confirmed_at').eq('id', orderId).maybeSingle()
+  return { ok: true, profile_id: existing?.tax_invoice_confirmed_profile_id, confirmed_at: existing?.tax_invoice_confirmed_at }
 }
 
 export async function fetchSetting(key) {

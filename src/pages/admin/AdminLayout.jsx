@@ -18,6 +18,7 @@ const groups = [
   { label: 'admin.sectionSales', items: [
     { to: '/admin/orders', icon: 'receipt', label: 'admin.menuOrders' },
     { to: '/admin/payments', icon: 'card', label: 'admin.menuPayments' },
+    { to: '/admin/warranty-claims', icon: 'shield', label: 'admin.menuWarranty' },
   ] },
   { label: 'admin.sectionPeople', items: [
     { to: '/admin/customers', icon: 'users', label: 'admin.menuCustomers' },

@@ -19,6 +19,10 @@ const ProductBody = z.object({
   images: z.array(z.string()).optional(), specs: z.record(z.any()).optional(),
   attrs: z.record(z.any()).optional(),
   description: z.string().nullable().optional(), is_active: z.boolean().optional(), is_featured: z.boolean().optional(),
+  warranty_period_months: z.number().nullable().optional(),
+  warranty_conditions: z.string().nullable().optional(),
+  warranty_service_center: z.string().nullable().optional(),
+  warranty_service_phone: z.string().nullable().optional(),
 }).openapi('AdminProductBody')
 
 const SlideBody = z.object({
@@ -62,6 +66,10 @@ export function registerAdmin(app: OpenAPIHono<AppEnv>) {
         price: Number(p.price) || 0, old_price: p.old_price ?? null, sale_price: p.sale_price ?? null,
         stock: Number(p.stock) || 0, badge: p.badge || null, images: p.images || [], specs: p.specs || {},
         description: p.description || null, is_active: p.is_active !== false, is_featured: !!p.is_featured,
+        warranty_period_months: p.warranty_period_months ?? 0,
+        warranty_conditions: p.warranty_conditions || null,
+        warranty_service_center: p.warranty_service_center || null,
+        warranty_service_phone: p.warranty_service_phone || null,
       }
       // attrs ส่งมาเท่านั้นจึงอัปเดต - กัน client เก่าที่ไม่มีฟิลด์นี้เขียนทับเป็น {}
       if (p.attrs !== undefined) row.attrs = p.attrs

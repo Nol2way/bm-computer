@@ -9,6 +9,8 @@ import { useFetch } from '../../lib/useFetch'
 import { OrderListSkeleton } from '../../components/Skeleton'
 import { PageHead, EmptyState, PrimaryBtn } from './ui'
 
+const INVOICE_ELIGIBLE = new Set(['paid', 'packing', 'shipping', 'done'])
+
 export default function AccountOrders() {
   const { t, lang } = useLang()
   const { user } = useAuth()
@@ -49,10 +51,22 @@ export default function AccountOrders() {
                     <div className="text-sm text-muted">{t('orders.totalLabel')}</div>
                     <b className="nums text-brand-600">฿{fmt(o.total)}</b>
                   </div>
-                  <Link to={`/account/track?order=${o.code}`}
-                    className="rounded-lg border border-line px-4 py-2 text-sm font-semibold transition-colors hover:bg-surface2">
-                    {t('orders.detail')}
-                  </Link>
+                  <div className="flex gap-2">
+                    {INVOICE_ELIGIBLE.has(o.status) ? (
+                      <Link to={`/account/invoice?order=${o.code}`}
+                        className="rounded-lg border border-line px-4 py-2 text-sm font-semibold transition-colors hover:bg-surface2">
+                        {t('orders.invoiceBtn')}
+                      </Link>
+                    ) : (
+                      <span title={t('orders.invoiceNotYet')} className="cursor-not-allowed rounded-lg border border-line px-4 py-2 text-sm font-semibold text-muted opacity-50">
+                        {t('orders.invoiceBtn')}
+                      </span>
+                    )}
+                    <Link to={`/account/track?order=${o.code}`}
+                      className="rounded-lg border border-line px-4 py-2 text-sm font-semibold transition-colors hover:bg-surface2">
+                      {t('orders.detail')}
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>

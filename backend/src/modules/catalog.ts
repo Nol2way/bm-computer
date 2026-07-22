@@ -35,6 +35,10 @@ export function mapProduct(row: any) {
     specs: row.specs || {},
     attrs: row.attrs || {},
     featured: !!row.is_featured,
+    warranty_period_months: row.warranty_period_months ?? 0,
+    warranty_conditions: row.warranty_conditions ?? null,
+    warranty_service_center: row.warranty_service_center ?? null,
+    warranty_service_phone: row.warranty_service_phone ?? null,
   }
 }
 
@@ -47,6 +51,10 @@ export const ProductSchema = z
     rating: z.number().nullable(), reviews: z.number(), stock: z.number(),
     badge: z.string().nullable(), images: z.array(z.string()),
     specs: z.record(z.any()), attrs: z.record(z.any()), featured: z.boolean(),
+    warranty_period_months: z.number().nullable(),
+    warranty_conditions: z.string().nullable(),
+    warranty_service_center: z.string().nullable(),
+    warranty_service_phone: z.string().nullable(),
   })
   .openapi('Product')
 
