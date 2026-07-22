@@ -34,6 +34,17 @@ export default function Checkout() {
   const [addrMode, setAddrMode] = useState('new')
   // ที่อยู่ใหม่: บันทึกเข้าบัญชีให้อัตโนมัติ (ติ๊กไว้เป็นค่าเริ่มต้น) - ครั้งถัดไปไม่ต้องกรอกซ้ำ
   const [saveAddr, setSaveAddr] = useState(true)
+  // ใบกำกับภาษี
+  const [useTaxInvoice, setUseTaxInvoice] = useState(false)
+  const [taxInvoice, setTaxInvoice] = useState({
+    invoiceNo: '', bookNo: '',
+    addrNo: '', lane: '', building: '', streetNo: '', village: '', villageName: '', soi: '', street: '',
+    subDistrict: '', district: '', province: '', postalCode: ''
+  })
+  const setTaxInvoiceField = (k, filter) => (e) => {
+    const v = filter ? filter(e.target.value) : e.target.value
+    setTaxInvoice((s) => ({ ...s, [k]: v }))
+  }
   const set = (k, filter) => (e) => {
     const v = filter ? filter(e.target.value) : e.target.value
     setForm((s) => ({ ...s, [k]: v }))
@@ -82,10 +93,16 @@ export default function Checkout() {
     const errs = checkAll({ name: ['required', 'name'], phone: ['required', 'phone'], address: ['required', 'address'] }, form)
     setFieldErrs(errs)
     if (Object.keys(errs).length) { setError(t('checkout.fillAddress')); return }
+    // ตรวจใบกำกับภาษี (ถ้าเลือก)
+    if (useTaxInvoice) {
+      const requiredFields = ['street', 'subDistrict', 'district', 'province', 'postalCode']
+      const missingFields = requiredFields.filter((f) => !taxInvoice[f])
+      if (missingFields.length) { setError(t('checkout.fillAddress')); return }
+    }
     if (!user) { openAuth('login'); return }
     setLoading(true)
     try {
-      const order = await createOrder({ userId: user.id, items: items.map((i) => ({ slug: i.slug, qty: i.qty })), ship: form })
+      const order = await createOrder({ userId: user.id, items: items.map((i) => ({ slug: i.slug, qty: i.qty })), ship: form, ...(useTaxInvoice && { taxInvoice }) })
       // จำที่อยู่ใหม่เข้าบัญชี (ไม่บล็อกออเดอร์ - พลาดก็แค่ครั้งหน้ากรอกใหม่)
       if (apiEnabled && addrMode === 'new' && saveAddr) {
         const line1 = form.address.trim()
@@ -171,6 +188,96 @@ export default function Checkout() {
                   )}
                 </>
               )}
+
+              {/* ใบกำกับภาษี */}
+              <div className="mt-6 border-t border-line pt-6">
+                <label className="flex cursor-pointer items-center gap-2 text-sm font-semibold">
+                  <input type="checkbox" className="h-4 w-4 accent-brand-600" checked={useTaxInvoice} onChange={(e) => setUseTaxInvoice(e.target.checked)} />
+                  {t('checkout.useTaxInvoice')}
+                </label>
+
+                {useTaxInvoice && (
+                  <div className="mt-4 space-y-3 rounded-lg bg-surface2 p-4">
+                    <div className="text-sm font-semibold text-muted">{t('checkout.taxInvoice')}</div>
+
+                    {/* Invoice info */}
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div>
+                        <label className="mb-1.5 block text-sm font-semibold">{t('checkout.taxInvoiceNo')}</label>
+                        <input className={input} value={taxInvoice.invoiceNo} onChange={setTaxInvoiceField('invoiceNo')} maxLength={20} />
+                      </div>
+                      <div>
+                        <label className="mb-1.5 block text-sm font-semibold">{t('checkout.taxInvoiceBook')}</label>
+                        <input className={input} value={taxInvoice.bookNo} onChange={setTaxInvoiceField('bookNo')} maxLength={20} />
+                      </div>
+                    </div>
+
+                    {/* Address details */}
+                    <div className="border-t border-line/30 pt-3 text-xs font-semibold text-muted">{t('checkout.buyerAddress')}</div>
+
+                    {/* Row 1: Address number, Lane, Building, Street number */}
+                    <div className="grid gap-3 sm:grid-cols-4">
+                      <div>
+                        <label className="mb-1.5 block text-sm font-semibold">{t('checkout.addrNo')}</label>
+                        <input className={input} value={taxInvoice.addrNo} onChange={setTaxInvoiceField('addrNo')} placeholder="1" maxLength={10} />
+                      </div>
+                      <div>
+                        <label className="mb-1.5 block text-sm font-semibold">{t('checkout.lane')}</label>
+                        <input className={input} value={taxInvoice.lane} onChange={setTaxInvoiceField('lane')} placeholder="A" maxLength={20} />
+                      </div>
+                      <div>
+                        <label className="mb-1.5 block text-sm font-semibold">{t('checkout.building')}</label>
+                        <input className={input} value={taxInvoice.building} onChange={setTaxInvoiceField('building')} placeholder="Building A" maxLength={30} />
+                      </div>
+                      <div>
+                        <label className="mb-1.5 block text-sm font-semibold">{t('checkout.streetNo')}</label>
+                        <input className={input} value={taxInvoice.streetNo} onChange={setTaxInvoiceField('streetNo')} placeholder="123" maxLength={10} />
+                      </div>
+                    </div>
+
+                    {/* Row 2: Village, Village name, Soi, Street */}
+                    <div className="grid gap-3 sm:grid-cols-4">
+                      <div>
+                        <label className="mb-1.5 block text-sm font-semibold">{t('checkout.village')}</label>
+                        <input className={input} value={taxInvoice.village} onChange={setTaxInvoiceField('village')} placeholder="10" maxLength={5} />
+                      </div>
+                      <div>
+                        <label className="mb-1.5 block text-sm font-semibold">{t('checkout.villageName')}</label>
+                        <input className={input} value={taxInvoice.villageName} onChange={setTaxInvoiceField('villageName')} maxLength={50} />
+                      </div>
+                      <div>
+                        <label className="mb-1.5 block text-sm font-semibold">{t('checkout.soi')}</label>
+                        <input className={input} value={taxInvoice.soi} onChange={setTaxInvoiceField('soi')} placeholder="123" maxLength={20} />
+                      </div>
+                      <div>
+                        <label className="mb-1.5 block text-sm font-semibold">{t('checkout.street')} *</label>
+                        <input className={input} value={taxInvoice.street} onChange={setTaxInvoiceField('street')} maxLength={50} />
+                      </div>
+                    </div>
+
+                    {/* Row 3: Sub-district, District, Province, Postal code */}
+                    <div className="grid gap-3 sm:grid-cols-4">
+                      <div>
+                        <label className="mb-1.5 block text-sm font-semibold">{t('checkout.subDistrict')} *</label>
+                        <input className={input} value={taxInvoice.subDistrict} onChange={setTaxInvoiceField('subDistrict')} maxLength={50} />
+                      </div>
+                      <div>
+                        <label className="mb-1.5 block text-sm font-semibold">{t('checkout.district')} *</label>
+                        <input className={input} value={taxInvoice.district} onChange={setTaxInvoiceField('district')} maxLength={50} />
+                      </div>
+                      <div>
+                        <label className="mb-1.5 block text-sm font-semibold">{t('checkout.province')} *</label>
+                        <input className={input} value={taxInvoice.province} onChange={setTaxInvoiceField('province')} maxLength={50} />
+                      </div>
+                      <div>
+                        <label className="mb-1.5 block text-sm font-semibold">{t('checkout.postalCode')} *</label>
+                        <input className={input} value={taxInvoice.postalCode} onChange={setTaxInvoiceField('postalCode', (v) => v.replace(/[^\d]/g, ''))} inputMode="numeric" placeholder="10200" maxLength={5} />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {error && <div className="mt-3 rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-600 dark:text-red-400" role="alert">{error}</div>}
               <button onClick={placeOrder} disabled={loading} className="mt-4 w-full rounded-xl bg-brand-600 py-3 font-semibold text-white transition-colors hover:bg-brand-700 disabled:opacity-60 cursor-pointer">
                 {loading ? t('checkout.placing') : !user ? t('checkout.loginToOrder') : t('checkout.confirm')}
@@ -184,7 +291,14 @@ export default function Checkout() {
         <aside className="rounded-2xl border border-line bg-surface p-5 lg:sticky lg:top-[150px]">
           <h3 className="mb-3 font-bold">{t('checkout.yourOrder')}</h3>
           {items.map((it) => (
-            <div key={it.slug} className="flex justify-between gap-2 py-1.5 text-sm text-muted"><span className="truncate">{it.name} ×{it.qty}</span><span className="nums shrink-0 text-fg">฿{fmt(it.price * it.qty)}</span></div>
+            <div key={it.slug}>
+              <div className="flex justify-between gap-2 py-1.5 text-sm text-muted"><span className="truncate">{it.name} ×{it.qty}</span><span className="nums shrink-0 text-fg">฿{fmt(it.price * it.qty)}</span></div>
+              {it.warranty_period_months && (
+                <div className="ml-2 flex items-center gap-1 py-1 text-xs text-amber-600 dark:text-amber-400">
+                  <Icon name="shield" size={13} /> {t('checkout.warrantyIncluded', { months: it.warranty_period_months })}
+                </div>
+              )}
+            </div>
           ))}
           <div className="mt-2 flex justify-between border-t border-line pt-2 text-sm text-muted"><span>{t('cart.subtotal')}</span><span className="nums text-fg">฿{fmt(subtotal)}</span></div>
           <div className="flex justify-between py-1.5 text-sm text-muted"><span>{t('cart.shipping')}</span><span>{shipping === 0 ? <b className="text-emerald-600 dark:text-emerald-400">{t('common.free')}</b> : `฿${fmt(shipping)}`}</span></div>

@@ -12,6 +12,7 @@ export const badRequest = (m: string) => new HttpError(400, m, 'bad_request')
 export const unauthorized = (m = 'ต้องเข้าสู่ระบบก่อน') => new HttpError(401, m, 'unauthorized')
 export const forbidden = (m = 'ไม่มีสิทธิ์เข้าถึง') => new HttpError(403, m, 'forbidden')
 export const notFound = (m = 'ไม่พบข้อมูล') => new HttpError(404, m, 'not_found')
+export const conflict = (m = 'ข้อมูลซ้ำ') => new HttpError(409, m, 'conflict')
 export const serverError = (m = 'เกิดข้อผิดพลาดในระบบ') => new HttpError(500, m, 'server_error')
 
 // handler รวมสำหรับ onError

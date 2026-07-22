@@ -129,6 +129,8 @@ function ProductForm({ product, cats, brands, attrDefs, onClose, onSaved }) {
     price: product.price || '', old_price: product.old_price || '', sale_price: product.sale_price || '',
     stock: product.stock ?? 0, badge: product.badge || '', description: product.description || '',
     is_active: product.is_active !== false, is_featured: !!product.is_featured,
+    warranty_period_months: product.warranty_period_months || '', warranty_conditions: product.warranty_conditions || '',
+    warranty_service_center: product.warranty_service_center || '', warranty_service_phone: product.warranty_service_phone || '',
   })
   const [images, setImages] = useState(product.images?.length ? product.images : [''])
   const [specs, setSpecs] = useState(Object.entries(product.specs || {}).map(([k, v]) => ({ k, v: String(v) })))
@@ -230,6 +232,26 @@ function ProductForm({ product, cats, brands, attrDefs, onClose, onSaved }) {
               ))}
             </div>
           )}
+        </div>
+
+        {/* Warranty section */}
+        <div className="mt-4 rounded-xl border border-line bg-surface2/40 p-4">
+          <label className="flex items-center gap-1.5 text-sm font-semibold"><Icon name="shield" size={15} className="text-brand-600" /> {t('admin.warrantyLabel')}</label>
+          <p className="mb-3 mt-0.5 text-xs text-muted">{t('admin.warrantyHint')}</p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Field label={t('admin.warrantyPeriod')}>
+              <input className={input} type="number" min="0" value={f.warranty_period_months} onChange={set('warranty_period_months')} placeholder="12" />
+            </Field>
+            <Field label={t('admin.warrantyServicePhone')}>
+              <input className={input} value={f.warranty_service_phone} onChange={set('warranty_service_phone')} placeholder="+66-2-xxx-xxxx" maxLength={20} />
+            </Field>
+          </div>
+          <Field label={t('admin.warrantyServiceCenter')} className="mt-3">
+            <input className={input} value={f.warranty_service_center} onChange={set('warranty_service_center')} placeholder={t('admin.warrantyServiceCenterPh')} />
+          </Field>
+          <Field label={t('admin.warrantyConditions')} className="mt-3">
+            <textarea className={input} rows="2" value={f.warranty_conditions} onChange={set('warranty_conditions')} placeholder={t('admin.warrantyConditionsPh')} />
+          </Field>
         </div>
 
         <Field label={t('admin.descriptionLabel')} className="mt-4"><textarea className={input} rows="3" value={f.description} onChange={set('description')} /></Field>

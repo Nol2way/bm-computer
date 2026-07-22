@@ -91,7 +91,7 @@ export default function OrderTracking() {
             <ol className="relative ml-2">
               {orderFlow.map((st, i) => (
                 <li key={st} className="relative pb-7 pl-8 last:pb-0">
-                  <span className={cx('absolute left-0 top-1 h-4 w-4 rounded-full ring-4 ring-surface', i < idx ? 'bg-emerald-500' : i === idx ? 'bg-brand-600' : 'bg-line')} />
+                  <span className={cx('absolute left-0 top-1 h-4 w-4 rounded-full ring-4 ring-surface', i < idx || (i === idx && idx === orderFlow.length - 1) ? 'bg-emerald-500' : i === idx ? 'bg-brand-600' : 'bg-line')} />
                   {i < orderFlow.length - 1 && <span className={cx('absolute left-[7px] top-5 h-full w-0.5', i < idx ? 'bg-emerald-500' : 'bg-line')} />}
                   <b className={cx(i > idx && 'text-muted')}>{t(`orders.status.${st}`)}</b>
                 </li>

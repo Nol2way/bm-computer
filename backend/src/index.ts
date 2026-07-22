@@ -10,6 +10,7 @@ import { registerOrders } from './modules/orders'
 import { registerAdmin } from './modules/admin'
 import { registerPayments } from './modules/payments'
 import { registerBuilder } from './modules/builder'
+import { registerWarranty } from './modules/warranty'
 
 const app = new OpenAPIHono<AppEnv>({
   // แปลง validation error (zod) เป็นรูปแบบ error กลางของระบบ
@@ -50,6 +51,7 @@ registerOrders(app)
 registerAdmin(app)
 registerPayments(app)
 registerBuilder(app)
+registerWarranty(app)
 
 // ---- OpenAPI JSON + Swagger UI ----
 app.doc('/api/openapi.json', {

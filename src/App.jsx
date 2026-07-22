@@ -25,14 +25,17 @@ import AdminOrders from './pages/admin/AdminOrders'
 import AdminPayments from './pages/admin/AdminPayments'
 import AdminCustomers from './pages/admin/AdminCustomers'
 import AdminSettings from './pages/admin/AdminSettings'
+import AdminWarrantyClaims from './pages/admin/AdminWarrantyClaims'
 import AccountLayout from './pages/account/AccountLayout'
 import Profile from './pages/account/Profile'
 import AccountOrders from './pages/account/AccountOrders'
 import AccountTrack from './pages/account/AccountTrack'
+import AccountInvoice from './pages/account/AccountInvoice'
 import Addresses from './pages/account/Addresses'
 import TaxProfiles from './pages/account/TaxProfiles'
 import PaymentMethods from './pages/account/PaymentMethods'
 import Wishlist from './pages/account/Wishlist'
+import AccountWarranty from './pages/account/AccountWarranty'
 import DocsPage from './pages/docs/DocsPage'
 import ErrorBoundary from './components/ErrorBoundary'
 import NotFound from './pages/NotFound'
@@ -73,15 +76,15 @@ function StorefrontShell() {
   const { t } = useLang()
   return (
     <div className="flex min-h-dvh flex-col bg-bg text-fg">
-      <div className="flex items-center justify-center gap-2 bg-zinc-900 px-4 py-1.5 text-center text-xs text-zinc-400">
+      <div className="no-print flex items-center justify-center gap-2 bg-zinc-900 px-4 py-1.5 text-center text-xs text-zinc-400">
         <Icon name="truck" size={14} className="shrink-0 text-brand-400" />
         {t('common.topbar')}
       </div>
-      <Navbar />
+      <div className="no-print"><Navbar /></div>
       <main className="flex-1">
         <Outlet />
       </main>
-      <Footer />
+      <div className="no-print"><Footer /></div>
     </div>
   )
 }
@@ -101,6 +104,7 @@ export default function App() {
           <Route path="orders" element={<AdminOrders />} />
           <Route path="payments" element={<AdminPayments />} />
           <Route path="customers" element={<AdminCustomers />} />
+          <Route path="warranty-claims" element={<AdminWarrantyClaims />} />
           <Route path="settings" element={<AdminSettings />} />
         </Route>
         {/* Docs: เลย์เอาต์เต็มหน้าแบบเดียวกับ admin (sidebar + header ของตัวเอง ไม่ใช้เปลือกหน้าร้าน) */}
@@ -125,10 +129,12 @@ export default function App() {
             <Route index element={<Profile />} />
             <Route path="orders" element={<AccountOrders />} />
             <Route path="track" element={<AccountTrack />} />
+            <Route path="invoice" element={<AccountInvoice />} />
             <Route path="addresses" element={<Addresses />} />
             <Route path="tax" element={<TaxProfiles />} />
             <Route path="payment" element={<PaymentMethods />} />
             <Route path="wishlist" element={<Wishlist />} />
+            <Route path="warranty" element={<AccountWarranty />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Route>

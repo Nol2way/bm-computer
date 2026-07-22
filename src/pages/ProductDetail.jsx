@@ -123,6 +123,19 @@ export default function ProductDetail() {
               <li key={x} className="flex items-center gap-2"><Icon name="check" size={16} className="text-emerald-500" /> {x}</li>
             ))}
           </ul>
+
+          {/* Warranty info */}
+          {p.warranty_period_months && (
+            <div className="mt-4 rounded-xl border border-line bg-surface2 p-4">
+              <div className="flex items-center gap-2 font-semibold text-sm mb-3"><Icon name="shield" size={16} className="text-amber-600" /> {t('pdp.warranty')}</div>
+              <div className="space-y-2 text-sm">
+                <div><span className="text-muted">{t('pdp.warrantyPeriod')}: </span><b>{p.warranty_period_months} {t('pdp.months')}</b></div>
+                {p.warranty_service_center && <div><span className="text-muted">{t('pdp.warrantyServiceCenter')}: </span><b>{p.warranty_service_center}</b></div>}
+                {p.warranty_service_phone && <div><span className="text-muted">{t('pdp.warrantyServicePhone')}: </span><b>{p.warranty_service_phone}</b></div>}
+                {p.warranty_conditions && <div className="text-muted border-t border-line/30 pt-2 mt-2">{p.warranty_conditions}</div>}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

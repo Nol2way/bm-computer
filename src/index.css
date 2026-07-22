@@ -131,3 +131,14 @@
 @media (prefers-reduced-motion: reduce) {
   *:not(.motion-keep) { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+
+/* พิมพ์ใบกำกับภาษี: ซ่อน chrome ของเว็บ + บังคับพื้นขาว/ตัวหนังสือดำแม้เปิดโหมดมืดอยู่ + บังคับกระดาษ A4 เต็มหน้าพอดี 1 แผ่น (ไม่ล้นไปหน้าที่ 2)
+   หมายเหตุ: margin ของหน้ากระดาษเป็น 0 เพราะ .print-area มี padding ของตัวเองอยู่แล้ว - กันไม่ให้ความสูงรวมเกิน 297mm */
+@page { size: A4; margin: 0; }
+@media print {
+  .no-print { display: none !important; }
+  body { background: #fff !important; color: #000 !important; }
+  .print-area { border: 0 !important; box-shadow: none !important; border-radius: 0 !important; max-width: none !important; width: 210mm !important; height: 297mm !important; min-height: 0 !important; margin: 0 !important; overflow: hidden; page-break-after: avoid; }
+  .print-full { display: block !important; margin: 0 !important; }
+  .account-shell { padding: 0 !important; margin: 0 !important; max-width: none !important; }
+}
