@@ -120,14 +120,8 @@
   to   { opacity: 1; transform: scale(1); }
 }
 
-/* เคอร์เซอร์กระพริบสำหรับ Typewriter (สโลแกนหน้าแรก) */
-@keyframes blink {
-  0%, 50% { opacity: 1; }
-  50.01%, 100% { opacity: 0; }
-}
-
 /* ผู้ใช้ปิดอนิเมชันของระบบ: หยุดอนิเมชันตกแต่งทั้งหมด
-   ยกเว้น .motion-keep (เช่น เคอร์เซอร์ Typewriter) ที่เป็นส่วนหนึ่งของเนื้อหา ไม่ใช่เอฟเฟกต์ */
+   ยกเว้น .motion-keep ที่เป็นส่วนหนึ่งของเนื้อหา ไม่ใช่เอฟเฟกต์ */
 @media (prefers-reduced-motion: reduce) {
   *:not(.motion-keep) { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }

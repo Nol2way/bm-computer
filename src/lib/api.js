@@ -209,6 +209,9 @@ export async function saveSlide(s) {
   const row = {
     id: s.id, placement: s.placement, title: s.title || null, image_url: s.image_url || null,
     link: s.link || null, sort: Number(s.sort) || 0, is_active: s.is_active !== false,
+    subtitle: s.subtitle || null, cta_label: s.cta_label || null, badge: s.badge || null, theme: s.theme || 'brand',
+    title_en: s.title_en || null, subtitle_en: s.subtitle_en || null,
+    cta_label_en: s.cta_label_en || null, badge_en: s.badge_en || null,
   }
   if (apiEnabled) { await api.post('/api/admin/slides', row); return }
   const { id, ...rest } = row
@@ -557,15 +560,15 @@ export async function fetchCommunityBuilds({ limit = 24, offset = 0 } = {}) {
 export async function fetchSlides(placement) {
   if (apiEnabled) return (await api.get('/api/catalog/slides' + qs({ placement }))).items
   if (!isSupabaseConfigured) return []
-  let q = supabase.from('slides').select('*').eq('is_active', true).order('sort', { ascending: true })
+  // เงื่อนไขเดียวกับฝั่ง backend: active + อยู่ในช่วงเวลาที่ตั้งไว้ (ถ้าตั้ง)
+  const now = new Date().toISOString()
+  let q = supabase.from('slides').select('*').eq('is_active', true)
+    .or(`starts_at.is.null,starts_at.lte.${now}`)
+    .or(`ends_at.is.null,ends_at.gte.${now}`)
+    .order('sort', { ascending: true })
   if (placement) q = q.eq('placement', placement)
   const { data, error } = await q
   if (error) throw error
-  const seen = new Set()
-  return (data || []).filter((s) => {
-    const k = `${s.image_url}|${s.title}`
-    if (seen.has(k)) return false
-    seen.add(k)
-    return true
-  })
+  // ไม่ต้อง dedupe แล้ว: unique index uq_slides_placement_sort กันซ้ำที่ฐานข้อมูล
+  return data || []
 }

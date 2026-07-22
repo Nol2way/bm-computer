@@ -4,7 +4,7 @@ import { adminListSlides, saveSlide, deleteSlide } from '../../lib/api'
 import { useFetch } from '../../lib/useFetch'
 import { useLang } from '../../i18n/LanguageContext'
 import { SlideCardSkeleton } from '../../components/Skeleton'
-import SlideBanner from '../../components/SlideBanner'
+import Banner from '../../components/Banner'
 import { check } from '../../lib/validate'
 
 const input = 'w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20'
@@ -13,6 +13,10 @@ const PLACEMENTS = [
   { v: 'promo', l: 'admin.placementPromo' },
   { v: 'flashsale', l: 'admin.placementFlash' },
 ]
+const THEMES = ['brand', 'dark', 'amber', 'emerald', 'violet']
+// พรีวิวในหลังบ้านต้องใช้ขนาดเดียวกับที่ลูกค้าเห็นจริง ไม่งั้นจัดข้อความแล้วหน้าเว็บไม่เหมือน
+const previewSize = (placement) => (placement === 'hero' ? 'hero' : 'promo')
+const previewRatio = () => 'aspect-[16/9]'
 
 export default function AdminSlides() {
   const { t } = useLang()
@@ -39,10 +43,9 @@ export default function AdminSlides() {
         <div className="grid gap-3 sm:grid-cols-2">
           {rows.map((s) => (
             <div key={s.id} className="overflow-hidden rounded-xl border border-line bg-surface">
-              <div className="aspect-[1200/440] bg-surface2">
-                {s.image_url
-                  ? <img src={s.image_url} alt="" className="h-full w-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none' }} />
-                  : <SlideBanner s={s} />}
+              {/* พรีวิวแบบเดียวกับหน้าเว็บจริง (กดในหลังบ้านไม่ต้องเด้งไปหน้าลิงก์) */}
+              <div className={`${previewRatio(s.placement)} bg-surface2 [&_a]:pointer-events-none`}>
+                <Banner slide={s} size={previewSize(s.placement)} />
               </div>
               <div className="flex items-center justify-between gap-2 p-3">
                 <div className="min-w-0">
@@ -69,14 +72,20 @@ function SlideForm({ slide, onClose, onSaved }) {
   const [f, setF] = useState({
     id: slide.id, placement: slide.placement || 'hero', title: slide.title || '',
     image_url: slide.image_url || '', link: slide.link || '', sort: slide.sort ?? 0, is_active: slide.is_active !== false,
+    subtitle: slide.subtitle || '', cta_label: slide.cta_label || '', badge: slide.badge || '', theme: slide.theme || 'brand',
+    title_en: slide.title_en || '', subtitle_en: slide.subtitle_en || '',
+    cta_label_en: slide.cta_label_en || '', badge_en: slide.badge_en || '',
   })
   const [saving, setSaving] = useState(false)
   const [err, setErr] = useState('')
+  // แท็บภาษา: กรอกไทยกับอังกฤษในฟอร์มเดียว ไม่ต้องเลื่อนยาว
+  const [tab, setTab] = useState('th')
+  const suffix = tab === 'en' ? '_en' : ''
   const set = (k) => (e) => setF((s) => ({ ...s, [k]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }))
 
   const submit = async (e) => {
     e.preventDefault(); setErr('')
-    // รูปไม่บังคับ: เว้นว่าง = หน้าเว็บใช้แบนเนอร์ดีไซน์จากชื่อสไลด์ (SlideBanner) แต่ต้องมีชื่อ
+    // รูปไม่บังคับ: เว้นว่าง = หน้าเว็บใช้แบนเนอร์แบบข้อความ (Banner) แต่ต้องมีชื่อ
     if (!f.image_url && !f.title.trim()) { setErr(t('admin.slideTitleRequired')); return }
     const urlErr = check('url', f.image_url)
     if (urlErr) { setErr(t(urlErr)); return }
@@ -92,11 +101,9 @@ function SlideForm({ slide, onClose, onSaved }) {
           <button type="button" onClick={onClose} className="grid h-9 w-9 place-items-center rounded-lg hover:bg-surface2 cursor-pointer"><Icon name="x" /></button>
         </div>
         {err && <div className="mb-3 rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-600">{err}</div>}
-        {/* พรีวิวสด: มีรูปโชว์รูป ไม่มีรูปโชว์แบนเนอร์ดีไซน์ (ตรงกับที่ลูกค้าจะเห็นจริง) */}
-        <div className="mb-3 aspect-[1200/440] w-full overflow-hidden rounded-lg bg-surface2">
-          {f.image_url
-            ? <img src={f.image_url} alt="" className="h-full w-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none' }} />
-            : <SlideBanner s={f} />}
+        {/* พรีวิวสด: ตรงกับที่ลูกค้าจะเห็นจริงทั้งขนาดและการจัดวาง */}
+        <div className={`mb-3 w-full overflow-hidden rounded-lg bg-surface2 ${previewRatio(f.placement)} [&_a]:pointer-events-none`}>
+          <Banner slide={f} size={previewSize(f.placement)} langOverride={tab} />
         </div>
         <div className="flex flex-col gap-3">
           <div><label className="mb-1.5 block text-sm font-semibold">{t('admin.placement')}</label><select className={input} value={f.placement} onChange={set('placement')}>{PLACEMENTS.map((p) => <option key={p.v} value={p.v}>{t(p.l)}</option>)}</select></div>
@@ -105,7 +112,51 @@ function SlideForm({ slide, onClose, onSaved }) {
             <input className={input} value={f.image_url} onChange={set('image_url')} placeholder="https://..." />
             <span className="mt-1 block text-xs text-muted">{t('admin.slideImageHint')}</span>
           </div>
-          <div><label className="mb-1.5 block text-sm font-semibold">{t('admin.slideTitle')}</label><input className={input} value={f.title} onChange={set('title')} /></div>
+          {/* ข้อความ 2 ภาษา: อังกฤษเว้นว่างได้ หน้าเว็บจะ fallback ไปใช้ไทย */}
+          <div className="rounded-xl border border-line p-3">
+            <div className="mb-3 flex gap-1.5">
+              {[['th', t('admin.langTh')], ['en', t('admin.langEn')]].map(([v, l]) => (
+                <button key={v} type="button" onClick={() => setTab(v)}
+                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${tab === v ? 'bg-brand-600 text-white' : 'bg-surface2 text-muted hover:text-fg'}`}>
+                  {l}
+                </button>
+              ))}
+              {tab === 'en' && <span className="self-center text-xs text-muted">{t('admin.langEnHint')}</span>}
+            </div>
+            <div className="flex flex-col gap-3">
+              <div>
+                <label className="mb-1.5 block text-sm font-semibold">{t('admin.slideTitle')}</label>
+                <input className={input} value={f[`title${suffix}`]} onChange={set(`title${suffix}`)} maxLength={80} />
+              </div>
+              {/* ส่วนที่เหลือใช้เฉพาะแบนเนอร์แบบข้อความ (ไม่ได้ใส่รูป) */}
+              {!f.image_url && (
+                <>
+                  <div>
+                    <label className="mb-1.5 block text-sm font-semibold">{t('admin.slideSubtitle')}</label>
+                    <input className={input} value={f[`subtitle${suffix}`]} onChange={set(`subtitle${suffix}`)} maxLength={120} />
+                  </div>
+                  <div className="flex flex-wrap gap-3">
+                    <div className="min-w-[140px] flex-1">
+                      <label className="mb-1.5 block text-sm font-semibold">{t('admin.slideBadge')}</label>
+                      <input className={input} value={f[`badge${suffix}`]} onChange={set(`badge${suffix}`)} maxLength={30} />
+                    </div>
+                    <div className="min-w-[140px] flex-1">
+                      <label className="mb-1.5 block text-sm font-semibold">{t('admin.slideCta')}</label>
+                      <input className={input} value={f[`cta_label${suffix}`]} onChange={set(`cta_label${suffix}`)} maxLength={30} />
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+          {!f.image_url && (
+            <div className="w-40">
+              <label className="mb-1.5 block text-sm font-semibold">{t('admin.slideTheme')}</label>
+              <select className={input} value={f.theme} onChange={set('theme')}>
+                {THEMES.map((v) => <option key={v} value={v}>{t(`admin.theme_${v}`)}</option>)}
+              </select>
+            </div>
+          )}
           <div><label className="mb-1.5 block text-sm font-semibold">{t('admin.slideLink')}</label><input className={input} value={f.link} onChange={set('link')} placeholder="/products?cat=gpu" /></div>
           <div className="flex gap-4">
             <div className="w-24"><label className="mb-1.5 block text-sm font-semibold">{t('admin.sort')}</label><input className={input} type="number" value={f.sort} onChange={set('sort')} /></div>

@@ -103,10 +103,6 @@ export default function ProductDetail() {
               <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">{t('common.save')} ฿{fmt(p.old - p.price)}</span></>}
           </div>
 
-          <div className="flex items-center justify-between rounded-xl border border-line bg-surface2 px-4 py-3 text-sm">
-            <span className="text-muted">{t('pdp.installment')}</span><b className="nums">฿{fmt(Math.round(p.price / 10))}{t('common.perMonth')}</b>
-          </div>
-
           {soldOut ? (
             <div className="flex items-center gap-2.5 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3.5 text-sm">
               <Icon name="alert" size={18} className="shrink-0 text-red-600 dark:text-red-400" />

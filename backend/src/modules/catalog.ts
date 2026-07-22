@@ -61,7 +61,16 @@ export const ProductSchema = z
 const SELECT = '*, categories!inner(slug,name_th,name_en), brands!inner(name,slug)'
 const CatSchema = z.object({ id: z.string(), slug: z.string(), name_th: z.string(), name_en: z.string(), icon: z.string().nullable(), sort: z.number() }).openapi('Category')
 const BrandSchema = z.object({ id: z.string(), slug: z.string(), name: z.string(), logo_url: z.string().nullable(), sort: z.number() }).openapi('Brand')
-const SlideSchema = z.object({ id: z.string(), placement: z.string(), title: z.string().nullable(), image_url: z.string().nullable(), link: z.string().nullable(), sort: z.number(), is_active: z.boolean() }).openapi('Slide')
+const SlideSchema = z.object({
+  id: z.string(), placement: z.string(), title: z.string().nullable(), image_url: z.string().nullable(),
+  link: z.string().nullable(), sort: z.number(), is_active: z.boolean(),
+  // ฟิลด์แบนเนอร์แบบข้อความ (ใช้เมื่อไม่ใส่รูป)
+  subtitle: z.string().nullable().optional(), cta_label: z.string().nullable().optional(),
+  badge: z.string().nullable().optional(), theme: z.string().optional(),
+  title_en: z.string().nullable().optional(), subtitle_en: z.string().nullable().optional(),
+  cta_label_en: z.string().nullable().optional(), badge_en: z.string().nullable().optional(),
+  starts_at: z.string().nullable().optional(), ends_at: z.string().nullable().optional(),
+}).openapi('Slide')
 
 export function registerCatalog(app: OpenAPIHono<AppEnv>) {
   // GET /api/catalog/products
@@ -227,18 +236,18 @@ export function registerCatalog(app: OpenAPIHono<AppEnv>) {
     async (c) => {
       const { placement } = c.req.valid('query')
       const db = anonClient(c.env)
-      let q = db.from('slides').select('*').eq('is_active', true).order('sort', { ascending: true })
+      // แบนเนอร์ตั้งเวลาได้: ยังไม่ถึง starts_at หรือเลย ends_at แล้ว = ไม่ต้องแสดง
+      // (เดิมมีคอลัมน์ให้ตั้งแต่ไม่เคยถูกนำมากรอง แบนเนอร์หมดอายุจึงค้างอยู่หน้าเว็บ)
+      const now = new Date().toISOString()
+      let q = db.from('slides').select('*').eq('is_active', true)
+        .or(`starts_at.is.null,starts_at.lte.${now}`)
+        .or(`ends_at.is.null,ends_at.gte.${now}`)
+        .order('sort', { ascending: true })
       if (placement) q = q.eq('placement', placement)
       const { data, error } = await q
       if (error) throw badRequest(error.message)
-      const seen = new Set<string>()
-      const items = (data ?? []).filter((s: any) => {
-        const k = `${s.image_url}|${s.title}`
-        if (seen.has(k)) return false
-        seen.add(k)
-        return true
-      })
-      return c.json({ ok: true as const, items })
+      // ไม่ต้อง dedupe ฝั่งโค้ดแล้ว: unique index uq_slides_placement_sort กันซ้ำที่ฐานข้อมูล
+      return c.json({ ok: true as const, items: data ?? [] })
     }
   )
 

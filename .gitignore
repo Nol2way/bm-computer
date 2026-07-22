@@ -31,3 +31,6 @@ Thumbs.db
 CLAUDE.md
 # Playwright MCP test artifacts
 .playwright-mcp/
+
+# ต้นฉบับแบนเนอร์ความละเอียดสูง - เว็บใช้ไฟล์ที่ย่อแล้วใน public/banners/*.webp
+public/bm_*.png

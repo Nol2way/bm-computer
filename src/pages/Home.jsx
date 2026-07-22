@@ -2,8 +2,7 @@ import { Link } from 'react-router-dom'
 import ProductRow from '../components/ProductRow'
 import { Icon } from '../components/Icons'
 import HeroCarousel from '../components/HeroCarousel'
-import OrderShowcase from '../components/OrderShowcase'
-import Typewriter from '../components/Typewriter'
+import PromoBanners from '../components/PromoBanners'
 import BrandBar from '../components/BrandBar'
 import FlashSale from '../components/FlashSale'
 import { useLang } from '../i18n/LanguageContext'
@@ -38,7 +37,8 @@ export default function Home() {
   const { t, lang } = useLang()
   const { categories, loading: catsLoading, catName } = useCatalog()
   const { data, loading } = useFetch(() => fetchProducts({}), [])
-  const { data: heroSlides } = useFetch(() => fetchSlides('hero'), [])
+  const { data: heroSlides, loading: heroLoading } = useFetch(() => fetchSlides('hero'), [])
+  const { data: promoSlides, loading: promoLoading } = useFetch(() => fetchSlides('promo'), [])
   const { data: brands } = useFetch(() => fetchBrands(), [])
   const { data: reviews } = useFetch(() => fetchLatestReviews(6), [])
   usePageMeta(null, t('home.heroDesc'))
@@ -56,32 +56,15 @@ export default function Home() {
 
   return (
     <div className={`${wrap} py-8`}>
-      {/* HERO: หัวใหญ่ซ้าย + โชว์เคสหน้าคำสั่งซื้อขวา (ประกอบจากข้อมูลจริง - ภาพตกแต่ง hover ได้ คลิกไม่มีผล) */}
-      <section className="grid items-center gap-10 py-4 lg:grid-cols-[1fr_1fr] lg:gap-14 lg:py-8">
-        <div>
-          <h1 className="text-3xl font-extrabold leading-[1.2] tracking-tight sm:text-4xl xl:text-5xl">
-            <span className="block">{t('home.heroLeadStatic')}</span>
-            {/* ล็อกความสูงตายตัว: ข้อความพิมพ์/ลบยาวแค่ไหนก็ไม่ดันหน้าเว็บ */}
-            <span className="block h-[2.5em] overflow-hidden text-brand-600">
-              <Typewriter phrases={t('home.heroSlogans')} />
-            </span>
-          </h1>
-          <p className="mt-2 max-w-[46ch] text-base leading-relaxed text-muted">{t('home.heroDesc')}</p>
-          <div className="mt-6 flex flex-wrap gap-3">
-            <Link to="/products" className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-brand-600/25 transition-colors hover:bg-brand-700">
-              <Icon name="cart" size={17} /> {t('home.shopNow')}
-            </Link>
-            <Link to="/builder" className="inline-flex items-center gap-2 rounded-xl border border-line bg-surface px-6 py-3 text-sm font-bold transition-colors hover:border-brand-500 hover:text-brand-600">
-              <Icon name="cpu" size={17} /> {t('home.heroBuild')}
-            </Link>
-          </div>
+      {/* HERO: แบนเนอร์ใหญ่ + แถวโปรโมชัน 3 ใบ (แบบร้านค้าออนไลน์) - เนื้อหาคุมจากหลังบ้านทั้งหมด */}
+      <h1 className="sr-only">{t('home.h1')}</h1>
+      <section aria-label={t('home.promoArea')}>
+        {heroLoading
+          ? <div className="skeleton h-[210px] rounded-2xl sm:h-[320px] lg:h-[420px] xl:h-[470px]" aria-hidden="true" />
+          : <HeroCarousel slides={heroSlides || []} />}
+        <div className="mt-4">
+          <PromoBanners slides={promoSlides || []} loading={promoLoading} />
         </div>
-        <OrderShowcase products={list} loading={loading} />
-      </section>
-
-      {/* แบนเนอร์โฆษณา/โปรโมชัน (ย้ายลงมาจาก header) - เนื้อหาคุมจากหลังบ้าน */}
-      <section className="mt-10">
-        <HeroCarousel slides={heroSlides || []} />
       </section>
 
       {/* แถบตัวเลขร้าน */}

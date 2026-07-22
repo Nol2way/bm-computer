@@ -26,9 +26,17 @@ const ProductBody = z.object({
 }).openapi('AdminProductBody')
 
 const SlideBody = z.object({
-  id: z.string().uuid().optional(), placement: z.string(), title: z.string().nullable().optional(),
-  image_url: z.string().nullable().optional(), link: z.string().nullable().optional(),
-  sort: z.number().optional(), is_active: z.boolean().optional(),
+  id: z.string().uuid().optional(), placement: z.enum(['hero', 'promo', 'flashsale']),
+  title: z.string().max(80).nullable().optional(),
+  image_url: z.string().max(2000).nullable().optional(), link: z.string().max(500).nullable().optional(),
+  sort: z.number().int().min(0).max(999).optional(), is_active: z.boolean().optional(),
+  // แบนเนอร์แบบข้อความ (ใช้เมื่อไม่ใส่รูป)
+  subtitle: z.string().max(120).nullable().optional(), cta_label: z.string().max(30).nullable().optional(),
+  badge: z.string().max(30).nullable().optional(),
+  theme: z.enum(['brand', 'dark', 'amber', 'emerald', 'violet']).optional(),
+  // ข้อความภาษาอังกฤษ (เว้นว่าง = หน้าเว็บใช้ข้อความไทยแทน)
+  title_en: z.string().max(80).nullable().optional(), subtitle_en: z.string().max(120).nullable().optional(),
+  cta_label_en: z.string().max(30).nullable().optional(), badge_en: z.string().max(30).nullable().optional(),
 }).openapi('AdminSlideBody')
 
 const BrandBody = z.object({
@@ -104,10 +112,20 @@ export function registerAdmin(app: OpenAPIHono<AppEnv>) {
       request: { body: jsonBody(SlideBody) }, responses: { 200: jsonRes('บันทึกแล้ว', OkSchema), 400: errRes('error'), 403: errRes('ต้องเป็นแอดมิน') } }),
     async (c) => {
       const s = c.req.valid('json')
-      const row = { placement: s.placement, title: s.title || null, image_url: s.image_url || null, link: s.link || null, sort: Number(s.sort) || 0, is_active: s.is_active !== false }
+      const row = {
+        placement: s.placement, title: s.title || null, image_url: s.image_url || null, link: s.link || null,
+        sort: Number(s.sort) || 0, is_active: s.is_active !== false,
+        subtitle: s.subtitle || null, cta_label: s.cta_label || null, badge: s.badge || null, theme: s.theme || 'brand',
+        title_en: s.title_en || null, subtitle_en: s.subtitle_en || null,
+        cta_label_en: s.cta_label_en || null, badge_en: s.badge_en || null,
+      }
       const db = authedDb(c)
       const res = s.id ? await db.from('slides').update(row).eq('id', s.id) : await db.from('slides').insert(row)
-      if (res.error) throw badRequest(res.error.message)
+      if (res.error) {
+        // unique index (placement, sort) กันสไลด์ซ้ำ -> บอกแอดมินให้เข้าใจแทนข้อความดิบจาก Postgres
+        if ((res.error as any).code === '23505') throw badRequest('ตำแหน่งนี้มีสไลด์ลำดับที่ ' + row.sort + ' อยู่แล้ว กรุณาเปลี่ยนลำดับ')
+        throw badRequest(res.error.message)
+      }
       return c.json({ ok: true as const })
     }
   )

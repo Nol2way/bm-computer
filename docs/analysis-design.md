@@ -127,9 +127,9 @@
 
 ```mermaid
 flowchart LR
-    Guest(["👤 ผู้เยี่ยมชม<br/>(Guest)"])
-    Customer(["🛒 สมาชิก<br/>(Customer)"])
-    Admin(["🛠️ ผู้ดูแลระบบ<br/>(Admin)"])
+    Guest(["ผู้เยี่ยมชม<br/>Guest"])
+    Customer(["สมาชิก<br/>Customer"])
+    Admin(["ผู้ดูแลระบบ<br/>Admin"])
 
     subgraph S["ระบบ BM Computer"]
         UC1["ดู/ค้นหา/กรองสินค้า"]
@@ -206,7 +206,7 @@ classDiagram
     class Order {
         +uuid id
         +string code
-        +string status  %% pending→paid→packing→shipping→done
+        +string status  %% pending, paid, packing, shipping, done
         +int total
         +string trackingNo
         +datetime paidAt
@@ -516,22 +516,24 @@ graph TD
     end
 
     subgraph Worker["Cloudflare Worker - Backend API"]
-        API["Hono + OpenAPI (Swagger ที่ /api/docs)<br/>โมดูล: auth · catalog · orders · payments<br/>account · builder · admin"]
+        API["Hono + OpenAPI (Swagger ที่ /api/docs)<br/>โมดูล: auth, account, catalog, orders,<br/>admin, payments, builder, warranty"]
     end
 
     subgraph Supabase["Supabase"]
         AUTHP["Auth<br/>Email/Password + Google OAuth"]
-        DB[("PostgreSQL 15 ตาราง<br/>+ Row Level Security")]
+        DB[("PostgreSQL 17 ตาราง<br/>+ Row Level Security")]
+        ST["Storage<br/>หลักฐานเคลมประกัน (bucket ปิด)"]
     end
 
     EXT1["EasySlip API<br/>ตรวจสลิปโอนเงิน"]
     EXT2["Cloudflare Turnstile<br/>กันบอท"]
-    GH["GitHub (main)<br/>push = deploy อัตโนมัติ (CI/CD)"]
+    GH["GitHub (main)<br/>push = Pages deploy อัตโนมัติ<br/>ส่วน Worker สั่ง wrangler deploy เอง"]
 
-    U -->|HTTPS| FE
+    U -->|"HTTPS"| FE
     FE --> PROXY --> API
-    API -->|ห่อ login / ตรวจ token| AUTHP
-    API -->|query ในนามผู้ใช้<br/>RLS บังคับสิทธิ์| DB
+    API -->|"ห่อ login และตรวจ token"| AUTHP
+    API -->|"query ในนามผู้ใช้<br/>RLS บังคับสิทธิ์"| DB
+    API -->|"signed URL อายุสั้น"| ST
     API --> EXT1
     API --> EXT2
     GH -.-> FE
