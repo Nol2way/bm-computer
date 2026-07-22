@@ -26,8 +26,8 @@ export default function AccountTrack() {
   const [reloadKey, setReloadKey] = useState(0)
   const { data, loading } = useFetch(() => (user ? fetchMyOrders(user.id) : Promise.resolve([])), [user?.id, reloadKey])
   const orders = data || []
-  // ออเดอร์ที่จัดส่งสำเร็จแล้วไม่ต้องติดตามอีก - ให้ไปดูในประวัติคำสั่งซื้อแทน
-  const trackableOrders = orders.filter((o) => o.status !== 'done')
+  // ออเดอร์ที่จัดส่งสำเร็จแล้ว หรือถูกยกเลิกแล้ว ไม่ต้องติดตามอีก - ให้ไปดูในประวัติคำสั่งซื้อแทน
+  const trackableOrders = orders.filter((o) => o.status !== 'done' && !CANCELLED_STATES.includes(o.status))
   const [selected, setSelected] = useState(null)
   const [cancelTarget, setCancelTarget] = useState(null)
   const [searchCode, setSearchCode] = useState('')
