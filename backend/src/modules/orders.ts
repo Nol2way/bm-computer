@@ -3,7 +3,7 @@ import type { AppEnv } from '../lib/env'
 import { authedDb, userClient, anonClient } from '../lib/supabase'
 import { getAccessToken } from '../lib/cookies'
 import { requireAuth } from '../lib/middleware'
-import { badRequest, notFound } from '../lib/http'
+import { badRequest, notFound, outOfStock } from '../lib/http'
 import { jsonBody, jsonRes, errRes } from '../lib/openapi'
 
 const TAG = ['Orders']
@@ -51,7 +51,7 @@ function withTaxInvoice(order: any) {
 
 const CreateOrderBody = z
   .object({
-    items: z.array(z.object({ slug: z.string(), qty: z.number().int().positive() })).min(1),
+    items: z.array(z.object({ slug: z.string(), qty: z.number().int().positive().max(99) })).min(1).max(50),
     ship: z.object({ name: z.string().min(1), phone: z.string().min(1), address: z.string().min(1) }),
     taxInvoice: TaxInvoiceSchema.optional(),
   })
@@ -64,20 +64,42 @@ export function registerOrders(app: OpenAPIHono<AppEnv>) {
       method: 'post', path: '/api/orders', tags: TAG, summary: 'สร้างคำสั่งซื้อ',
       middleware: [requireAuth] as const,
       request: { body: jsonBody(CreateOrderBody) },
-      responses: { 200: jsonRes('สร้างแล้ว', z.object({ ok: z.literal(true), order: OrderSchema })), 400: errRes('error'), 401: errRes('ต้องเข้าสู่ระบบ') },
+      responses: {
+        200: jsonRes('สร้างแล้ว', z.object({ ok: z.literal(true), order: OrderSchema })),
+        400: errRes('error'), 401: errRes('ต้องเข้าสู่ระบบ'), 409: errRes('สินค้าหมด/มีไม่พอ'),
+      },
     }),
     async (c) => {
       const uid = c.get('user').id
       const { items, ship, taxInvoice } = c.req.valid('json') as z.infer<typeof CreateOrderBody>
       const db = authedDb(c)
-      const slugs = items.map((i) => i.slug)
-      const { data: prods, error: e1 } = await db.from('products').select('id,slug,name,price,sale_price,stock').in('slug', slugs)
+
+      // รวมบรรทัดที่ slug ซ้ำกันก่อน: ถ้าไม่รวม ผู้ใช้ส่ง slug เดิมหลายบรรทัดจะเลี่ยงการตรวจสต็อกต่อบรรทัดได้
+      const wanted = new Map<string, number>()
+      for (const i of items) wanted.set(i.slug, (wanted.get(i.slug) ?? 0) + i.qty)
+
+      const { data: prods, error: e1 } = await db.from('products')
+        .select('id,slug,name,price,sale_price,stock,is_active').in('slug', [...wanted.keys()])
       if (e1) throw badRequest(e1.message)
       const bySlug = Object.fromEntries((prods ?? []).map((p: any) => [p.slug, p]))
+
+      // สินค้าที่ขายไม่ได้แล้ว (ถูกลบ/ปิดขาย) - เดิมโค้ดกรองทิ้งเงียบๆ ทำให้ลูกค้าจ่ายเงินโดยไม่รู้ว่าของหาย
+      const gone = [...wanted.keys()].filter((s) => !bySlug[s] || bySlug[s].is_active === false)
+      if (gone.length) throw badRequest('มีสินค้าในตะกร้าที่ปิดการขายแล้ว กรุณานำออกจากตะกร้าแล้วลองใหม่')
+
+      // สต็อกไม่พอ = สั่งไม่ได้ (ด่านแรก · ตอนชำระเงินยังตรวจซ้ำอีกชั้นใน mark_order_paid)
+      const short = [...wanted.entries()]
+        .map(([slug, qty]) => ({ slug, qty, p: bySlug[slug] }))
+        .filter(({ qty, p }) => (p.stock ?? 0) < qty)
+        .map(({ slug, qty, p }) => ({ slug, name: p.name, stock: p.stock ?? 0, qty }))
+      if (short.length) {
+        const msg = short.map((s) => (s.stock === 0 ? `${s.name} (สินค้าหมด)` : `${s.name} (เหลือ ${s.stock} · สั่ง ${s.qty})`)).join(', ')
+        throw outOfStock('สั่งซื้อไม่ได้เพราะสินค้ามีไม่พอ: ' + msg, short)
+      }
+
       const priceOf = (p: any) => (p.sale_price && p.sale_price < p.price ? p.sale_price : p.price)
-      const lines = items
-        .filter((i) => bySlug[i.slug])
-        .map((i) => { const p = bySlug[i.slug]; return { product_id: p.id, name: p.name, price: priceOf(p), qty: i.qty } })
+      const lines = [...wanted.entries()]
+        .map(([slug, qty]) => { const p = bySlug[slug]; return { product_id: p.id, name: p.name, price: priceOf(p), qty } })
       if (!lines.length) throw badRequest('ไม่มีสินค้าในตะกร้า')
       const subtotal = lines.reduce((s: number, l) => s + l.price * l.qty, 0)
       const total = subtotal + (subtotal >= 1500 ? 0 : 80)

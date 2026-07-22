@@ -82,6 +82,22 @@ export async function fetchSearchIndex() {
   })
 }
 
+// สต็อก/ราคาล่าสุดของสินค้าที่ระบุ - ใช้ตรวจตะกร้าก่อนกดสั่งซื้อ
+// (ตะกร้าเก็บ snapshot ไว้ใน localStorage ซึ่งค้างได้นาน สต็อกจริงเปลี่ยนไปแล้วก็ได้)
+export async function fetchStock(slugs) {
+  const list = [...new Set((slugs || []).filter(Boolean))]
+  if (!list.length) return []
+  if (apiEnabled) return (await api.get(`/api/catalog/stock?slugs=${encodeURIComponent(list.join(','))}`)).items
+  if (!isSupabaseConfigured) return MOCK_PRODUCTS.filter((p) => list.includes(p.slug)).map((p) => ({ slug: p.slug, name: p.name, stock: p.stock, price: p.price, is_active: true }))
+  const { data, error } = await supabase.from('products').select('slug,name,stock,price,sale_price,is_active').in('slug', list)
+  if (error) throw error
+  return (data || []).map((r) => ({
+    slug: r.slug, name: r.name, stock: r.stock ?? 0,
+    price: r.sale_price && r.sale_price < r.price ? r.sale_price : r.price,
+    is_active: r.is_active !== false,
+  }))
+}
+
 // สร้างออเดอร์จริง - โหมด API ผ่าน backend (คิดราคาใหม่ที่ server) · fallback คิดที่นี่แล้วเขียน Supabase
 export async function createOrder({ userId, items, ship, taxInvoice }) {
   if (apiEnabled) {
@@ -89,14 +105,19 @@ export async function createOrder({ userId, items, ship, taxInvoice }) {
     return order
   }
   if (!isSupabaseConfigured) throw new Error('Supabase not configured')
-  const slugs = items.map((i) => i.slug)
-  const { data: prods, error: e1 } = await supabase.from('products').select('id,slug,name,price,sale_price,stock').in('slug', slugs)
+  const wanted = new Map()
+  items.forEach((i) => wanted.set(i.slug, (wanted.get(i.slug) || 0) + i.qty))
+  const { data: prods, error: e1 } = await supabase.from('products').select('id,slug,name,price,sale_price,stock,is_active').in('slug', [...wanted.keys()])
   if (e1) throw e1
   const bySlug = Object.fromEntries((prods || []).map((p) => [p.slug, p]))
+  // สินค้าหาย/ปิดขาย/ของไม่พอ = สั่งไม่ได้ (โหมด API มีด่านเดียวกันนี้ที่ backend + ที่ DB อีกชั้น)
+  if ([...wanted.keys()].some((s) => !bySlug[s] || bySlug[s].is_active === false)) throw new Error(tOutside('cart.someUnavailable'))
+  const short = [...wanted.entries()].filter(([s, q]) => (bySlug[s].stock ?? 0) < q)
+  if (short.length) throw new Error(tOutside('cart.outOfStockShort') + ' ' + short.map(([s, q]) => `${bySlug[s].name} (${bySlug[s].stock ?? 0}/${q})`).join(', '))
   const priceOf = (p) => (p.sale_price && p.sale_price < p.price ? p.sale_price : p.price)
-  const lines = items.filter((i) => bySlug[i.slug]).map((i) => {
-    const p = bySlug[i.slug]
-    return { product_id: p.id, name: p.name, price: priceOf(p), qty: i.qty }
+  const lines = [...wanted.entries()].map(([s, qty]) => {
+    const p = bySlug[s]
+    return { product_id: p.id, name: p.name, price: priceOf(p), qty }
   })
   if (!lines.length) throw new Error(tOutside('common.emptyCart'))
   const subtotal = lines.reduce((s, l) => s + l.price * l.qty, 0)

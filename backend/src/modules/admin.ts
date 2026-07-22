@@ -204,7 +204,12 @@ export function registerAdmin(app: OpenAPIHono<AppEnv>) {
         const { dir, deducted } = stockEffect(b.status as OrderStatus, !!order.stock_deducted)
         if (dir !== 0) {
           const { error: eStock } = await db.rpc('adjust_order_stock', { p_order: id, p_dir: dir })
-          if (eStock) throw badRequest('ปรับสต็อกไม่สำเร็จ: ' + eStock.message)
+          if (eStock) {
+            const m = eStock.message || ''
+            // ตั้งสถานะเป็น "จ่ายแล้ว" ย้อนหลังไม่ได้ถ้าของถูกขายไปหมดแล้ว (สต็อกจะติดลบ)
+            if (m.includes('insufficient_stock')) throw badRequest('สต็อกไม่พอสำหรับออเดอร์นี้: ' + m.split('insufficient_stock:').pop()!.trim())
+            throw badRequest('ปรับสต็อกไม่สำเร็จ: ' + m)
+          }
           patch.stock_deducted = deducted
           if (dir === -1) patch.paid_at = new Date().toISOString()
         }

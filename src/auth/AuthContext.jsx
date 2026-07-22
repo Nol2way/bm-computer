@@ -10,6 +10,9 @@ export const useAuth = () => useContext(Ctx)
 // เช็คจาก sessionStorage flag (ตั้งตอนกดปุ่ม Google ใน AuthForm) เพราะ supabase-js
 // ลบ token ออกจาก URL hash ก่อน React mount ทำให้เช็คจาก hash ตรงๆ ไม่ทัน
 export const OAUTH_FLAG = 'bm-oauth-return'
+// session อยู่ใน cookie ซึ่ง "ใช้ร่วมกันทั้งเบราว์เซอร์": ล็อกอินบัญชีใหม่ในแท็บหนึ่ง = ทุกแท็บกลายเป็นบัญชีนั้น
+// แท็บอื่นไม่รู้ตัวจะยังโชว์ชื่อ/ตะกร้าของบัญชีเดิม -> ประกาศผ่าน localStorage ให้ทุกแท็บโหลดตัวตนใหม่
+const UID_KEY = 'bm-auth-uid'
 // โชว์ overlay อย่างน้อยเท่านี้ กันกระพริบแวบเดียวแล้วหาย (ดูไม่ออกว่าเกิดอะไรขึ้น)
 const OAUTH_OVERLAY_MIN_MS = 900
 function isOAuthReturn() {
@@ -39,11 +42,23 @@ export function AuthProvider({ children }) {
       }
       setUser(u ? { id: u.id, email: u.email } : null)
       setProfile(u || null)
+      // บันทึกว่าตอนนี้เบราว์เซอร์นี้เป็นใคร - แท็บอื่นจะได้รู้ว่ามีการสลับบัญชี
+      try {
+        if (localStorage.getItem(UID_KEY) !== (u?.id || '')) localStorage.setItem(UID_KEY, u?.id || '')
+      } catch { /* โหมดส่วนตัวบางเบราว์เซอร์เขียนไม่ได้ */ }
     } catch {
       setUser(null)
       setProfile(null)
     }
   }, [])
+
+  // แท็บอื่นล็อกอิน/ล็อกเอาต์/สลับบัญชี -> โหลดตัวตนใหม่ในแท็บนี้ (ตะกร้าจะสลับตามเอง)
+  useEffect(() => {
+    if (!apiEnabled) return
+    const onStorage = (e) => { if (e.key === UID_KEY) reload() }
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
+  }, [reload])
 
   // ===== โหมด backend API (session สั้น + HttpOnly cookie) =====
   useEffect(() => {
@@ -111,6 +126,7 @@ export function AuthProvider({ children }) {
     else if (isSupabaseConfigured) { await supabase.auth.signOut() }
     setUser(null)
     setProfile(null)
+    try { localStorage.setItem(UID_KEY, '') } catch { /* ignore */ }
   }
 
   return (

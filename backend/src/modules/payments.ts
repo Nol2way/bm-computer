@@ -1,7 +1,7 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
 import type { AppEnv } from '../lib/env'
 import { adminClient } from '../lib/supabase'
-import { badRequest, notFound, serverError } from '../lib/http'
+import { badRequest, notFound, serverError, HttpError } from '../lib/http'
 import { jsonRes, errRes } from '../lib/openapi'
 
 const TAG = ['Payments']
@@ -32,6 +32,7 @@ export function registerPayments(app: OpenAPIHono<AppEnv>) {
         200: jsonRes('ตรวจสำเร็จ', z.object({ ok: z.literal(true), amount: z.number().optional(), transRef: z.string().nullable().optional(), already: z.boolean().optional(), message: z.string().optional() })),
         400: errRes('สลิปไม่ถูกต้อง/ยอดไม่พอ/ถูกใช้แล้ว'),
         404: errRes('ไม่พบคำสั่งซื้อ'),
+        409: errRes('สินค้าหมดระหว่างรอชำระเงิน'),
         500: errRes('ตั้งค่าไม่ครบ/อัปเดตล้มเหลว'),
       },
     }),
@@ -70,14 +71,19 @@ export function registerPayments(app: OpenAPIHono<AppEnv>) {
       // 3) ยอดต้องพอ
       if (Math.floor(amount) < order.total) throw badRequest(`ยอดโอน ฿${amount} น้อยกว่ายอดที่ต้องชำระ ฿${order.total}`)
 
-      // 4) ตัดสต็อกตอนจ่ายจริง (atomic, idempotent ด้วยแฟล็ก stock_deducted) แล้วตั้งเป็นชำระแล้ว
-      if (!order.stock_deducted) {
-        const { error: eStock } = await db.rpc('adjust_order_stock', { p_order: order.id, p_dir: -1 })
-        if (eStock) throw serverError('ตัดสต็อกไม่สำเร็จ: ' + eStock.message)
+      // 4) ตัดสต็อก + ตั้งสถานะ "ชำระแล้ว" ในธุรกรรมเดียว (mark_order_paid ล็อกแถวออเดอร์ให้)
+      //    ของไม่พอ = ไม่ให้จ่ายผ่าน (สต็อกไม่ถูกตัด สถานะไม่เปลี่ยน) แล้วบอกลูกค้าว่าติดสินค้าตัวไหน
+      const { data: paid, error: ePay } = await db.rpc('mark_order_paid', { p_order: order.id })
+      if (ePay) {
+        const m = ePay.message || ''
+        if (m.includes('insufficient_stock')) {
+          throw new HttpError(409, 'ชำระเงินไม่สำเร็จเพราะสินค้ามีไม่พอแล้ว: ' + m.split('insufficient_stock:').pop()!.trim()
+            + ' · ยอดที่โอนมาจะได้รับการคืนเงิน กรุณาติดต่อร้าน', 'out_of_stock')
+        }
+        if (m.includes('order_not_payable')) throw badRequest('คำสั่งซื้อนี้ถูกยกเลิกไปแล้ว ชำระเงินไม่ได้')
+        throw serverError('ยืนยันการชำระเงินไม่สำเร็จ: ' + m)
       }
-      const { error: upErr } = await db.from('orders')
-        .update({ status: 'paid', stock_deducted: true, paid_at: new Date().toISOString() }).eq('id', order.id)
-      if (upErr) throw serverError('อัปเดตสถานะไม่สำเร็จ')
+      if ((paid as any)?.already) return c.json({ ok: true as const, already: true, message: 'คำสั่งซื้อนี้ชำระแล้ว' })
 
       return c.json({ ok: true as const, amount, transRef })
     }

@@ -37,8 +37,10 @@ export default function ProductDetail() {
   const { user } = useAuth()
   const { open: openAuth } = useAuthNav()
   const nav = useNavigate()
-  const addToCart = () => { if (!user) { openAuth('login'); return } add(p, qty); setAdded(true); setTimeout(() => setAdded(false), 1200) }
-  const buyNow = () => { if (!user) { openAuth('login'); return } add(p, qty); nav('/checkout') }
+  // ของหมด/ไม่พอ = ใส่ตะกร้าไม่ได้ (backend ปฏิเสธอยู่แล้ว แต่ต้องไม่หลอกให้ลูกค้ากดจนถึงหน้าจ่ายเงิน)
+  const soldOut = !!p && (p.stock ?? 0) <= 0
+  const addToCart = () => { if (!user) { openAuth('login'); return } if (soldOut) return; add(p, qty); setAdded(true); setTimeout(() => setAdded(false), 1200) }
+  const buyNow = () => { if (!user) { openAuth('login'); return } if (soldOut) return; add(p, qty); nav('/checkout') }
   const copyLink = () => { navigator.clipboard?.writeText(window.location.href); setCopied(true); setTimeout(() => setCopied(false), 1500) }
 
   if (loading) return <div className={`${wrap} py-6`}><ProductDetailSkeleton /></div>
@@ -79,8 +81,9 @@ export default function ProductDetail() {
           <div className="flex flex-wrap items-center gap-2">
             <span className="rounded-full bg-surface2 px-2.5 py-1 text-xs font-semibold">{p.brand}</span>
             {b && <span className={cx('rounded-full px-2.5 py-1 text-xs font-semibold', b.cls)}>{badgeLabel[lang][p.badge]}</span>}
-            <span className={cx('text-xs font-semibold', p.stock <= 5 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400')}>
-              {p.stock <= 5 ? t('common.lowStock', { n: p.stock }) : t('common.inStock')}
+            <span className={cx('text-xs font-semibold',
+              soldOut ? 'text-red-600 dark:text-red-400' : p.stock <= 5 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400')}>
+              {soldOut ? t('common.outOfStock') : p.stock <= 5 ? t('common.lowStock', { n: p.stock }) : t('common.inStock')}
             </span>
           </div>
           <h1 className="text-2xl font-bold leading-tight">{p.name}</h1>
@@ -104,19 +107,30 @@ export default function ProductDetail() {
             <span className="text-muted">{t('pdp.installment')}</span><b className="nums">฿{fmt(Math.round(p.price / 10))}{t('common.perMonth')}</b>
           </div>
 
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="inline-flex items-center overflow-hidden rounded-lg border border-line">
-              <button onClick={() => setQty((q) => Math.max(1, q - 1))} className="grid h-11 w-11 place-items-center hover:bg-surface2 cursor-pointer" aria-label="-"><Icon name="minus" size={16} /></button>
-              <span className="nums w-12 text-center">{qty}</span>
-              <button onClick={() => setQty((q) => q + 1)} className="grid h-11 w-11 place-items-center hover:bg-surface2 cursor-pointer" aria-label="+"><Icon name="plus" size={16} /></button>
+          {soldOut ? (
+            <div className="flex items-center gap-2.5 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3.5 text-sm">
+              <Icon name="alert" size={18} className="shrink-0 text-red-600 dark:text-red-400" />
+              <div>
+                <b className="text-red-600 dark:text-red-400">{t('common.outOfStock')}</b>
+                <span className="text-muted"> · {t('pdp.outOfStockHint')}</span>
+              </div>
             </div>
-            <button onClick={addToCart}
-              className={cx('flex items-center gap-2 rounded-xl border px-5 py-3 font-semibold transition-colors cursor-pointer',
-                added ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400' : 'border-line hover:bg-surface2')}>
-              <Icon name={added ? 'check' : 'cart'} size={18} /> {added ? t('common.added') : t('pdp.addToCart')}
-            </button>
-            <button onClick={buyNow} className="flex-1 rounded-xl bg-brand-600 px-5 py-3 text-center font-semibold text-white transition-colors hover:bg-brand-700 cursor-pointer">{t('common.buyNow')}</button>
-          </div>
+          ) : (
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="inline-flex items-center overflow-hidden rounded-lg border border-line">
+                <button onClick={() => setQty((q) => Math.max(1, q - 1))} disabled={qty <= 1} className="grid h-11 w-11 place-items-center hover:bg-surface2 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40" aria-label="-"><Icon name="minus" size={16} /></button>
+                <span className="nums w-12 text-center">{qty}</span>
+                {/* กดเพิ่มเกินจำนวนที่มีจริงไม่ได้ */}
+                <button onClick={() => setQty((q) => Math.min(p.stock, q + 1))} disabled={qty >= p.stock} className="grid h-11 w-11 place-items-center hover:bg-surface2 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40" aria-label="+"><Icon name="plus" size={16} /></button>
+              </div>
+              <button onClick={addToCart}
+                className={cx('flex items-center gap-2 rounded-xl border px-5 py-3 font-semibold transition-colors cursor-pointer',
+                  added ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400' : 'border-line hover:bg-surface2')}>
+                <Icon name={added ? 'check' : 'cart'} size={18} /> {added ? t('common.added') : t('pdp.addToCart')}
+              </button>
+              <button onClick={buyNow} className="flex-1 rounded-xl bg-brand-600 px-5 py-3 text-center font-semibold text-white transition-colors hover:bg-brand-700 cursor-pointer">{t('common.buyNow')}</button>
+            </div>
+          )}
 
           <ul className="mt-1 flex flex-col gap-2 text-sm">
             {[t('pdp.b1'), t('pdp.b2'), t('pdp.b3')].map((x) => (

@@ -134,6 +134,33 @@ export function registerCatalog(app: OpenAPIHono<AppEnv>) {
     }
   )
 
+  // GET /api/catalog/stock?slugs=a,b,c - สต็อก+ราคาล่าสุดของสินค้าที่ระบุ (ใช้ตรวจตะกร้าก่อนสั่งซื้อ)
+  // ตะกร้าเก็บ snapshot ไว้ใน localStorage ซึ่งค้างได้นาน จึงต้องถามสต็อกจริงก่อนให้กดสั่งซื้อ
+  const StockItem = z.object({
+    slug: z.string(), name: z.string(), stock: z.number(), price: z.number(), is_active: z.boolean(),
+  }).openapi('StockItem')
+  app.openapi(
+    createRoute({
+      method: 'get', path: '/api/catalog/stock', tags: TAG, summary: 'สต็อก/ราคาล่าสุดตาม slug (ตรวจตะกร้า)',
+      request: { query: z.object({ slugs: z.string().min(1) }) },
+      responses: { 200: jsonRes('สำเร็จ', z.object({ ok: z.literal(true), items: z.array(StockItem) })), 400: errRes('error') },
+    }),
+    async (c) => {
+      const { slugs } = c.req.valid('query')
+      const list = [...new Set(slugs.split(',').map((s) => s.trim()).filter(Boolean))].slice(0, 50)
+      if (!list.length) return c.json({ ok: true as const, items: [] })
+      const { data, error } = await anonClient(c.env).from('products')
+        .select('slug,name,stock,price,sale_price,is_active').in('slug', list)
+      if (error) throw badRequest(error.message)
+      const items = (data ?? []).map((r: any) => ({
+        slug: r.slug, name: r.name, stock: r.stock ?? 0,
+        price: r.sale_price && r.sale_price < r.price ? r.sale_price : r.price,
+        is_active: r.is_active !== false,
+      }))
+      return c.json({ ok: true as const, items })
+    }
+  )
+
   // GET /api/catalog/categories
   app.openapi(
     createRoute({

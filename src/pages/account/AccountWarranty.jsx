@@ -2,54 +2,56 @@ import { useEffect, useState } from 'react'
 import { Icon } from '../../components/Icons'
 import { cx } from '../../lib/ui'
 import { useLang } from '../../i18n/LanguageContext'
-import { useAuth } from '../../auth/AuthContext'
-import { fetchMyOrders } from '../../lib/api'
 import { warrantyApi } from '../../lib/warrantyApi'
-import { useFetch } from '../../lib/useFetch'
 import { CardListSkeleton } from './ui'
 
-const ELIGIBLE_ORDER_STATUS = new Set(['paid', 'packing', 'shipping', 'done'])
+const MAX_EVIDENCE_MB = 5
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif']
 
 export default function AccountWarranty() {
-  const { t } = useLang()
-  const { user } = useAuth()
-  const { data: ordersRes, loading: ordersLoading } = useFetch(() => (user ? fetchMyOrders(user.id) : Promise.resolve([])), [user?.id])
+  const { t, lang } = useLang()
   const [claims, setClaims] = useState([])
-  const [claimsLoading, setClaimsLoading] = useState(true)
+  const [eligible, setEligible] = useState([])
+  const [loading, setLoading] = useState(true)
   const [claimForm, setClaimForm] = useState(null)
   const [uploadedFile, setUploadedFile] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const [err, setErr] = useState('')
 
-  const orders = Array.isArray(ordersRes) ? ordersRes : []
-
-  const loadClaims = () => {
-    setClaimsLoading(true)
-    warrantyApi.listClaims().then((r) => setClaims(r.items || [])).catch((e) => setErr(e.message)).finally(() => setClaimsLoading(false))
+  // สินค้าที่เคลมได้ให้ server เป็นคนตัดสิน (สถานะออเดอร์ + ระยะประกัน + เคลมซ้ำ)
+  // เพื่อให้ตัวเลือกที่เห็นตรงกับกฎที่ใช้ตอนยื่นจริงเสมอ
+  const load = () => {
+    setLoading(true)
+    Promise.all([warrantyApi.listClaims(), warrantyApi.eligibleItems()])
+      .then(([c, e]) => { setClaims(c.items || []); setEligible(e.items || []) })
+      .catch((e) => setErr(e.message))
+      .finally(() => setLoading(false))
   }
-  useEffect(() => { loadClaims() }, [])
+  useEffect(() => { load() }, [])
 
-  const claimedItemIds = new Set(claims.map((c) => c.order_item_id).filter(Boolean))
-  const claimableItems = orders
-    .filter((o) => ELIGIBLE_ORDER_STATUS.has(o.status))
-    .flatMap((o) => (o.order_items || []).map((it) => ({ ...it, order_id: o.id, order_code: o.code })))
-    .filter((it) => !claimedItemIds.has(it.id))
+  const claimableItems = eligible
+
+  const pickFile = (f) => {
+    setErr('')
+    if (!f) { setUploadedFile(null); return }
+    if (!ALLOWED_TYPES.includes(f.type)) { setErr(t('warranty.badFileType')); setUploadedFile(null); return }
+    if (f.size > MAX_EVIDENCE_MB * 1024 * 1024) { setErr(t('warranty.fileTooBig', { n: MAX_EVIDENCE_MB })); setUploadedFile(null); return }
+    setUploadedFile(f)
+  }
 
   const handleClaimSubmit = async (e) => {
     e.preventDefault()
     setErr('')
-    if (!claimForm.itemKey || !claimForm.reason || !uploadedFile) {
-      setErr(t('warranty.fillRequired'))
-      return
-    }
-    const item = claimableItems.find((it) => it.id === claimForm.itemKey)
-    if (!item) return
+    if (!claimForm.itemKey || !uploadedFile) { setErr(t('warranty.fillRequired')); return }
+    if (claimForm.reason.trim().length < 10) { setErr(t('warranty.reasonTooShort')); return }
+    const item = claimableItems.find((it) => it.order_item_id === claimForm.itemKey)
+    if (!item) { setErr(t('warranty.fillRequired')); return }
     setSubmitting(true)
     try {
-      await warrantyApi.submitClaim({ order_id: item.order_id, order_item_id: item.id, reason: claimForm.reason, evidence: uploadedFile })
+      await warrantyApi.submitClaim({ order_id: item.order_id, order_item_id: item.order_item_id, reason: claimForm.reason.trim(), evidence: uploadedFile })
       setClaimForm(null)
       setUploadedFile(null)
-      loadClaims()
+      load()
     } catch (e) {
       setErr(e.message)
     } finally {
@@ -57,7 +59,7 @@ export default function AccountWarranty() {
     }
   }
 
-  const loading = ordersLoading || claimsLoading
+  const fmtDate = (iso) => (iso ? new Date(iso).toLocaleDateString(lang === 'th' ? 'th-TH' : 'en-GB', { year: 'numeric', month: 'short', day: 'numeric' }) : '')
 
   return (
     <div>
@@ -90,6 +92,13 @@ export default function AccountWarranty() {
                 </span>
               </div>
               <p className="text-sm text-muted">{claim.reason}</p>
+              {/* หลักฐานอยู่ใน storage แบบปิด - ลิงก์นี้เป็น signed URL อายุสั้นที่ backend ออกให้เจ้าของเท่านั้น */}
+              {claim.evidence_url && (
+                <a href={claim.evidence_url} target="_blank" rel="noopener noreferrer"
+                  className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-brand-600 hover:underline">
+                  <Icon name="image" size={15} /> {t('warranty.viewEvidence')}
+                </a>
+              )}
               {claim.admin_notes && (
                 <div className="mt-3 rounded-lg bg-surface2 p-3 text-sm">
                   <b className="text-sm">{t('warranty.adminNotes')}:</b>
@@ -128,9 +137,19 @@ export default function AccountWarranty() {
               >
                 <option value="">{t('warranty.choosePh')}</option>
                 {claimableItems.map((it) => (
-                  <option key={it.id} value={it.id}>{it.name} · {it.order_code}</option>
+                  <option key={it.order_item_id} value={it.order_item_id}>{it.name} · {it.order_code}</option>
                 ))}
               </select>
+              {/* บอกวันหมดประกันของชิ้นที่เลือก - ยื่นหลังหมดอายุ server จะปฏิเสธ */}
+              {claimForm.itemKey && (() => {
+                const sel = claimableItems.find((it) => it.order_item_id === claimForm.itemKey)
+                if (!sel) return null
+                return (
+                  <p className="mt-1.5 text-xs text-muted">
+                    {t('warranty.coverUntil', { date: fmtDate(sel.warranty_until), n: sel.days_left })}
+                  </p>
+                )
+              })()}
             </div>
 
             <div>
@@ -151,8 +170,8 @@ export default function AccountWarranty() {
               <div className="rounded-lg border-2 border-dashed border-line p-6 text-center">
                 <input
                   type="file"
-                  accept="image/*"
-                  onChange={(e) => setUploadedFile(e.target.files?.[0] || null)}
+                  accept={ALLOWED_TYPES.join(',')}
+                  onChange={(e) => pickFile(e.target.files?.[0] || null)}
                   className="hidden"
                   id="file-input"
                 />

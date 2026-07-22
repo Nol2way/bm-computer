@@ -10,20 +10,23 @@ export const warrantyApi = {
    */
   submitClaim: async (data: {
     order_id: string
-    order_item_id?: string
+    order_item_id: string
     reason: string
     evidence: File
   }) => {
     const formData = new FormData()
     formData.append('order_id', data.order_id)
-    if (data.order_item_id) {
-      formData.append('order_item_id', data.order_item_id)
-    }
+    formData.append('order_item_id', data.order_item_id)
     formData.append('reason', data.reason)
     formData.append('evidence', data.evidence)
 
     return api.postForm('/api/warranty/claims', formData)
   },
+
+  /**
+   * สินค้าที่เคลมได้จริง (server คิดให้: จ่ายแล้ว + มีประกัน + ยังไม่หมดอายุ + ยังไม่เคยเคลม)
+   */
+  eligibleItems: async () => api.get('/api/warranty/eligible-items'),
 
   /**
    * List user's warranty claims

@@ -59,15 +59,16 @@ export default function ProductCard({ p }) {
           <span className="nums text-lg font-bold text-brand-600">฿{fmt(p.price)}</span>
           {p.old && <span className="nums text-xs text-zinc-400 line-through">฿{fmt(p.old)}</span>}
         </div>
-        <span className={cx('text-xs font-semibold', p.stock <= 5 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400')}>
-          {p.stock <= 5 ? t('common.lowStock', { n: p.stock }) : t('common.inStock')}
+        <span className={cx('text-xs font-semibold',
+          p.stock <= 0 ? 'text-red-600 dark:text-red-400' : p.stock <= 5 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400')}>
+          {p.stock <= 0 ? t('common.outOfStock') : p.stock <= 5 ? t('common.lowStock', { n: p.stock }) : t('common.inStock')}
         </span>
       </div>
       <div className="p-4 pt-0">
-        <button onClick={addToCart} disabled={p.stock === 0}
-          className={cx('flex w-full items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold text-white transition-colors cursor-pointer disabled:opacity-50',
+        <button onClick={addToCart} disabled={p.stock <= 0}
+          className={cx('flex w-full items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold text-white transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-50',
             added ? 'bg-emerald-600' : 'bg-brand-600 hover:bg-brand-700')}>
-          <Icon name={added ? 'check' : 'cart'} size={16} /> {added ? t('common.added') : t('common.addToCart')}
+          <Icon name={added ? 'check' : 'cart'} size={16} /> {added ? t('common.added') : p.stock <= 0 ? t('common.outOfStock') : t('common.addToCart')}
         </button>
       </div>
     </article>

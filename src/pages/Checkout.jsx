@@ -5,6 +5,7 @@ import { Icon } from '../components/Icons'
 import { cx } from '../lib/ui'
 import { useLang } from '../i18n/LanguageContext'
 import { useCart } from '../cart/CartContext'
+import { useCartStock } from '../cart/useCartStock'
 import { useAuth } from '../auth/AuthContext'
 import { useAuthNav } from '../auth/useAuthNav'
 import { createOrder, fetchSetting } from '../lib/api'
@@ -21,6 +22,8 @@ const input = 'w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-
 export default function Checkout() {
   const { t } = useLang()
   const { items, subtotal, shipping, total, clear } = useCart()
+  // ตรวจสต็อกจริงอีกครั้งก่อนสั่งซื้อ (ตะกร้าอาจค้างมาจากเมื่อวาน ของอาจหมดไปแล้ว)
+  const { problems: stockProblems, blocked: stockBlocked, refetch: recheckStock } = useCartStock(items)
   usePageMeta(t('cart.checkout'))
   const { user, profile } = useAuth()
   const { open: openAuth } = useAuthNav()
@@ -100,6 +103,8 @@ export default function Checkout() {
       if (missingFields.length) { setError(t('checkout.fillAddress')); return }
     }
     if (!user) { openAuth('login'); return }
+    // ของหมด/ไม่พอ = ไม่ให้สร้างออเดอร์ (หลังบ้านจะปฏิเสธอยู่แล้ว แต่บอกก่อนดีกว่าให้กดแล้วเด้ง error)
+    if (stockBlocked) { setError(t('cart.stockIssueTitle')); return }
     setLoading(true)
     try {
       const order = await createOrder({ userId: user.id, items: items.map((i) => ({ slug: i.slug, qty: i.qty })), ship: form, ...(useTaxInvoice && { taxInvoice }) })
@@ -117,6 +122,8 @@ export default function Checkout() {
       setPlaced(order)
     } catch (e) {
       setError(e.message || t('checkout.orderFail'))
+      // ถูกปฏิเสธเพราะสต็อก: ถามสต็อกใหม่ให้ตะกร้าแสดงสถานะจริงทันที
+      if (e instanceof ApiError && e.code === 'out_of_stock') recheckStock()
     } finally {
       setLoading(false)
     }
@@ -278,8 +285,23 @@ export default function Checkout() {
                 )}
               </div>
 
+              {/* สต็อกไม่พอ: บอกให้ชัดว่าติดตัวไหน แล้วให้กลับไปแก้ที่ตะกร้า */}
+              {stockBlocked && (
+                <div className="mt-4 flex items-start gap-2.5 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm" role="alert">
+                  <Icon name="alert" size={17} className="mt-0.5 shrink-0 text-red-600 dark:text-red-400" />
+                  <div>
+                    <b className="text-red-600 dark:text-red-400">{t('cart.stockIssueTitle')}</b>
+                    <ul className="mt-1 list-inside list-disc text-muted">
+                      {stockProblems.map((p) => (
+                        <li key={p.slug}>{p.name} · {p.out ? t('cart.outOfStock') : t('cart.onlyNLeft', { n: p.stock })}</li>
+                      ))}
+                    </ul>
+                    <Link to="/cart" className="mt-1.5 inline-block font-semibold text-brand-600 hover:underline">{t('checkout.backToCart')}</Link>
+                  </div>
+                </div>
+              )}
               {error && <div className="mt-3 rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-600 dark:text-red-400" role="alert">{error}</div>}
-              <button onClick={placeOrder} disabled={loading} className="mt-4 w-full rounded-xl bg-brand-600 py-3 font-semibold text-white transition-colors hover:bg-brand-700 disabled:opacity-60 cursor-pointer">
+              <button onClick={placeOrder} disabled={loading || stockBlocked} className="mt-4 w-full rounded-xl bg-brand-600 py-3 font-semibold text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer">
                 {loading ? t('checkout.placing') : !user ? t('checkout.loginToOrder') : t('checkout.confirm')}
               </button>
             </section>
