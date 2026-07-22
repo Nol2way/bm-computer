@@ -90,28 +90,6 @@ const TaxCreate = z
   .openapi('TaxProfileCreate')
 
 // ======================= PAYMENT METHOD =========================
-const PaymentSchema = z
-  .object({
-    id: z.string(),
-    type: z.string(),
-    label: z.string().nullable(),
-    provider: z.string().nullable(),
-    account_name: z.string().nullable(),
-    masked: z.string().nullable(),
-    is_default: z.boolean(),
-  })
-  .openapi('PaymentMethod')
-const PaymentCreate = z
-  .object({
-    type: z.enum(['promptpay', 'bank_transfer', 'cod', 'card']),
-    label: z.string().optional(),
-    provider: z.string().optional(),
-    account_name: z.string().optional(),
-    masked: z.string().optional(),
-    is_default: z.boolean().optional(),
-  })
-  .openapi('PaymentMethodCreate')
-
 // ตัวช่วย: ถ้าจะตั้งเป็น default ให้ปลด default ของแถวอื่นก่อน + auto-default ถ้ายังไม่มีแถวใด
 async function resolveDefault(db: any, table: string, uid: string, wantDefault?: boolean) {
   const { count } = await db.from(table).select('id', { count: 'exact', head: true }).eq('user_id', uid)
@@ -272,7 +250,9 @@ export function registerAccount(app: OpenAPIHono<AppEnv>) {
   // -------- CRUD ตารางบัญชี --------
   crud(app, { base: '/api/account/addresses', table: 'addresses', name: 'ที่อยู่จัดส่ง', row: AddressSchema, create: AddressCreate, hasDefault: true })
   crud(app, { base: '/api/account/tax-profiles', table: 'tax_profiles', name: 'ที่อยู่ใบกำกับภาษี', row: TaxSchema, create: TaxCreate, hasDefault: true })
-  crud(app, { base: '/api/account/payment-methods', table: 'payment_methods', name: 'ช่องทางชำระเงิน', row: PaymentSchema, create: PaymentCreate, hasDefault: true })
+  // หมายเหตุ: เคยมี CRUD /api/account/payment-methods (บันทึกบัตร/COD/โอนธนาคาร) แต่ถอดออกแล้ว
+  // เพราะระบบรับชำระผ่าน PromptPay QR + ตรวจสลิป อย่างเดียว และ checkout ไม่เคยอ่านข้อมูลนี้เลย
+  // เก็บไว้ = ฟีเจอร์หลอกลูกค้าว่าเลือกวิธีจ่ายได้ (ดู migration 20260723_drop_payment_methods)
 
   // -------- wishlist (สินค้าที่ถูกใจ) --------
   app.openapi(

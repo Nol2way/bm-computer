@@ -235,7 +235,6 @@ const API_GROUPS = [
       ['GET', '/api/account/wishlist', { th: 'สินค้าที่ถูกใจ (เพิ่ม/ลบ ใช้ POST/DELETE)', en: 'Wishlist (add/remove via POST/DELETE)' }, 'user'],
       ['GET', '/api/account/addresses', { th: 'ที่อยู่จัดส่ง (CRUD ครบ: POST/PATCH/DELETE)', en: 'Shipping addresses (full CRUD)' }, 'user'],
       ['GET', '/api/account/tax-profiles', { th: 'ที่อยู่ใบกำกับภาษี (CRUD ครบ)', en: 'Tax invoice profiles (full CRUD)' }, 'user'],
-      ['GET', '/api/account/payment-methods', { th: 'ช่องทางชำระเงินที่บันทึกไว้ (CRUD ครบ)', en: 'Saved payment methods (full CRUD)' }, 'user'],
     ],
   },
   {

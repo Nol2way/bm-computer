@@ -33,7 +33,6 @@ import AccountTrack from './pages/account/AccountTrack'
 import AccountInvoice from './pages/account/AccountInvoice'
 import Addresses from './pages/account/Addresses'
 import TaxProfiles from './pages/account/TaxProfiles'
-import PaymentMethods from './pages/account/PaymentMethods'
 import Wishlist from './pages/account/Wishlist'
 import AccountWarranty from './pages/account/AccountWarranty'
 import DocsPage from './pages/docs/DocsPage'
@@ -132,7 +131,8 @@ export default function App() {
             <Route path="invoice" element={<AccountInvoice />} />
             <Route path="addresses" element={<Addresses />} />
             <Route path="tax" element={<TaxProfiles />} />
-            <Route path="payment" element={<PaymentMethods />} />
+            {/* /account/payment ถูกถอดออก (ระบบรับ PromptPay อย่างเดียว) - บุ๊กมาร์กเดิมพากลับหน้าบัญชี */}
+            <Route path="payment" element={<Navigate to="/account" replace />} />
             <Route path="wishlist" element={<Wishlist />} />
             <Route path="warranty" element={<AccountWarranty />} />
           </Route>

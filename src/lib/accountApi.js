@@ -29,10 +29,6 @@ export const accountApi = {
   deleteTax:      (id)      => api.del(`/api/account/tax-profiles/${id}`),
 
   // ช่องทางชำระเงิน
-  listPayments:   ()        => api.get('/api/account/payment-methods'),
-  createPayment:  (b)       => api.post('/api/account/payment-methods', b),
-  updatePayment:  (id, b)   => api.patch(`/api/account/payment-methods/${id}`, b),
-  deletePayment:  (id)      => api.del(`/api/account/payment-methods/${id}`),
 
   // สินค้าที่ถูกใจ
   listWishlist:   ()        => api.get('/api/account/wishlist'),

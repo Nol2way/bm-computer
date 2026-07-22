@@ -93,7 +93,6 @@ export default function AccountLayout() {
           <SideLink to="/account" end icon="user" label={t('account.title')} />
           <SideLink to="/account/addresses" icon="pin" label={t('account.shippingAddress')} />
           <SideLink to="/account/tax" icon="doc" label={t('account.taxAddress')} />
-          <SideLink to="/account/payment" icon="card" label={t('account.paymentMethods')} />
         </aside>
         <section className="min-w-0">
           <Outlet />
