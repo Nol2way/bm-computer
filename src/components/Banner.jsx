@@ -25,11 +25,6 @@ function srcSetFor(url) {
   return m ? `${m[1]}-800.webp 800w, ${url} 1600w` : undefined
 }
 
-// พื้นหลังเบลอไม่ต้องคมชัด -> ใช้ไฟล์เล็กเสมอ ประหยัดแบนด์วิดท์ (ภาพนี้จะถูกเบลอทิ้งอยู่แล้ว)
-function srcFallbackSmall(url) {
-  const m = /^(.*)-1600\.webp$/.exec(url || '')
-  return m ? `${m[1]}-800.webp` : url
-}
 
 // ขนาดตัวอักษร/ระยะห่าง ต่างกันระหว่างแบนเนอร์ใหญ่ (hero) กับใบเล็ก (โปรโมชัน)
 const SIZES = {
@@ -97,32 +92,22 @@ export default function Banner({ slide, size = 'hero', eager = false, langOverri
   const label = (lang === 'en' ? slide.title_en || slide.title : slide.title) || ''
 
   const inner = hasImage ? (
-    // งานอาร์ตแบนเนอร์เป็นโปสเตอร์ (สัดส่วนสูงกว่ากรอบ hero มาก)
-    // ถ้า object-cover จะโดนครอปจนอ่านไม่ครบ -> ใช้ object-contain ไม่ให้เสียเนื้อหา
-    // แล้วเติมช่องว่างสองข้างด้วยภาพเดิมแบบเบลอ+ซูม ให้ดูตั้งใจ ไม่ใช่แถบดำโล่ง
-    <div className="relative h-full w-full overflow-hidden bg-zinc-950">
-      <img
-        src={srcFallbackSmall(slide.image_url)}
-        alt=""
-        aria-hidden="true"
-        className="absolute inset-0 h-full w-full scale-110 object-cover opacity-45 blur-2xl"
-        loading="lazy"
-        decoding="async"
-      />
-      <img
-        src={slide.image_url}
-        srcSet={srcSetFor(slide.image_url)}
-        sizes={size === 'hero' ? '(max-width: 1240px) 100vw, 1200px' : '(max-width: 640px) 100vw, 380px'}
-        alt={label}
-        className="relative h-full w-full object-contain"
-        loading={eager ? 'eager' : 'lazy'}
-        // แบนเนอร์ใบแรกคือภาพใหญ่ที่สุดที่ผู้ใช้เห็นทันที (LCP) - บอกเบราว์เซอร์ให้โหลดก่อนเพื่อน
-        // React 18 ยังไม่รู้จัก fetchPriority แบบ camelCase ต้องเขียนตัวพิมพ์เล็กให้ผ่านไปเป็น attribute ตรงๆ
-        fetchpriority={eager ? 'high' : 'auto'}
-        decoding="async"
-        onError={() => setBroken(true)}
-      />
-    </div>
+    // เต็มกรอบเสมอ ไม่มีขอบว่างซ้ายขวา
+    // งานอาร์ตเป็นโปสเตอร์แนวตั้งกว่ากรอบแบนเนอร์ จึงต้องครอปบน-ล่างบ้าง
+    // object-[center_38%] ดึงจุดสนใจขึ้นด้านบนเล็กน้อย เพื่อรักษาโลโก้/หัวเรื่องไว้
+    <img
+      src={slide.image_url}
+      srcSet={srcSetFor(slide.image_url)}
+      sizes={size === 'hero' ? '(max-width: 1240px) 100vw, 1200px' : '(max-width: 640px) 100vw, 400px'}
+      alt={label}
+      className="h-full w-full bg-zinc-950 object-cover object-[center_38%]"
+      loading={eager ? 'eager' : 'lazy'}
+      // แบนเนอร์ใบแรกคือภาพใหญ่ที่สุดที่ผู้ใช้เห็นทันที (LCP) - บอกเบราว์เซอร์ให้โหลดก่อนเพื่อน
+      // React 18 ยังไม่รู้จัก fetchPriority แบบ camelCase ต้องเขียนตัวพิมพ์เล็กให้ผ่านไปเป็น attribute ตรงๆ
+      fetchpriority={eager ? 'high' : 'auto'}
+      decoding="async"
+      onError={() => setBroken(true)}
+    />
   ) : (
     <TextBanner slide={slide} size={size} lang={lang} />
   )

@@ -60,7 +60,7 @@ export default function Home() {
       <h1 className="sr-only">{t('home.h1')}</h1>
       <section aria-label={t('home.promoArea')}>
         {heroLoading
-          ? <div className="skeleton h-[210px] rounded-2xl sm:h-[320px] lg:h-[420px] xl:h-[470px]" aria-hidden="true" />
+          ? <div className="skeleton aspect-[4/3] rounded-2xl sm:aspect-[16/9] lg:aspect-[2/1]" aria-hidden="true" />
           : <HeroCarousel slides={heroSlides || []} />}
         <div className="mt-4">
           <PromoBanners slides={promoSlides || []} loading={promoLoading} />

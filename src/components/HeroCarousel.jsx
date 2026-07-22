@@ -31,7 +31,7 @@ export default function HeroCarousel({ slides }) {
 
   const go = (d) => setI((x) => (x + d + n) % n)
 
-  if (!n) return <div className="skeleton h-[210px] rounded-2xl sm:h-[320px] lg:h-[420px] xl:h-[470px]" aria-hidden="true" />
+  if (!n) return <div className="skeleton aspect-[4/3] rounded-2xl sm:aspect-[16/9] lg:aspect-[2/1]" aria-hidden="true" />
 
   return (
     <section
@@ -39,9 +39,9 @@ export default function HeroCarousel({ slides }) {
       aria-roledescription="carousel" aria-label="โปรโมชันแนะนำ"
       onMouseEnter={stop} onMouseLeave={start} onFocusCapture={stop} onBlurCapture={start}
     >
-      {/* ความสูงคงที่ตามขนาดจอ ไม่ใช้ aspect ratio: งานอาร์ตแบนเนอร์เป็นโปสเตอร์ 1.5:1
-          ถ้าผูกกับ aspect ที่กว้าง หน้าแรกจะสูงจนเนื้อหาอื่นตกจอไปหมด */}
-      <div className="h-[210px] sm:h-[320px] lg:h-[420px] xl:h-[470px]">
+      {/* สัดส่วนกรอบไล่ตามขนาดจอ: จอแคบใช้กรอบสูง (ครอปโปสเตอร์น้อย)
+          จอกว้างค่อยแบนลง - รูปเต็มกรอบทุกขนาดโดยไม่มีขอบว่าง */}
+      <div className="aspect-[4/3] sm:aspect-[16/9] lg:aspect-[2/1]">
         {slides.map((s, idx) => (
           // ซ่อนด้วย visibility ไม่ใช่แค่ opacity: เบราว์เซอร์จะได้ไม่ต้องวาดชั้นที่มองไม่เห็น
           // (ลดอาการกระตุกบนเครื่อง GPU อ่อน) และ inert กันคีย์บอร์ด tab เข้าไปในสไลด์ที่ซ่อนอยู่
